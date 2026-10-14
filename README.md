@@ -46,11 +46,13 @@ Trois lecteurs, trois niveaux chacun, trois vitesses de rotative :
 Deux modes : l'**édition du jour** (10 articles, la même pour tout le monde,
 résultat à partager) et la **partie libre** (sans fin, rubriques au choix).
 
-### Explications en japonais (et bientôt en anglais)
+### Jeu en japonais (et bientôt en anglais)
 
 Pour « J'apprends le français », le bulletin propose la langue des explications.
-Les articles restent en français ; les règles, les messages du bas de l'écran, le
-pupitre de correction, l'aide et le bilan passent dans la langue choisie.
+Les articles restent en français ; le menu, les règles, les messages du bas de
+l'écran, le pupitre de correction, l'aide et le bilan passent dans la langue
+choisie. Le choix est gardé d'une visite à l'autre, et reste modifiable dans le
+bulletin tant qu'une autre langue que le français est active.
 
 Chaque langue est un fichier de `coquilles/js/langues/` (voir `ja.js`) avec :
 `ui` (textes d'interface), `regles` (nom et explication de chaque règle),

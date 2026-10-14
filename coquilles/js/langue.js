@@ -1,7 +1,7 @@
-/* Coquilles — langue des explications.
-   Les articles restent toujours en français (c'est ce qu'on apprend) ; les règles,
-   les messages du marbre, le pupitre de correction, l'aide et le bilan peuvent
-   être affichés dans une autre langue. Chaque langue est un fichier de
+/* Coquilles — langue de l'interface et des explications.
+   Les articles restent toujours en français (c'est ce qu'on apprend) ; le menu,
+   les règles, les messages du marbre, le pupitre de correction, l'aide et le
+   bilan peuvent être affichés dans une autre langue. Chaque langue est un fichier de
    js/langues/ qui remplit CQ.LANGUES[code] avec : nom, nomFr, ui, regles,
    details (explications des brèves, clé = texte français) et gabarits. */
 (function () {
@@ -20,6 +20,17 @@
     ui: {
       citation: '« {x} »',
       separateur: ' ', // entre l'explication du mot et la règle générale
+      locale: 'fr-FR',
+      'une.numero': 'N° {n}',
+      'une.jour.deja': 'Déjà jouée : {n} points. Rejouer ne change pas ce score.',
+      'une.jour.info': '{n} articles, la même pour tous les lecteurs',
+      'une.libre.record': 'Record {lecteur} {etoiles} : {n} points',
+      'une.libre.info': "Sans fin, jusqu'à la dernière plainte des lecteurs",
+      'son.actif': 'Son activé',
+      'son.coupe': 'Son coupé',
+      'niv.enfant': 'CE2|CM1|CM2',
+      'niv.adulte': 'Courant|Exigeant|Expert',
+      'niv.apprenant': 'A1|A2|B1',
       page: 'page {n}',
       'ok.photo': 'Bien vu : la photo ne correspondait pas.',
       'ok.mot': 'Bien vu : {faux} → {juste}',
@@ -140,7 +151,7 @@
   }
 
   // Zones de la page dont le texte suit la langue des explications.
-  const ZONES = ['ecran-jeu', 'ecran-bilan', 'voile-aide', 'voile-pause', 'voile-correction'];
+  const ZONES = ['ecran-une', 'ecran-jeu', 'ecran-bilan', 'voile-aide', 'voile-pause', 'voile-correction'];
 
   CQ.choisirLangue = function (code) {
     lireFrancais();

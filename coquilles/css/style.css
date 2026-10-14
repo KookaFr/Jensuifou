@@ -593,13 +593,15 @@ legend {
    prennent une gothique système, plus lisible en petit sur téléphone. */
 :root { --f-ja: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', Meiryo, sans-serif; }
 [lang='ja'] { line-break: strict; }
+[lang='ja'] .devise { font-style: normal; } /* pas d'italique en japonais */
 [lang='ja'] .marbre-titre, [lang='ja'] .marbre-detail, [lang='ja'] .pieges b, [lang='ja'] .pieges p,
 [lang='ja'] .regles-jeu, [lang='ja'] .carte-voile h2, [lang='ja'] .carte-voile p, [lang='ja'] .bilan-titre,
 [lang='ja'] .btn, [lang='ja'] .lien, [lang='ja'] .corr-aide, [lang='ja'] .chiffres dt, [lang='ja'] .etiquette,
-[lang='ja'] .legende-grille, [lang='ja'] .surtitre, [lang='ja'] .tirage {
+[lang='ja'] .legende-grille, [lang='ja'] .surtitre, [lang='ja'] .tirage,
+[lang='ja'] legend, [lang='ja'] .choix label, [lang='ja'] .devise, [lang='ja'] .filet-haut, [lang='ja'] .bulletin-titre {
   font-family: 'Newsreader', var(--f-ja);
 }
-[lang='ja'] .etiquette, [lang='ja'] .chiffres dt, [lang='ja'] .surtitre { letter-spacing: 0.04em; }
+[lang='ja'] .etiquette, [lang='ja'] .chiffres dt, [lang='ja'] .surtitre, [lang='ja'] .bulletin-titre, [lang='ja'] .filet-haut { letter-spacing: 0.04em; }
 [lang='ja'] .corr-contexte, .epreuve { font-family: var(--f-journal); }
 
 /* ---------- Animations ---------- */

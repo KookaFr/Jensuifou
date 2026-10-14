@@ -20,27 +20,27 @@
     <header class="manchette">
       <p class="filet-haut">
         <span id="date-edition">Édition du jour</span>
-        <span>N° <b id="num-edition">1</b></span>
-        <span>Gratuit</span>
+        <span id="numero-edition">N° <b>1</b></span>
+        <span data-t="une.gratuit">Gratuit</span>
       </p>
       <h1 class="titre-journal">Coquilles</h1>
-      <p class="devise">Le quotidien qui traque les fautes avant l'impression</p>
+      <p class="devise" data-t="une.devise">Le quotidien qui traque les fautes avant l'impression</p>
     </header>
 
     <form class="bulletin" id="reglages" onsubmit="return false">
-      <h2 class="bulletin-titre">Bulletin d'abonnement</h2>
+      <h2 class="bulletin-titre" data-t="une.bulletin">Bulletin d'abonnement</h2>
 
       <fieldset>
-        <legend>Lecteur</legend>
+        <legend data-t="une.lecteur">Lecteur</legend>
         <div class="choix">
-          <input type="radio" name="public" id="pub-enfant" value="enfant"><label for="pub-enfant">Enfant<small>8 à 11 ans</small></label>
-          <input type="radio" name="public" id="pub-adulte" value="adulte"><label for="pub-adulte">Adulte<small>francophone</small></label>
-          <input type="radio" name="public" id="pub-apprenant" value="apprenant"><label for="pub-apprenant">J'apprends le français<small>FLE</small></label>
+          <input type="radio" name="public" id="pub-enfant" value="enfant"><label for="pub-enfant" data-t="lab.enfant">Enfant<small>8 à 11 ans</small></label>
+          <input type="radio" name="public" id="pub-adulte" value="adulte"><label for="pub-adulte" data-t="lab.adulte">Adulte<small>francophone</small></label>
+          <input type="radio" name="public" id="pub-apprenant" value="apprenant"><label for="pub-apprenant" data-t="lab.apprenant">J'apprends le français<small>FLE</small></label>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>Niveau</legend>
+        <legend data-t="une.niveau">Niveau</legend>
         <div class="choix choix-3">
           <input type="radio" name="niveau" id="niv-1" value="1"><label for="niv-1">★<small id="niv-1-nom">Courant</small></label>
           <input type="radio" name="niveau" id="niv-2" value="2"><label for="niv-2">★★<small id="niv-2-nom">Exigeant</small></label>
@@ -49,40 +49,40 @@
       </fieldset>
 
       <fieldset>
-        <legend>Vitesse de la rotative</legend>
+        <legend data-t="une.vitesse">Vitesse de la rotative</legend>
         <div class="choix choix-3">
-          <input type="radio" name="vitesse" id="vit-tranquille" value="tranquille"><label for="vit-tranquille">Tranquille</label>
-          <input type="radio" name="vitesse" id="vit-normale" value="normale"><label for="vit-normale">Normale</label>
-          <input type="radio" name="vitesse" id="vit-rapide" value="rapide"><label for="vit-rapide">Rapide</label>
+          <input type="radio" name="vitesse" id="vit-tranquille" value="tranquille"><label for="vit-tranquille" data-t="lab.tranquille">Tranquille</label>
+          <input type="radio" name="vitesse" id="vit-normale" value="normale"><label for="vit-normale" data-t="lab.normale">Normale</label>
+          <input type="radio" name="vitesse" id="vit-rapide" value="rapide"><label for="vit-rapide" data-t="lab.rapide">Rapide</label>
         </div>
       </fieldset>
 
       <fieldset id="champ-langue" hidden>
-        <legend>Langue des explications</legend>
+        <legend data-t="une.langue">Langue des explications</legend>
         <div class="choix" id="choix-langue"></div>
       </fieldset>
 
       <fieldset>
-        <legend>Rubriques de la partie libre</legend>
+        <legend data-t="une.rubriques">Rubriques de la partie libre</legend>
         <div class="choix">
-          <input type="checkbox" name="rubrique" id="rub-ortho" value="ortho"><label for="rub-ortho">Orthographe</label>
-          <input type="checkbox" name="rubrique" id="rub-gram" value="gram"><label for="rub-gram">Grammaire</label>
-          <input type="checkbox" name="rubrique" id="rub-typo" value="typo"><label for="rub-typo">Typographie</label>
-          <input type="checkbox" name="rubrique" id="rub-calc" value="calc"><label for="rub-calc">Calcul</label>
-          <input type="checkbox" name="rubrique" id="rub-faits" value="faits"><label for="rub-faits">Faits</label>
-          <input type="checkbox" name="rubrique" id="rub-image" value="image"><label for="rub-image">Images</label>
-          <input type="checkbox" name="rubrique" id="rub-page" value="page"><label for="rub-page">Pages</label>
+          <input type="checkbox" name="rubrique" id="rub-ortho" value="ortho"><label for="rub-ortho" data-t="lab.ortho">Orthographe</label>
+          <input type="checkbox" name="rubrique" id="rub-gram" value="gram"><label for="rub-gram" data-t="lab.gram">Grammaire</label>
+          <input type="checkbox" name="rubrique" id="rub-typo" value="typo"><label for="rub-typo" data-t="lab.typo">Typographie</label>
+          <input type="checkbox" name="rubrique" id="rub-calc" value="calc"><label for="rub-calc" data-t="lab.calc">Calcul</label>
+          <input type="checkbox" name="rubrique" id="rub-faits" value="faits"><label for="rub-faits" data-t="lab.faits">Faits</label>
+          <input type="checkbox" name="rubrique" id="rub-image" value="image"><label for="rub-image" data-t="lab.image">Images</label>
+          <input type="checkbox" name="rubrique" id="rub-page" value="page"><label for="rub-page" data-t="lab.page">Pages</label>
         </div>
       </fieldset>
     </form>
 
     <div class="actions">
-      <button type="button" class="btn btn-principal" id="btn-jour">Édition du jour<small id="etat-jour">10 articles, la même pour tous les lecteurs</small></button>
-      <button type="button" class="btn" id="btn-libre">Partie libre<small id="etat-libre">Sans fin, jusqu'à la dernière plainte</small></button>
+      <button type="button" class="btn btn-principal" id="btn-jour"><span data-t="une.jour">Édition du jour</span><small id="etat-jour">10 articles, la même pour tous les lecteurs</small></button>
+      <button type="button" class="btn" id="btn-libre"><span data-t="une.libre">Partie libre</span><small id="etat-libre">Sans fin, jusqu'à la dernière plainte</small></button>
     </div>
 
     <nav class="pied">
-      <button type="button" class="lien" id="btn-aide">Comment jouer</button>
+      <button type="button" class="lien" id="btn-aide" data-t="une.aide">Comment jouer</button>
       <button type="button" class="lien" id="btn-son" aria-pressed="true">Son activé</button>
     </nav>
   </section>

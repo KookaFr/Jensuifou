@@ -606,13 +606,15 @@ legend {
    prennent une gothique système, plus lisible en petit sur téléphone. */
 :root { --f-ja: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', Meiryo, sans-serif; }
 [lang='ja'] { line-break: strict; }
+[lang='ja'] .devise { font-style: normal; } /* pas d'italique en japonais */
 [lang='ja'] .marbre-titre, [lang='ja'] .marbre-detail, [lang='ja'] .pieges b, [lang='ja'] .pieges p,
 [lang='ja'] .regles-jeu, [lang='ja'] .carte-voile h2, [lang='ja'] .carte-voile p, [lang='ja'] .bilan-titre,
 [lang='ja'] .btn, [lang='ja'] .lien, [lang='ja'] .corr-aide, [lang='ja'] .chiffres dt, [lang='ja'] .etiquette,
-[lang='ja'] .legende-grille, [lang='ja'] .surtitre, [lang='ja'] .tirage {
+[lang='ja'] .legende-grille, [lang='ja'] .surtitre, [lang='ja'] .tirage,
+[lang='ja'] legend, [lang='ja'] .choix label, [lang='ja'] .devise, [lang='ja'] .filet-haut, [lang='ja'] .bulletin-titre {
   font-family: 'Newsreader', var(--f-ja);
 }
-[lang='ja'] .etiquette, [lang='ja'] .chiffres dt, [lang='ja'] .surtitre { letter-spacing: 0.04em; }
+[lang='ja'] .etiquette, [lang='ja'] .chiffres dt, [lang='ja'] .surtitre, [lang='ja'] .bulletin-titre, [lang='ja'] .filet-haut { letter-spacing: 0.04em; }
 [lang='ja'] .corr-contexte, .epreuve { font-family: var(--f-journal); }
 
 /* ---------- Animations ---------- */
@@ -642,27 +644,27 @@ legend {
     <header class="manchette">
       <p class="filet-haut">
         <span id="date-edition">Édition du jour</span>
-        <span>N° <b id="num-edition">1</b></span>
-        <span>Gratuit</span>
+        <span id="numero-edition">N° <b>1</b></span>
+        <span data-t="une.gratuit">Gratuit</span>
       </p>
       <h1 class="titre-journal">Coquilles</h1>
-      <p class="devise">Le quotidien qui traque les fautes avant l'impression</p>
+      <p class="devise" data-t="une.devise">Le quotidien qui traque les fautes avant l'impression</p>
     </header>
 
     <form class="bulletin" id="reglages" onsubmit="return false">
-      <h2 class="bulletin-titre">Bulletin d'abonnement</h2>
+      <h2 class="bulletin-titre" data-t="une.bulletin">Bulletin d'abonnement</h2>
 
       <fieldset>
-        <legend>Lecteur</legend>
+        <legend data-t="une.lecteur">Lecteur</legend>
         <div class="choix">
-          <input type="radio" name="public" id="pub-enfant" value="enfant"><label for="pub-enfant">Enfant<small>8 à 11 ans</small></label>
-          <input type="radio" name="public" id="pub-adulte" value="adulte"><label for="pub-adulte">Adulte<small>francophone</small></label>
-          <input type="radio" name="public" id="pub-apprenant" value="apprenant"><label for="pub-apprenant">J'apprends le français<small>FLE</small></label>
+          <input type="radio" name="public" id="pub-enfant" value="enfant"><label for="pub-enfant" data-t="lab.enfant">Enfant<small>8 à 11 ans</small></label>
+          <input type="radio" name="public" id="pub-adulte" value="adulte"><label for="pub-adulte" data-t="lab.adulte">Adulte<small>francophone</small></label>
+          <input type="radio" name="public" id="pub-apprenant" value="apprenant"><label for="pub-apprenant" data-t="lab.apprenant">J'apprends le français<small>FLE</small></label>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>Niveau</legend>
+        <legend data-t="une.niveau">Niveau</legend>
         <div class="choix choix-3">
           <input type="radio" name="niveau" id="niv-1" value="1"><label for="niv-1">★<small id="niv-1-nom">Courant</small></label>
           <input type="radio" name="niveau" id="niv-2" value="2"><label for="niv-2">★★<small id="niv-2-nom">Exigeant</small></label>
@@ -671,40 +673,40 @@ legend {
       </fieldset>
 
       <fieldset>
-        <legend>Vitesse de la rotative</legend>
+        <legend data-t="une.vitesse">Vitesse de la rotative</legend>
         <div class="choix choix-3">
-          <input type="radio" name="vitesse" id="vit-tranquille" value="tranquille"><label for="vit-tranquille">Tranquille</label>
-          <input type="radio" name="vitesse" id="vit-normale" value="normale"><label for="vit-normale">Normale</label>
-          <input type="radio" name="vitesse" id="vit-rapide" value="rapide"><label for="vit-rapide">Rapide</label>
+          <input type="radio" name="vitesse" id="vit-tranquille" value="tranquille"><label for="vit-tranquille" data-t="lab.tranquille">Tranquille</label>
+          <input type="radio" name="vitesse" id="vit-normale" value="normale"><label for="vit-normale" data-t="lab.normale">Normale</label>
+          <input type="radio" name="vitesse" id="vit-rapide" value="rapide"><label for="vit-rapide" data-t="lab.rapide">Rapide</label>
         </div>
       </fieldset>
 
       <fieldset id="champ-langue" hidden>
-        <legend>Langue des explications</legend>
+        <legend data-t="une.langue">Langue des explications</legend>
         <div class="choix" id="choix-langue"></div>
       </fieldset>
 
       <fieldset>
-        <legend>Rubriques de la partie libre</legend>
+        <legend data-t="une.rubriques">Rubriques de la partie libre</legend>
         <div class="choix">
-          <input type="checkbox" name="rubrique" id="rub-ortho" value="ortho"><label for="rub-ortho">Orthographe</label>
-          <input type="checkbox" name="rubrique" id="rub-gram" value="gram"><label for="rub-gram">Grammaire</label>
-          <input type="checkbox" name="rubrique" id="rub-typo" value="typo"><label for="rub-typo">Typographie</label>
-          <input type="checkbox" name="rubrique" id="rub-calc" value="calc"><label for="rub-calc">Calcul</label>
-          <input type="checkbox" name="rubrique" id="rub-faits" value="faits"><label for="rub-faits">Faits</label>
-          <input type="checkbox" name="rubrique" id="rub-image" value="image"><label for="rub-image">Images</label>
-          <input type="checkbox" name="rubrique" id="rub-page" value="page"><label for="rub-page">Pages</label>
+          <input type="checkbox" name="rubrique" id="rub-ortho" value="ortho"><label for="rub-ortho" data-t="lab.ortho">Orthographe</label>
+          <input type="checkbox" name="rubrique" id="rub-gram" value="gram"><label for="rub-gram" data-t="lab.gram">Grammaire</label>
+          <input type="checkbox" name="rubrique" id="rub-typo" value="typo"><label for="rub-typo" data-t="lab.typo">Typographie</label>
+          <input type="checkbox" name="rubrique" id="rub-calc" value="calc"><label for="rub-calc" data-t="lab.calc">Calcul</label>
+          <input type="checkbox" name="rubrique" id="rub-faits" value="faits"><label for="rub-faits" data-t="lab.faits">Faits</label>
+          <input type="checkbox" name="rubrique" id="rub-image" value="image"><label for="rub-image" data-t="lab.image">Images</label>
+          <input type="checkbox" name="rubrique" id="rub-page" value="page"><label for="rub-page" data-t="lab.page">Pages</label>
         </div>
       </fieldset>
     </form>
 
     <div class="actions">
-      <button type="button" class="btn btn-principal" id="btn-jour">Édition du jour<small id="etat-jour">10 articles, la même pour tous les lecteurs</small></button>
-      <button type="button" class="btn" id="btn-libre">Partie libre<small id="etat-libre">Sans fin, jusqu'à la dernière plainte</small></button>
+      <button type="button" class="btn btn-principal" id="btn-jour"><span data-t="une.jour">Édition du jour</span><small id="etat-jour">10 articles, la même pour tous les lecteurs</small></button>
+      <button type="button" class="btn" id="btn-libre"><span data-t="une.libre">Partie libre</span><small id="etat-libre">Sans fin, jusqu'à la dernière plainte</small></button>
     </div>
 
     <nav class="pied">
-      <button type="button" class="lien" id="btn-aide">Comment jouer</button>
+      <button type="button" class="lien" id="btn-aide" data-t="une.aide">Comment jouer</button>
       <button type="button" class="lien" id="btn-son" aria-pressed="true">Son activé</button>
     </nav>
   </section>
@@ -973,10 +975,10 @@ legend {
 })();
 </script>
 <script>
-/* Coquilles — langue des explications.
-   Les articles restent toujours en français (c'est ce qu'on apprend) ; les règles,
-   les messages du marbre, le pupitre de correction, l'aide et le bilan peuvent
-   être affichés dans une autre langue. Chaque langue est un fichier de
+/* Coquilles — langue de l'interface et des explications.
+   Les articles restent toujours en français (c'est ce qu'on apprend) ; le menu,
+   les règles, les messages du marbre, le pupitre de correction, l'aide et le
+   bilan peuvent être affichés dans une autre langue. Chaque langue est un fichier de
    js/langues/ qui remplit CQ.LANGUES[code] avec : nom, nomFr, ui, regles,
    details (explications des brèves, clé = texte français) et gabarits. */
 (function () {
@@ -995,6 +997,17 @@ legend {
     ui: {
       citation: '« {x} »',
       separateur: ' ', // entre l'explication du mot et la règle générale
+      locale: 'fr-FR',
+      'une.numero': 'N° {n}',
+      'une.jour.deja': 'Déjà jouée : {n} points. Rejouer ne change pas ce score.',
+      'une.jour.info': '{n} articles, la même pour tous les lecteurs',
+      'une.libre.record': 'Record {lecteur} {etoiles} : {n} points',
+      'une.libre.info': "Sans fin, jusqu'à la dernière plainte des lecteurs",
+      'son.actif': 'Son activé',
+      'son.coupe': 'Son coupé',
+      'niv.enfant': 'CE2|CM1|CM2',
+      'niv.adulte': 'Courant|Exigeant|Expert',
+      'niv.apprenant': 'A1|A2|B1',
       page: 'page {n}',
       'ok.photo': 'Bien vu : la photo ne correspondait pas.',
       'ok.mot': 'Bien vu : {faux} → {juste}',
@@ -1115,7 +1128,7 @@ legend {
   }
 
   // Zones de la page dont le texte suit la langue des explications.
-  const ZONES = ['ecran-jeu', 'ecran-bilan', 'voile-aide', 'voile-pause', 'voile-correction'];
+  const ZONES = ['ecran-une', 'ecran-jeu', 'ecran-bilan', 'voile-aide', 'voile-pause', 'voile-correction'];
 
   CQ.choisirLangue = function (code) {
     lireFrancais();
@@ -1153,6 +1166,43 @@ legend {
       // Messages du marbre et du pupitre
       citation: '「{x}」',
       separateur: '',
+      locale: 'ja-JP',
+
+      // Menu (la une)
+      'une.numero': '第{n}号',
+      'une.gratuit': '無料',
+      'une.devise': '印刷の前に誤植を追いかける日刊紙',
+      'une.bulletin': '購読申込書',
+      'une.lecteur': '読者',
+      'une.niveau': 'レベル',
+      'une.vitesse': '輪転機のスピード',
+      'une.langue': '解説の言語（Langue des explications）',
+      'une.rubriques': 'フリープレイのジャンル',
+      'lab.enfant': '子ども<small>8〜11歳</small>',
+      'lab.adulte': '大人<small>フランス語話者</small>',
+      'lab.apprenant': 'フランス語学習者<small>FLE</small>',
+      'lab.tranquille': 'ゆっくり',
+      'lab.normale': 'ふつう',
+      'lab.rapide': 'はやい',
+      'lab.ortho': 'つづり',
+      'lab.gram': '文法',
+      'lab.typo': '表記',
+      'lab.calc': '計算',
+      'lab.faits': '事実',
+      'lab.image': '写真',
+      'lab.page': 'ページ',
+      'une.jour': '今日の号',
+      'une.libre': 'フリープレイ',
+      'une.aide': '遊び方',
+      'une.jour.deja': 'プレイ済み：{n} ポイント。もう一度遊んでも記録は変わりません。',
+      'une.jour.info': '記事{n}本。全員が同じ号を読みます。',
+      'une.libre.record': '最高記録（{lecteur} {etoiles}）：{n} ポイント',
+      'une.libre.info': '終わりなし。読者の苦情が限界に達するまで続きます。',
+      'son.actif': '音：オン',
+      'son.coupe': '音：オフ',
+      'niv.enfant': 'CE2・小3|CM1・小4|CM2・小5',
+      'niv.adulte': '標準|上級|エキスパート',
+      'niv.apprenant': 'A1|A2|B1',
       page: '{n}ページ',
       'ok.photo': 'よく見つけました！写真が記事と合っていませんでした。',
       'ok.mot': '正解！ {faux} → {juste}',
@@ -3674,12 +3724,6 @@ legend {
   const CQ = window.CQ;
   const $ = (id) => document.getElementById(id);
 
-  const NIVEAUX = {
-    enfant: ['CE2', 'CM1', 'CM2'],
-    adulte: ['Courant', 'Exigeant', 'Expert'],
-    apprenant: ['A1', 'A2', 'B1'],
-  };
-  const LECTEURS = { enfant: 'Enfant', adulte: 'Adulte', apprenant: 'Apprenant' };
   const t = CQ.t;
   const TOUTES = { ortho: true, gram: true, typo: true, calc: true, faits: true, image: true, page: true };
   const ARTICLES_DU_JOUR = 10;
@@ -3694,8 +3738,8 @@ legend {
   let apresAide = null;
 
   const etoiles = (n) => '★'.repeat(n);
-  // Les explications dans une autre langue sont proposées aux personnes qui apprennent le français.
-  const langueActive = () => (reglages.public === 'apprenant' && CQ.LANGUES[reglages.langue] ? reglages.langue : 'fr');
+  // La langue choisie vaut pour le menu et les explications, quel que soit le lecteur.
+  const langueActive = () => (CQ.LANGUES[reglages.langue] ? reglages.langue : 'fr');
   const cleJour = () => `jour:${CQ.cleDuJour()}:${reglages.public}:${reglages.niveau}`;
   const cleRecord = () => `record:${reglages.public}:${reglages.niveau}`;
 
@@ -3705,27 +3749,29 @@ legend {
 
   // ---------- La une ----------
   function majUne() {
+    CQ.choisirLangue(langueActive());
     const auj = new Date();
-    $('date-edition').textContent = auj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    $('num-edition').textContent = CQ.numeroEdition(auj);
+    $('date-edition').textContent = auj.toLocaleDateString(t('locale'), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    $('numero-edition').innerHTML = t('une.numero', { n: `<b>${CQ.numeroEdition(auj)}</b>` });
 
     $('pub-' + reglages.public).checked = true;
     $('niv-' + reglages.niveau).checked = true;
     $('vit-' + reglages.vitesse).checked = true;
     Object.keys(TOUTES).forEach((r) => { $('rub-' + r).checked = !!reglages.rubriques[r]; });
-    NIVEAUX[reglages.public].forEach((nom, i) => { $(`niv-${i + 1}-nom`).textContent = nom; });
-    $('champ-langue').hidden = reglages.public !== 'apprenant';
+    t('niv.' + reglages.public).split('|').forEach((nom, i) => { $(`niv-${i + 1}-nom`).textContent = nom; });
+    // Proposé aux apprenants ; reste visible tant qu'une autre langue que le français est choisie.
+    $('champ-langue').hidden = reglages.public !== 'apprenant' && langueActive() === 'fr';
     const choixLangue = $('lang-' + reglages.langue) || $('lang-fr');
     if (choixLangue) choixLangue.checked = true;
 
     const jour = CQ.stock.lire(cleJour(), null);
     $('etat-jour').textContent = jour
-      ? `Déjà jouée : ${CQ.milliers(jour.score)} points. Rejouer ne change pas ce score.`
-      : `${ARTICLES_DU_JOUR} articles, la même pour tous les lecteurs`;
+      ? t('une.jour.deja', { n: CQ.milliers(jour.score) })
+      : t('une.jour.info', { n: ARTICLES_DU_JOUR });
     const record = CQ.stock.lire(cleRecord(), 0);
     $('etat-libre').textContent = record
-      ? `Record ${LECTEURS[reglages.public].toLowerCase()} ${etoiles(reglages.niveau)} : ${CQ.milliers(record)} points`
-      : "Sans fin, jusqu'à la dernière plainte des lecteurs";
+      ? t('une.libre.record', { lecteur: t('lecteur.' + reglages.public).toLowerCase(), etoiles: etoiles(reglages.niveau), n: CQ.milliers(record) })
+      : t('une.libre.info');
     majBoutonSon();
     CQ.typographier($('ecran-une'));
   }
@@ -3745,7 +3791,7 @@ legend {
 
   function majBoutonSon() {
     const b = $('btn-son');
-    b.textContent = CQ.Son.actif ? 'Son activé' : 'Son coupé';
+    b.textContent = CQ.Son.actif ? t('son.actif') : t('son.coupe');
     b.setAttribute('aria-pressed', String(CQ.Son.actif));
   }
 
@@ -3940,7 +3986,7 @@ legend {
     $('btn-abandonner').addEventListener('click', () => partie && partie.abandonner());
     $('btn-partager').addEventListener('click', partager);
     $('btn-rejouer').addEventListener('click', () => lancer(derniere || 'libre'));
-    $('btn-une').addEventListener('click', () => { CQ.choisirLangue('fr'); majUne(); afficher('ecran-une'); });
+    $('btn-une').addEventListener('click', () => { majUne(); afficher('ecran-une'); });
     document.addEventListener('keydown', (ev) => {
       if (ev.key !== 'Escape') return;
       if (!$('voile-aide').hidden) fermerAide();

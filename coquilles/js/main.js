@@ -4,12 +4,6 @@
   const CQ = window.CQ;
   const $ = (id) => document.getElementById(id);
 
-  const NIVEAUX = {
-    enfant: ['CE2', 'CM1', 'CM2'],
-    adulte: ['Courant', 'Exigeant', 'Expert'],
-    apprenant: ['A1', 'A2', 'B1'],
-  };
-  const LECTEURS = { enfant: 'Enfant', adulte: 'Adulte', apprenant: 'Apprenant' };
   const t = CQ.t;
   const TOUTES = { ortho: true, gram: true, typo: true, calc: true, faits: true, image: true, page: true };
   const ARTICLES_DU_JOUR = 10;
@@ -24,8 +18,8 @@
   let apresAide = null;
 
   const etoiles = (n) => '★'.repeat(n);
-  // Les explications dans une autre langue sont proposées aux personnes qui apprennent le français.
-  const langueActive = () => (reglages.public === 'apprenant' && CQ.LANGUES[reglages.langue] ? reglages.langue : 'fr');
+  // La langue choisie vaut pour le menu et les explications, quel que soit le lecteur.
+  const langueActive = () => (CQ.LANGUES[reglages.langue] ? reglages.langue : 'fr');
   const cleJour = () => `jour:${CQ.cleDuJour()}:${reglages.public}:${reglages.niveau}`;
   const cleRecord = () => `record:${reglages.public}:${reglages.niveau}`;
 
@@ -35,27 +29,29 @@
 
   // ---------- La une ----------
   function majUne() {
+    CQ.choisirLangue(langueActive());
     const auj = new Date();
-    $('date-edition').textContent = auj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    $('num-edition').textContent = CQ.numeroEdition(auj);
+    $('date-edition').textContent = auj.toLocaleDateString(t('locale'), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    $('numero-edition').innerHTML = t('une.numero', { n: `<b>${CQ.numeroEdition(auj)}</b>` });
 
     $('pub-' + reglages.public).checked = true;
     $('niv-' + reglages.niveau).checked = true;
     $('vit-' + reglages.vitesse).checked = true;
     Object.keys(TOUTES).forEach((r) => { $('rub-' + r).checked = !!reglages.rubriques[r]; });
-    NIVEAUX[reglages.public].forEach((nom, i) => { $(`niv-${i + 1}-nom`).textContent = nom; });
-    $('champ-langue').hidden = reglages.public !== 'apprenant';
+    t('niv.' + reglages.public).split('|').forEach((nom, i) => { $(`niv-${i + 1}-nom`).textContent = nom; });
+    // Proposé aux apprenants ; reste visible tant qu'une autre langue que le français est choisie.
+    $('champ-langue').hidden = reglages.public !== 'apprenant' && langueActive() === 'fr';
     const choixLangue = $('lang-' + reglages.langue) || $('lang-fr');
     if (choixLangue) choixLangue.checked = true;
 
     const jour = CQ.stock.lire(cleJour(), null);
     $('etat-jour').textContent = jour
-      ? `Déjà jouée : ${CQ.milliers(jour.score)} points. Rejouer ne change pas ce score.`
-      : `${ARTICLES_DU_JOUR} articles, la même pour tous les lecteurs`;
+      ? t('une.jour.deja', { n: CQ.milliers(jour.score) })
+      : t('une.jour.info', { n: ARTICLES_DU_JOUR });
     const record = CQ.stock.lire(cleRecord(), 0);
     $('etat-libre').textContent = record
-      ? `Record ${LECTEURS[reglages.public].toLowerCase()} ${etoiles(reglages.niveau)} : ${CQ.milliers(record)} points`
-      : "Sans fin, jusqu'à la dernière plainte des lecteurs";
+      ? t('une.libre.record', { lecteur: t('lecteur.' + reglages.public).toLowerCase(), etoiles: etoiles(reglages.niveau), n: CQ.milliers(record) })
+      : t('une.libre.info');
     majBoutonSon();
     CQ.typographier($('ecran-une'));
   }
@@ -75,7 +71,7 @@
 
   function majBoutonSon() {
     const b = $('btn-son');
-    b.textContent = CQ.Son.actif ? 'Son activé' : 'Son coupé';
+    b.textContent = CQ.Son.actif ? t('son.actif') : t('son.coupe');
     b.setAttribute('aria-pressed', String(CQ.Son.actif));
   }
 
@@ -270,7 +266,7 @@
     $('btn-abandonner').addEventListener('click', () => partie && partie.abandonner());
     $('btn-partager').addEventListener('click', partager);
     $('btn-rejouer').addEventListener('click', () => lancer(derniere || 'libre'));
-    $('btn-une').addEventListener('click', () => { CQ.choisirLangue('fr'); majUne(); afficher('ecran-une'); });
+    $('btn-une').addEventListener('click', () => { majUne(); afficher('ecran-une'); });
     document.addEventListener('keydown', (ev) => {
       if (ev.key !== 'Escape') return;
       if (!$('voile-aide').hidden) fermerAide();
