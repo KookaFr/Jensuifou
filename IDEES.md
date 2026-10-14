@@ -18,7 +18,7 @@ les voix ou une première version des contenus, toujours relue).
 
 - Vraies illustrations à la place des emoji (dessins générés puis retouchés).
 - Installation sur l'écran d'accueil et mode hors ligne (PWA).
-- Encore plus de brèves (216 écrites à la main aujourd'hui, de 18 à 28 par public et par niveau), et des coquilles de bon sens (« il neige à 35 °C »).
+- Encore plus de brèves (230 écrites à la main aujourd'hui, de 22 à 32 par public et par niveau), et des coquilles de bon sens (« il neige à 35 °C »).
 - Légendes de photos, renvois « suite en page 6 », chiffres qui changent au sein d'un même article.
 - Mode classe : un enseignant choisit les règles travaillées et voit les erreurs du groupe.
 - Interface traduite pour les débutants en français (anglais, espagnol, arabe…).

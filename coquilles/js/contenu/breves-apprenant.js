@@ -133,4 +133,36 @@
     { niv: 3, section: 'Études', titre: "Après l'examen",
       texte: "Les résultats de l'examen {seront|serons#verbe:Avec « les résultats » (ils), le futur finit par -ront.} publiés dans deux semaines. Il faut que je {sois|suis#subj:Après « il faut que », on emploie le subjonctif : il faut que je sois patient.} patient." },
   ]);
+
+  // Troisième fournée : le niveau B1 étoffé (récit au passé, constructions verbales, démarches).
+  ajouter('apprenant', [
+    { niv: 3, section: 'Souvenirs', titre: 'Un coup de téléphone',
+      texte: "Hier soir, {je regardais|j'ai regardé#imparfait:Pour l'action en cours, le décor, on emploie l'imparfait : je regardais la télévision quand…} la télévision quand le téléphone {a sonné|sonnait#imparfait:Pour l'action soudaine qui interrompt, on emploie le passé composé : le téléphone a sonné.}. C'était ma sœur : elle {venait|vient#imparfait:Dans un récit au passé, « venir de » se met à l'imparfait : elle venait de rentrer.} de rentrer du Japon." },
+    { niv: 3, section: 'Démarches', titre: 'Le titre de séjour',
+      texte: "Pour renouveler votre titre de séjour, vous devez prendre rendez-vous {à la|au#genre:« préfecture » est féminin : à la préfecture.} préfecture. Il faut que vous {apportiez|apportez#subj:Après « il faut que », on emploie le subjonctif : il faut que vous apportiez.} votre passeport et une photo {récente|récent#accord:« photo » est féminin : une photo récente.}." },
+    { niv: 3, section: 'Travail', titre: 'Un collègue efficace',
+      texte: "{C'est|Il est#cestil} un collègue très efficace. Il travaille vite et il parle anglais {mieux|meilleur#mieux} que moi." },
+    { niv: 3, section: 'Études', titre: 'Apprendre une langue',
+      texte: "J'ai décidé {d'apprendre|à apprendre#verbeprep:On dit « décider de » : j'ai décidé d'apprendre.} l'italien. Je prends des cours le mardi soir et je progresse en {écoutant|écoutent#gerondif} des chansons. J'ai déjà réussi {à|de#verbeprep:On dit « réussir à » : j'ai réussi à comprendre une chanson.} comprendre une chanson entière." },
+    { niv: 3, section: 'Voyages', titre: 'Le train était parti',
+      texte: "Quand je suis arrivé à la gare, le train {était|avait#aux:« partir » se conjugue avec être, aussi au plus-que-parfait : le train était parti.} déjà parti. J'ai dû {attendre|attendu#inf} le suivant pendant une heure." },
+    { niv: 3, section: 'Projets', titre: "L'été prochain",
+      texte: "L'été prochain, nous {irons|allerons#conj:aller au futur : j'irai, nous irons.} en Grèce. Si tout va bien, je {pourrai|pouvrai#conj:pouvoir au futur : je pourrai, avec deux r.} prendre trois semaines de congés." },
+    { niv: 3, section: 'Emploi', titre: 'Une lettre de candidature',
+      texte: "Madame, Monsieur, je souhaiterais {poser|posé#inf} ma candidature pour le poste de vendeuse. J'ai travaillé deux ans dans une boutique {où|que#rel:« où » remplace un lieu : la boutique où j'ai travaillé.} j'ai appris à conseiller les clients." },
+    { niv: 3, section: 'Logement', titre: "Les clés de l'appartement",
+      texte: "Les clés, je les ai {laissées|laissé#ppa:Le COD « les » (les clés, féminin pluriel) est placé avant : laissées.} chez la gardienne. Tu pourras {les|leur#pron:On récupère quelque chose, sans « à » : tu pourras les récupérer.} récupérer ce soir." },
+    { niv: 3, section: 'Famille', titre: 'Ma grand-mère me manque',
+      texte: "Ma grand-mère habite loin, au Maroc. Je pense souvent {à elle|lui#pron:Avec « penser à », on garde « à » + pronom : je pense à elle.} et je {lui|la#pron:On téléphone « à » quelqu'un : je lui téléphone.} téléphone chaque dimanche." },
+    { niv: 3, section: 'Courses', titre: 'Plus de pain',
+      texte: "Il n'y a {plus|pas plus#neg:Pour dire que c'est fini, on dit « ne… plus » : il n'y a plus de pain.} de pain à la boulangerie. Il ne reste que des croissants, et personne n'en {veut|veulent#verbe:Avec « personne », le verbe reste au singulier : personne n'en veut.} à cette heure-ci." },
+    { niv: 3, section: 'Santé', titre: 'Rester en forme',
+      texte: "Le médecin m'a conseillé de {faire|fais#inf} du sport pour que je {sois|suis#subj:Après « pour que », on emploie le subjonctif : pour que je sois en forme.} en forme. Le soir, je me détends en {lisant|lisent#gerondif}." },
+    { niv: 3, section: 'Météo', titre: 'Une tempête annoncée',
+      texte: "Les météorologues annoncent une tempête pour demain : il {faudra|faudrera#conj:falloir au futur : il faudra.} rester chez soi. Si le vent {souffle|soufflera#si:Après « si », on n'emploie pas le futur : si le vent souffle fort, les trains s'arrêteront.} fort, les trains s'arrêteront." },
+    { niv: 3, section: 'Sorties', titre: 'Le musée des Beaux-Arts',
+      texte: "Le musée {que|dont#rel:On visite un musée (complément direct) : le musée que nous avons visité.} nous avons visité hier était magnifique. Les tableaux {qu'on|qu'ont#on} y voit datent du XIXe siècle." },
+    { niv: 3, section: 'Restaurant', titre: 'Une réservation',
+      texte: "Bonsoir, je {voudrais|voudrai#futcond:Pour une demande polie, on emploie le conditionnel : je voudrais.} réserver une table pour quatre personnes. Pourriez-vous nous {mettre|mettez#inf:Après « pouvoir », on met l'infinitif : pourriez-vous nous mettre…} près de la fenêtre ?" },
+  ]);
 })();

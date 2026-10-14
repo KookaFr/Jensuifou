@@ -74,6 +74,11 @@
     faire: { nom: 'Il fait beau', rub: 'gram', expl: "Pour la météo, on dit « il fait beau », « il fait froid », pas « il est »." },
     yen: { nom: 'y ou en', rub: 'gram', expl: "« y » remplace un lieu (j'y vais, j'y suis allé). « en » remplace « de + nom » (j'en viens, j'en veux)." },
     pron: { nom: 'le, les ou leur', rub: 'gram', expl: "« les » remplace un COD (je les vois). « leur » remplace « à eux, à elles » (je leur parle)." },
+    imparfait: { nom: 'Imparfait ou passé composé', rub: 'gram', expl: "Dans un récit, l'imparfait décrit le décor ou l'action en cours (je regardais la télé) ; le passé composé raconte l'action soudaine (quand le téléphone a sonné)." },
+    cestil: { nom: "C'est ou il est", rub: 'gram', expl: "Devant un nom avec un article, on dit « c'est » (c'est un bon médecin). Devant un adjectif ou un métier sans article, on dit « il est » (il est médecin)." },
+    mieux: { nom: 'Mieux ou meilleur', rub: 'gram', expl: "« meilleur » est un adjectif, il accompagne un nom (un meilleur prix). « mieux » est un adverbe, il accompagne un verbe (elle parle mieux)." },
+    verbeprep: { nom: 'Verbe + de ou à', rub: 'gram', expl: "Certains verbes se construisent avec « de » (décider de, essayer de, oublier de), d'autres avec « à » (commencer à, réussir à, apprendre à)." },
+    gerondif: { nom: 'Le gérondif', rub: 'gram', expl: "Le gérondif se forme avec « en » + le radical de « nous » + -ant : nous écoutons → en écoutant. Il ne change jamais." },
     rel: { nom: 'qui, que, dont, où', rub: 'gram', expl: "« qui » est sujet (les groupes qui jouent), « que » est complément (les groupes que nous avons vus), « dont » remplace « de… » (le film dont je parle), « où » remplace un lieu ou un moment." },
 
     // Calcul et logique
