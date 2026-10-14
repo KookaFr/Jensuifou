@@ -100,6 +100,22 @@
     return m === 0 ? h + (h > 1 ? ' heures' : ' heure') : h + ' h ' + String(m).padStart(2, '0');
   };
 
+  // Compare la réponse tapée à la valeur attendue : « 4,6 » = « 4,60 »,
+  // « 10h35 » = « 10 h 35 », « 16 » = « 16 h », « 1089 » = « 1 089 ».
+  CQ.normValeur = function (s) {
+    return String(s).toLowerCase().replace(/heures?/g, 'h').replace(/minutes?/g, '')
+      .replace(/[\s\u00A0\u202F€%]/g, '').replace(/\./g, ',');
+  };
+  CQ.memeValeur = function (tape, attendu) {
+    const t = CQ.normValeur(tape), a = CQ.normValeur(attendu);
+    if (!/\d/.test(t)) return false;
+    const minutes = (s) => { const [h, m] = s.split('h'); return +h * 60 + +(m || 0); };
+    const nombre = (s) => parseFloat(s.replace(',', '.'));
+    if (a.includes('h')) return t.includes('h') ? minutes(t) === minutes(a) : /h$/.test(a) && nombre(t) * 60 === minutes(a);
+    if (t.includes('h')) return minutes(t) === nombre(a);
+    return Math.abs(nombre(t) - nombre(a)) < 1e-9;
+  };
+
   // Stockage local tolérant : un navigateur privé ou bloqué ne casse pas le jeu.
   CQ.stock = {
     lire(cle, defaut) {

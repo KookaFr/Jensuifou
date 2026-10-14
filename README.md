@@ -24,6 +24,13 @@ tout ce qu'un secrétaire de rédaction vérifie avant le bouclage :
 Les coquilles de typographie et les numéros de page se posent automatiquement sur
 n'importe quel article : le contenu n'a pas besoin de les prévoir.
 
+Pour un résultat de calcul faux (ou un âge, ou un numéro de page), il faut aussi
+**donner la bonne valeur** : parmi trois propositions aux niveaux 1 et 2, au clavier
+au niveau 3, avant la fin du compte à rebours. Chaque article de calcul enchaîne
+deux résultats ; la coquille peut tomber sur l'un ou l'autre, et trois articles sur
+dix n'en ont aucune. Les données de départ sont justes : ce sont les résultats
+qu'on vérifie.
+
 Toucher un mot juste est une **faute de zèle**. Après chaque coquille, la règle
 s'affiche en bas de l'écran, et le bilan liste les pièges de la partie. En partie
 libre, le jeu ressert plus souvent les règles qu'on rate.

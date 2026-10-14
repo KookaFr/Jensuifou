@@ -32,6 +32,15 @@ function verifierElements(elements, ou) {
     for (const t of [e.correct, ...e.fautes]) {
       if (/NaN|undefined|Infinity|null/.test(t)) erreur(`${ou} : valeur invalide « ${t} »`);
     }
+    // Les résultats à corriger : réponse présente, cohérente, et trois mauvaises propositions.
+    if (['calc', 'age', 'folio'].includes(e.code)) {
+      if (e.valeur === undefined) { erreur(`${ou} : pas de réponse attendue pour « ${e.correct} »`); continue; }
+      const enLettres = /[a-z]/.test(CQ.normValeur(e.correct).replace(/h/g, ''));
+      const coherente = enLettres ? [CQ.enLettres(+e.valeur), CQ.enLettresF(+e.valeur)].includes(e.correct) : CQ.memeValeur(e.valeur, e.correct);
+      if (!coherente) erreur(`${ou} : la réponse « ${e.valeur} » ne correspond pas à « ${e.correct} »`);
+      if (e.fautes.length < 3) erreur(`${ou} : seulement ${e.fautes.length} mauvaises propositions pour « ${e.correct} »`);
+      if (!enLettres && e.fautes.some((f) => CQ.memeValeur(f, e.valeur))) erreur(`${ou} : une faute vaut la bonne réponse (${e.correct})`);
+    }
   }
 }
 
@@ -74,6 +83,7 @@ CQ.GENERATEURS.forEach((g, k) => {
     const els = CQ.analyser(fiche.titre, (m) => erreur(`${ou} : ${m}`)).concat(CQ.analyser(fiche.texte, (m) => erreur(`${ou} : ${m}`)));
     verifierElements(els, ou);
     if (g.rub === 'calc' && !els.some((e) => e.type === 'jeton')) erreur(`${ou} : pas de jeton de calcul`);
+    if (els.filter((e) => e.code === 'calc').length === 1) erreur(`${ou} : un seul résultat, la coquille serait toujours au même endroit`);
   }
 });
 
@@ -82,6 +92,7 @@ const PUBLICS = ['enfant', 'adulte', 'apprenant'];
 const TOUTES = { ortho: true, gram: true, typo: true, calc: true, faits: true, image: true, page: true };
 const COMBINAISONS = [TOUTES].concat(Object.keys(TOUTES).map((k) => ({ [k]: true })));
 const parRegle = {};
+const position = { avant: 0, dernier: 0 };
 const bilan = {};
 for (const pub of PUBLICS) {
   for (const niveau of [1, 2, 3]) {
@@ -102,6 +113,10 @@ for (const pub of PUBLICS) {
           if (j.coquille && j.affiche === j.correct) erreur(`${ou} : coquille identique à la forme correcte « ${j.correct} »`);
           if (j.coquille && !rub[CQ.rubriqueDe(j.code)]) erreur(`${ou} : coquille « ${j.code} » hors des rubriques choisies`);
           if (j.coquille) parRegle[j.code] = (parRegle[j.code] || 0) + 1;
+          if (j.coquille && j.code === 'calc') {
+            const calculs = jetons.filter((x) => x.code === 'calc');
+            position[calculs.indexOf(j) === calculs.length - 1 ? 'dernier' : 'avant'] += 1;
+          }
           if (!CQ.REGLES[j.code]) erreur(`${ou} : règle inconnue « ${j.code} »`);
         }
         if (a.folio && a.folio.correct !== String(n + 2)) erreur(`${ou} : la page ${n + 2} porte le numéro ${a.folio.correct}`);
@@ -118,6 +133,7 @@ for (const pub of PUBLICS) {
 
 console.log('\nBrèves :', CQ.BREVES.length, '· images :', CQ.IMAGES.length, '· générateurs :', CQ.GENERATEURS.length);
 for (const [k, v] of Object.entries(bilan)) console.log(`  ${k.padEnd(16)} ${v}`);
+console.log(`Calculs : coquille sur le dernier résultat ${position.dernier} fois, sur un résultat intermédiaire ${position.avant} fois`);
 console.log('Coquilles tirées par règle :', Object.entries(parRegle).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', '));
 
 if (process.argv.includes('--exemples')) {

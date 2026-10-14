@@ -544,6 +544,63 @@ legend {
 .regles-jeu { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; font: 400 1rem/1.45 var(--f-journal); }
 .regles-jeu b { font-weight: 700; }
 
+/* ---------- Pupitre de correction ---------- */
+.pupitre { display: grid; gap: 10px; }
+.pupitre h2 { margin: 0; }
+.corr-contexte {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 2px solid var(--stylo);
+  background: #e3e1da;
+  font: 400 1.05rem/1.6 var(--f-journal);
+  color: var(--encre);
+}
+.corr-contexte .m.cible {
+  padding: 1px 3px;
+  background: var(--jaune);
+  color: var(--encre);
+  font-weight: 700;
+  text-decoration: none;
+}
+.corr-contexte .m.corrige::after { display: none; }
+.chrono { height: 4px; background: var(--papier-ombre); overflow: hidden; }
+.chrono i { display: block; height: 100%; background: var(--stylo); transform-origin: left; }
+.corr-choix { display: grid; gap: 8px; }
+.choix-valeur.btn {
+  align-items: center;
+  background: var(--encre);
+  border-color: var(--encre);
+  color: var(--papier);
+  font: 700 1.3rem/1.2 var(--f-compteur);
+  font-variant-numeric: tabular-nums;
+}
+.corr-pave { display: grid; gap: 6px; }
+.corr-saisie {
+  display: block;
+  padding: 8px 12px;
+  border: 2px solid var(--encre);
+  background: #fff;
+  font: 600 1.6rem/1.2 var(--f-compteur);
+  text-align: right;
+  min-height: 2.6rem;
+}
+.corr-saisie.vide { color: var(--papier-ombre); }
+.corr-aide { margin: 0; font: 500 0.75rem/1.3 var(--f-compteur); color: var(--encre-douce); }
+.pave { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.pave button {
+  min-height: 48px;
+  border: 1px solid var(--encre);
+  border-radius: 2px;
+  background: var(--papier);
+  color: var(--encre);
+  font: 600 1.25rem/1 var(--f-compteur);
+}
+.pave button:active { background: var(--papier-ombre); }
+.pave .large { grid-column: span 2; }
+.pave .valider { background: var(--jaune); border-color: var(--jaune); font-family: var(--f-journal); font-weight: 700; font-size: 1.1rem; }
+.pave .valider:disabled { background: var(--papier-ombre); border-color: var(--papier-ombre); color: var(--encre-douce); }
+.pupitre .lien { justify-self: center; color: var(--encre-douce); }
+
 /* ---------- Animations ---------- */
 @keyframes secoue {
   20% { transform: translateX(-3px); }
@@ -659,12 +716,14 @@ legend {
       <h2 class="bilan-titre" id="bilan-titre">Édition bouclée</h2>
       <p class="bilan-score"><b id="bilan-score">0</b> points <span class="bilan-record" id="bilan-record"></span></p>
       <div class="grille" id="bilan-grille"></div>
-      <p class="legende-grille"><span><i class="case parfait"></i>sans faute</span> <span><i class="case zele"></i>faute de zèle</span> <span><i class="case rate"></i>coquille imprimée</span></p>
+      <p class="legende-grille"><span><i class="case parfait"></i>sans faute</span> <span><i class="case zele"></i>zèle ou correction ratée</span> <span><i class="case rate"></i>coquille imprimée</span></p>
       <dl class="chiffres">
         <div><dt>Coquilles trouvées</dt><dd id="b-trouvees">0</dd></div>
         <div><dt>Coquilles imprimées</dt><dd id="b-ratees">0</dd></div>
         <div><dt>Fautes de zèle</dt><dd id="b-zeles">0</dd></div>
+        <div><dt>Corrections justes</dt><dd id="b-corrections">0</dd></div>
         <div><dt>Meilleure série</dt><dd id="b-serie">0</dd></div>
+        <div><dt>Articles imprimés</dt><dd id="b-articles">0</dd></div>
       </dl>
       <h3 class="pieges-titre" id="pieges-titre">À retenir</h3>
       <ul class="pieges" id="bilan-pieges"></ul>
@@ -689,6 +748,28 @@ legend {
     </div>
   </div>
 
+  <!-- Correction d'un résultat faux -->
+  <div class="voile voile-correction" id="voile-correction" hidden>
+    <div class="carte-voile pupitre" role="dialog" aria-modal="true" aria-labelledby="corr-titre">
+      <p class="surtitre">Correction</p>
+      <h2 id="corr-titre">Quelle est la bonne valeur ?</h2>
+      <p class="corr-contexte" id="corr-contexte"></p>
+      <div class="chrono" aria-hidden="true"><i id="corr-chrono"></i></div>
+      <div class="corr-choix" id="corr-choix"></div>
+      <div class="corr-pave" id="corr-pave" hidden>
+        <output class="corr-saisie vide" id="corr-saisie" aria-live="polite">?</output>
+        <p class="corr-aide" id="corr-aide"></p>
+        <div class="pave">
+          <button type="button" data-touche="7">7</button><button type="button" data-touche="8">8</button><button type="button" data-touche="9">9</button><button type="button" data-touche="effacer" aria-label="Effacer">⌫</button>
+          <button type="button" data-touche="4">4</button><button type="button" data-touche="5">5</button><button type="button" data-touche="6">6</button><button type="button" data-touche=",">,</button>
+          <button type="button" data-touche="1">1</button><button type="button" data-touche="2">2</button><button type="button" data-touche="3">3</button><button type="button" data-touche="h">h</button>
+          <button type="button" data-touche="0" class="large">0</button><button type="button" data-touche="valider" class="large valider" id="corr-valider" disabled>Corriger</button>
+        </div>
+      </div>
+      <button type="button" class="lien" id="corr-passer">Je ne sais pas</button>
+    </div>
+  </div>
+
   <!-- Aide -->
   <div class="voile" id="voile-aide" hidden>
     <div class="carte-voile" role="dialog" aria-modal="true" aria-labelledby="aide-titre">
@@ -697,6 +778,7 @@ legend {
         <li>Les articles montent vers la rotative. <b>Touche chaque coquille</b> avant qu'elle soit imprimée : faute d'orthographe ou de grammaire, lettres inversées, mot répété, erreur de calcul, information fausse.</li>
         <li>Le texte a toujours raison. Si <b>la photo</b> ne correspond pas au texte, touche la photo.</li>
         <li>Vérifie aussi <b>le numéro de page</b> en haut de chaque article : les pages se suivent. La rotative affiche la date du journal et la dernière page imprimée.</li>
+        <li>Dans un calcul, les données de départ sont justes : <b>vérifie chaque résultat</b>. Quand tu en trouves un faux, donne la bonne valeur : parmi trois propositions aux niveaux 1 et 2, au clavier au niveau 3.</li>
         <li>Toucher un mot juste est une <b>faute de zèle</b> : tu perds 40 points et ta série.</li>
         <li>Chaque article imprimé avec une coquille te coûte <b>un point de réputation</b>. À zéro, le rédacteur en chef arrête les rotatives.</li>
         <li><b>Bon à tirer</b> envoie le prochain article à l'impression. S'il est propre, tu gagnes un bonus d'avance.</li>
@@ -810,6 +892,22 @@ legend {
     const h = Math.floor(minutes / 60), m = minutes % 60;
     if (h === 0) return m + ' minutes';
     return m === 0 ? h + (h > 1 ? ' heures' : ' heure') : h + ' h ' + String(m).padStart(2, '0');
+  };
+
+  // Compare la réponse tapée à la valeur attendue : « 4,6 » = « 4,60 »,
+  // « 10h35 » = « 10 h 35 », « 16 » = « 16 h », « 1089 » = « 1 089 ».
+  CQ.normValeur = function (s) {
+    return String(s).toLowerCase().replace(/heures?/g, 'h').replace(/minutes?/g, '')
+      .replace(/[\s\u00A0\u202F€%]/g, '').replace(/\./g, ',');
+  };
+  CQ.memeValeur = function (tape, attendu) {
+    const t = CQ.normValeur(tape), a = CQ.normValeur(attendu);
+    if (!/\d/.test(t)) return false;
+    const minutes = (s) => { const [h, m] = s.split('h'); return +h * 60 + +(m || 0); };
+    const nombre = (s) => parseFloat(s.replace(',', '.'));
+    if (a.includes('h')) return t.includes('h') ? minutes(t) === minutes(a) : /h$/.test(a) && nombre(t) * 60 === minutes(a);
+    if (t.includes('h')) return minutes(t) === nombre(a);
+    return Math.abs(nombre(t) - nombre(a)) < 1e-9;
   };
 
   // Stockage local tolérant : un navigateur privé ou bloqué ne casse pas le jeu.
@@ -1417,8 +1515,11 @@ legend {
 </script>
 <script>
 /* Coquilles — générateurs d'articles à calculs et à compter.
-   Chaque générateur renvoie un article dont le résultat est un jeton :
-   la bonne valeur d'abord, puis des erreurs plausibles (souvent les erreurs classiques). */
+   Un article de calcul enchaîne deux résultats. Les données de départ sont justes ;
+   la coquille tombe sur l'un des résultats, et les suivants restent calculés avec
+   les vraies valeurs : la valeur fautive est donc toujours repérable.
+   Chaque résultat est un jeton : la bonne valeur, trois erreurs plausibles (les
+   erreurs classiques d'abord) et, après « = », la réponse que le joueur doit retrouver. */
 (function () {
   'use strict';
   const CQ = window.CQ;
@@ -1429,74 +1530,104 @@ legend {
   const decimal = (x) => String(Math.round(x * 100) / 100).replace('.', ',');
   const heureMin = (t) => CQ.heure(Math.floor(t / 60), t % 60);
   const eurosCts = (c) => CQ.euros(c / 100);
+  const heures = (x) => x + ' h';
 
-  // Fabrique le jeton d'une valeur : erreur classique d'abord, puis des voisines.
+  // Fabrique le jeton d'un résultat. opts : detail, fmt, pas, min, classiques, voisins, code, chiffres.
   function nombre(r, juste, opts) {
     const fmt = opts.fmt || String;
+    const pas = opts.pas || 1;
+    const min = opts.min || 1;
     const vus = new Set([fmt(juste)]);
     const fautes = [];
     const ajouter = (v) => {
-      if (!(v > 0) || fautes.length >= 2) return;
+      if (!(v >= min) || fautes.length >= 3) return;
       const f = fmt(v);
       if (vus.has(f)) return;
       vus.add(f);
       fautes.push(f);
     };
     (opts.classiques || []).forEach(ajouter);
-    r.melanger(opts.voisins || [juste + 1, juste - 1, juste + 2]).forEach(ajouter);
-    if (fautes.length === 0) fautes.push(fmt(juste + 1));
-    return `{${fmt(juste)}|${fautes.join('|')}#${opts.code || 'calc'}:${opts.detail}}`;
+    r.melanger(opts.voisins || [juste + pas, juste - pas, juste + 2 * pas]).forEach(ajouter);
+    [1, -1, 2, -2, 3, -3, 4, 5, 6].forEach((k) => ajouter(juste + k * pas));
+    const valeur = opts.chiffres ? String(juste) : fmt(juste);
+    return `{${fmt(juste)}|${fautes.join('|')}#${opts.code || 'calc'}=${valeur}:${opts.detail}}`;
   }
 
   const gen = (def) => G.push(Object.assign({ rub: 'calc' }, def));
 
-  // ---------- Enfants ----------
+  // ---------- Enfants, CE2 : additions et soustractions ----------
   gen({ pub: ['enfant'], niv: 1, fn(r) {
-    const p = r.choix(CQ.PRENOMS), a = r.entier(3, 12), b = r.entier(2, 8), s = a + b;
+    const p = r.choix(CQ.PRENOMS), a = r.entier(4, 12), b = r.entier(2, 8), s = a + b, c = r.entier(2, s - 3), reste = s - c;
     return { section: 'Récréation', titre: 'Partie de billes',
-      texte: `${p} a ${a} billes. Son copain lui en donne ${b}. Maintenant, ${p} a ${nombre(r, s, { detail: `${a} + ${b} = ${s}`, voisins: [s - 1, s + 1, s + 2, s - 2] })} billes.` };
+      texte: `${p} a ${a} billes. Son copain lui en donne ${b} : ${p} en a donc ${nombre(r, s, { detail: `${a} + ${b} = ${s}`, voisins: [s + 1, s - 1, s + 2, s + 10] })}. À la récré, ${p} en perd ${c} : il lui en reste ${nombre(r, reste, { detail: `${s} − ${c} = ${reste}`, classiques: [s + c], voisins: [reste + 1, reste - 1, reste + 2] })}.` };
   } });
 
   gen({ pub: ['enfant'], niv: 1, fn(r) {
-    const a = r.entier(9, 20), b = r.entier(2, a - 4), d = a - b;
+    const a = r.entier(12, 20), b = r.entier(3, a - 4), d = a - b, e = r.entier(2, 6), t = d + e;
     return { section: 'Cuisine', titre: 'Le goûter',
-      texte: `Il y avait ${a} crêpes sur la table. Les enfants en ont mangé ${b} : il en reste ${nombre(r, d, { detail: `${a} − ${b} = ${d}`, classiques: [a + b], voisins: [d - 1, d + 1] })}.` };
+      texte: `Il y avait ${a} crêpes sur la table. Les enfants en mangent ${b} : il en reste ${nombre(r, d, { detail: `${a} − ${b} = ${d}`, classiques: [a + b], voisins: [d + 1, d - 1] })}. Papi en fait ${e} de plus : cela fait ${nombre(r, t, { detail: `${d} + ${e} = ${t}`, voisins: [t + 1, t - 1, t + 2] })} crêpes.` };
   } });
 
+  gen({ pub: ['enfant'], niv: 1, fn(r) {
+    const a = r.entier(8, 15), m = r.entier(2, 7), s = a + m, d = r.entier(2, s - 4), reste = s - d;
+    return { section: 'Transports', titre: 'Le bus de ramassage',
+      texte: `Dans le bus, il y a ${a} enfants. À l'arrêt, ${m} enfants montent : ils sont maintenant ${nombre(r, s, { detail: `${a} + ${m} = ${s}`, voisins: [s + 1, s - 1, s + 2] })}. Plus loin, ${d} enfants descendent : il en reste ${nombre(r, reste, { detail: `${s} − ${d} = ${reste}`, classiques: [s + d], voisins: [reste + 1, reste - 1] })}.` };
+  } });
+
+  gen({ pub: ['enfant'], niv: 1, fn(r) {
+    const f = r.entier(5, 12), g = r.entier(5, 12), s = f + g, k = r.entier(3, s - 3), reste = s - k;
+    return { section: 'École', titre: 'Dans la cour',
+      texte: `Dans la cour, ${f} filles et ${g} garçons jouent : cela fait ${nombre(r, s, { detail: `${f} + ${g} = ${s}`, voisins: [s + 1, s - 1, s + 10] })} enfants. ${k} enfants rentrent en classe : ${nombre(r, reste, { detail: `${s} − ${k} = ${reste}`, voisins: [reste + 1, reste - 1, reste + 2] })} restent dehors.` };
+  } });
+
+  // ---------- Enfants, CM1 : nombres jusqu'à 100, tables, monnaie, heures ----------
   gen({ pub: ['enfant'], niv: 2, fn(r) {
-    const a = r.entier(23, 58), b = r.entier(14, 39), s = a + b;
+    const a = r.entier(23, 58), b = r.entier(14, 39), s = a + b, manque = 100 - s;
     return { section: 'École', titre: 'Collecte de bouchons',
-      texte: `La classe de CM1 a ramassé ${a} bouchons et la classe de CM2 en a ramassé ${b}. Cela fait ${nombre(r, s, { detail: `${a} + ${b} = ${s}`, classiques: [s - 10], voisins: [s + 10, s - 1, s + 1] })} bouchons pour l'association.` };
+      texte: `La classe de CM1 a ramassé ${a} bouchons et la classe de CM2 en a ramassé ${b} : cela fait ${nombre(r, s, { detail: `${a} + ${b} = ${s}`, classiques: [s - 10], voisins: [s + 10, s - 1, s + 1] })} bouchons. Il en faut 100 pour remplir le sac : il en manque encore ${nombre(r, manque, { detail: `100 − ${s} = ${manque}`, voisins: [manque + 10, manque - 10, manque + 1, manque - 1] })}.` };
   } });
 
   gen({ pub: ['enfant'], niv: 2, fn(r) {
-    const p = r.choix(CQ.PRENOMS), prix = r.entier(2, 5), k = r.entier(2, 5), s = prix * k;
+    const p = r.choix(CQ.PRENOMS), prix = r.entier(2, 5), k = r.entier(2, 3), tot = prix * k, rendu = 20 - tot;
     return { section: 'Commerces', titre: 'À la papeterie',
-      texte: `Un cahier coûte ${prix} €. ${p} en achète ${k} et paie ${nombre(r, s, { detail: `${k} × ${prix} = ${s}`, classiques: [prix + k], voisins: [s + prix, s - prix, s + 1] })} €.` };
+      texte: `Un cahier coûte ${prix} €. ${p} en achète ${k} et paie ${nombre(r, tot, { detail: `${k} × ${prix} = ${tot}`, classiques: [prix + k], voisins: [tot + prix, tot - prix, tot + 1] })} €. Avec un billet de 20 €, on lui rend ${nombre(r, rendu, { detail: `20 − ${tot} = ${rendu}`, voisins: [rendu + 1, rendu - 1, rendu + 2, rendu + 10] })} €.` };
   } });
 
   gen({ pub: ['enfant'], niv: 2, fn(r) {
-    const h = r.entier(13, 17), d = r.entier(1, 3), fin = h + d;
+    const h = r.entier(13, 16), d = r.entier(1, 2), fin = h + d, gouter = fin + 1;
     return { section: 'Cinéma', titre: 'Séance de cinéma',
-      texte: `Le film commence à ${h} h et dure ${d === 1 ? 'une heure' : d + ' heures'}. Il finit à ${nombre(r, fin, { detail: `${h} h + ${d} h = ${fin} h`, fmt: (x) => x + ' h', voisins: [fin + 1, fin - 1] })}.` };
+      texte: `Le film commence à ${h} h et dure ${d === 1 ? 'une heure' : d + ' heures'} : il finit à ${nombre(r, fin, { detail: `${h} h + ${d} h = ${fin} h`, fmt: heures, voisins: [fin + 1, fin - 1, fin + 2] })}. Le goûter est servi une heure plus tard, à ${nombre(r, gouter, { detail: `${fin} h + 1 h = ${gouter} h`, fmt: heures, voisins: [gouter + 1, gouter - 1, gouter + 2] })}.` };
   } });
 
+  gen({ pub: ['enfant'], niv: 2, fn(r) {
+    const rangs = r.entier(3, 6), parRang = r.entier(4, 9), s = rangs * parRang, manges = r.entier(3, 9), reste = s - manges;
+    return { section: 'Jardin', titre: 'Les salades du potager',
+      texte: `Les élèves ont planté ${rangs} rangs de ${parRang} salades : cela fait ${nombre(r, s, { detail: `${rangs} × ${parRang} = ${s}`, classiques: [rangs + parRang], voisins: [s + parRang, s - parRang, s + 1] })} salades. Les lapins en mangent ${manges} : il en reste ${nombre(r, reste, { detail: `${s} − ${manges} = ${reste}`, voisins: [reste + 1, reste - 1, reste + 10] })}.` };
+  } });
+
+  // ---------- Enfants, CM2 : chaînes plus longues, minutes, divisions ----------
   gen({ pub: ['enfant'], niv: 3, fn(r) {
-    const p = r.choix(CQ.PRENOMS), k = r.entier(3, 9), m = r.entier(4, 9), s = k * m;
+    const p = r.choix(CQ.PRENOMS), k = r.entier(4, 9), m = r.entier(6, 9), s = k * m, d = r.entier(5, 15), reste = s - d;
     return { section: 'École', titre: 'Le rangement de la classe',
-      texte: `${p} range ${k} boîtes de ${m} crayons. Cela fait ${nombre(r, s, { detail: `${k} × ${m} = ${s}`, voisins: [s + m, s - m, s + 1, s - 1] })} crayons en tout.` };
+      texte: `${p} range ${k} boîtes de ${m} crayons : cela fait ${nombre(r, s, { detail: `${k} × ${m} = ${s}`, voisins: [s + m, s - m, s + 1, s - 1] })} crayons. ${p} en donne ${d} à la classe voisine : il en reste ${nombre(r, reste, { detail: `${s} − ${d} = ${reste}`, voisins: [reste + 1, reste - 1, reste + 10, reste - 10] })}.` };
   } });
 
   gen({ pub: ['enfant'], niv: 3, fn(r) {
-    const p = r.choix(CQ.PRENOMS), prix = r.entier(6, 17), rendu = 20 - prix;
+    const p = r.choix(CQ.PRENOMS), livre = r.entier(8, 14), stylo = r.entier(2, 5), tot = livre + stylo, rendu = 20 - tot;
     return { section: 'Commerces', titre: 'À la librairie',
-      texte: `${p} achète un livre à ${prix} € et paie avec un billet de 20 €. La libraire lui rend ${nombre(r, rendu, { detail: `20 − ${prix} = ${rendu}`, voisins: [rendu + 1, rendu - 1, rendu + 2] })} €.` };
+      texte: `${p} achète un livre à ${livre} € et un stylo à ${stylo} € : cela fait ${nombre(r, tot, { detail: `${livre} + ${stylo} = ${tot}`, voisins: [tot + 1, tot - 1, tot + 2, tot + 10] })} €. Avec un billet de 20 €, la libraire lui rend ${nombre(r, rendu, { detail: `20 − ${tot} = ${rendu}`, voisins: [rendu + 1, rendu - 1, rendu + 2] })} €.` };
   } });
 
   gen({ pub: ['enfant'], niv: 3, fn(r) {
-    const debut = 10 * 60 + r.choix([0, 5, 10, 15, 20, 25, 30]), d = r.choix([15, 20, 25, 30]), fin = debut + d;
+    const debut = 10 * 60 + r.choix([0, 5, 10, 15, 20, 25, 30]), d = r.choix([15, 20, 25, 30]), fin = debut + d, reprise = fin + 5;
     return { section: 'École', titre: 'La récréation',
-      texte: `La récréation commence à ${heureMin(debut)} et dure ${d} minutes. Elle se termine à ${nombre(r, fin, { detail: `${heureMin(debut)} + ${d} minutes = ${heureMin(fin)}`, fmt: heureMin, voisins: [fin + 5, fin - 5, fin + 10] })}.` };
+      texte: `La récréation commence à ${heureMin(debut)} et dure ${d} minutes : elle finit à ${nombre(r, fin, { detail: `${heureMin(debut)} + ${d} minutes = ${heureMin(fin)}`, fmt: heureMin, pas: 5 })}. La classe reprend 5 minutes plus tard, à ${nombre(r, reprise, { detail: `${heureMin(fin)} + 5 minutes = ${heureMin(reprise)}`, fmt: heureMin, pas: 5 })}.` };
+  } });
+
+  gen({ pub: ['enfant'], niv: 3, fn(r) {
+    const taille = r.entier(4, 6), groupes = r.entier(4, 7), eleves = taille * groupes, adultes = r.entier(1, 2), total = groupes * adultes;
+    return { section: 'Sorties', titre: 'Sortie au château',
+      texte: `${eleves} élèves partent visiter le château. On forme des groupes de ${taille} : cela fait ${nombre(r, groupes, { detail: `${eleves} ÷ ${taille} = ${groupes}`, voisins: [groupes + 1, groupes - 1, groupes + 2] })} groupes. Avec ${adultes === 1 ? 'un adulte' : 'deux adultes'} par groupe, il faut ${nombre(r, total, { detail: `${groupes} × ${adultes} = ${total}`, voisins: [total + 1, total - 1, total + 2] })} accompagnateurs.` };
   } });
 
   // ---------- Dates impossibles (tous publics) ----------
@@ -1531,21 +1662,24 @@ legend {
 
   // ---------- Adultes ----------
   gen({ pub: ['adulte'], niv: 1, fn(r) {
-    const prix = r.entier(40, 389) * 10, billet = prix < 2000 ? r.choix([2000, 5000]) : 5000, rendu = billet - prix;
+    const q = r.entier(2, 3), baguette = r.choix([105, 110, 115, 120, 125, 130]), pain = r.entier(18, 32) * 10;
+    const tot = q * baguette + pain, billet = tot < 1000 ? 10 : 20, rendu = billet * 100 - tot;
     return { section: 'Consommation', titre: 'Rendre la monnaie',
-      texte: `Au marché, une cliente paie ${eurosCts(prix)} € avec un billet de ${billet / 100} €. Le marchand lui rend ${nombre(r, rendu, { detail: `${billet / 100} − ${eurosCts(prix)} = ${eurosCts(rendu)} €`, fmt: eurosCts, voisins: [rendu + 100, rendu - 100, rendu + 50, rendu - 50, rendu + 1000] })} €.` };
+      texte: `Une cliente achète ${q} baguettes à ${eurosCts(baguette)} € et un pain aux céréales à ${eurosCts(pain)} € : elle paie ${nombre(r, tot, { detail: `${q} × ${eurosCts(baguette)} + ${eurosCts(pain)} = ${eurosCts(tot)} €`, fmt: eurosCts, pas: 10, classiques: [baguette + pain], voisins: [tot + 100, tot - 100, tot + 50, tot - 50] })} €. Avec un billet de ${billet} €, on lui rend ${nombre(r, rendu, { detail: `${billet} − ${eurosCts(tot)} = ${eurosCts(rendu)} €`, fmt: eurosCts, pas: 10, voisins: [rendu + 100, rendu - 100, rendu + 50, rendu - 50] })} €.` };
   } });
 
   gen({ pub: ['adulte'], niv: 1, fn(r) {
-    const depart = 6 * 60 + r.entier(0, 156) * 5, d = r.entier(10, 34) * 5, arrivee = depart + d;
+    const depart = 6 * 60 + r.entier(0, 150) * 5, d = r.entier(10, 34) * 5, arrivee = depart + d;
+    const corresp = r.choix([15, 20, 25, 35, 40]), repart = arrivee + corresp;
     return { section: 'Transports', titre: 'Horaires du TER',
-      texte: `Parti à ${heureMin(depart)}, le TER est arrivé à ${heureMin(arrivee)}, après ${nombre(r, d, { detail: `De ${heureMin(depart)} à ${heureMin(arrivee)}, il s'écoule ${CQ.duree(d)}.`, fmt: CQ.duree, voisins: [d + 10, d - 10, d + 20, d - 20] })} de trajet.` };
+      texte: `Parti à ${heureMin(depart)}, le TER est arrivé à Lyon à ${heureMin(arrivee)}, soit ${nombre(r, d, { detail: `De ${heureMin(depart)} à ${heureMin(arrivee)}, il s'écoule ${CQ.duree(d)}.`, fmt: CQ.duree, pas: 5, voisins: [d + 10, d - 10, d + 20, d - 20] })} de trajet. Avec ${corresp} minutes de correspondance, le voyageur repart à ${nombre(r, repart, { detail: `${heureMin(arrivee)} + ${corresp} minutes = ${heureMin(repart)}`, fmt: heureMin, pas: 5, voisins: [repart + 10, repart - 10, repart + 60] })}.` };
   } });
 
   gen({ pub: ['adulte'], niv: 1, fn(r) {
     const total = r.entier(80, 240), f = r.entier(Math.round(total * 0.3), Math.round(total * 0.7)), h = total - f;
+    const nouveaux = r.entier(8, 30), apres = total + nouveaux;
     return { section: 'Associations', titre: 'Le club de randonnée',
-      texte: `Le club de randonnée compte ${total} adhérents : ${f} femmes et ${nombre(r, h, { detail: `${total} − ${f} = ${h}`, voisins: [h + 10, h - 10, h + 1, h - 1] })} hommes.` };
+      texte: `Le club de randonnée compte ${total} adhérents : ${f} femmes et ${nombre(r, h, { detail: `${total} − ${f} = ${h}`, voisins: [h + 10, h - 10, h + 1, h - 1] })} hommes. Avec ${nouveaux} nouvelles inscriptions, il comptera bientôt ${nombre(r, apres, { detail: `${total} + ${nouveaux} = ${apres}`, voisins: [apres + 10, apres - 10, apres + 1] })} membres.` };
   } });
 
   const ARTICLES_SOLDES = ['Une veste', 'Une lampe', 'Une valise', 'Une montre', 'Une cafetière'];
@@ -1553,113 +1687,114 @@ legend {
     const prix = r.choix([40, 60, 80, 100, 120, 150, 200]), pct = r.choix([10, 20, 25, 30, 40, 50]);
     const remise = prix * pct, solde = prix * 100 - remise; // en centimes
     return { section: 'Consommation', titre: 'Soldes : faites le calcul',
-      texte: `${r.choix(ARTICLES_SOLDES)} à ${prix} € est soldée à −${pct} %. Elle ne coûte plus que ${nombre(r, solde, { detail: `${pct} % de ${prix} € = ${eurosCts(remise)} € ; ${prix} − ${eurosCts(remise)} = ${eurosCts(solde)} €.`, fmt: eurosCts, classiques: [prix * 100 - pct * 100], voisins: [solde + 500, solde - 500, remise] })} €.` };
+      texte: `${r.choix(ARTICLES_SOLDES)} à ${prix} € est soldée à −${pct} % : la remise est de ${nombre(r, remise, { detail: `${pct} % de ${prix} € = ${prix} × ${pct} ÷ 100 = ${eurosCts(remise)} €`, fmt: eurosCts, pas: 100, classiques: [pct * 100], voisins: [remise + 500, remise - 500, remise + 1000] })} €, et elle ne coûte plus que ${nombre(r, solde, { detail: `${prix} − ${eurosCts(remise)} = ${eurosCts(solde)} €`, fmt: eurosCts, pas: 100, classiques: [prix * 100 - pct * 100], voisins: [solde + 500, solde - 500, solde + 1000] })} €.` };
   } });
 
   gen({ pub: ['adulte'], niv: 2, fn(r) {
-    const k = r.choix([4, 6, 8, 12]), u = r.entier(5, 18) * 5, lot = u * k; // centimes
+    const k1 = r.choix([4, 6]), k2 = r.choix([8, 12]), u1 = r.entier(8, 14) * 5, u2 = u1 + r.choix([-10, -5, 5]);
+    const lot1 = u1 * k1, lot2 = u2 * k2;
+    const conclusion = u2 < u1 ? 'le grand lot est plus avantageux' : 'le petit lot revient moins cher';
     return { section: 'Consommation', titre: 'Le vrai prix des yaourts',
-      texte: `Le lot de ${k} yaourts est vendu ${eurosCts(lot)} €, soit ${nombre(r, u, { detail: `${eurosCts(lot)} € ÷ ${k} = ${eurosCts(u)} €`, fmt: eurosCts, voisins: [u + 10, u - 10, u + 5, u - 5] })} € le yaourt.` };
+      texte: `Le lot de ${k1} yaourts coûte ${eurosCts(lot1)} €, soit ${nombre(r, u1, { detail: `${eurosCts(lot1)} € ÷ ${k1} = ${eurosCts(u1)} €`, fmt: eurosCts, pas: 5, voisins: [u1 + 10, u1 - 10, u1 + 5] })} € le pot. Le lot de ${k2} coûte ${eurosCts(lot2)} €, soit ${nombre(r, u2, { detail: `${eurosCts(lot2)} € ÷ ${k2} = ${eurosCts(u2)} €`, fmt: eurosCts, pas: 5, voisins: [u2 + 10, u2 - 10, u2 + 5] })} € le pot : ${conclusion}.` };
   } });
 
   const PRODUITS_KILO = [
-    { nom: 'Le paquet de @ g de café', kilos: [12, 14, 16, 20] },
-    { nom: 'La barquette de @ g de fraises', kilos: [6, 8, 10, 12] },
-    { nom: 'Le sachet de @ g de pâtes', kilos: [2, 4] },
-    { nom: 'Le morceau de @ g de comté', kilos: [16, 20, 24] },
+    { petit: 'Le paquet de @ g de café', grand: "Le paquet d'un kilo", kilos: [12, 14, 16, 20] },
+    { petit: 'Le morceau de @ g de comté', grand: "Le morceau d'un kilo", kilos: [16, 20, 24] },
   ];
   gen({ pub: ['adulte'], niv: 2, fn(r) {
-    const produit = r.choix(PRODUITS_KILO), kilo = r.choix(produit.kilos), g = r.choix([250, 500, 750]);
-    const prix = (kilo * g) / 10; // centimes
-    const calcul = g === 750 ? `${eurosCts(prix)} € ÷ 3 × 4 = ${kilo} €` : `${eurosCts(prix)} € × ${1000 / g} = ${kilo} €`;
-    const classiques = g === 250 ? [kilo / 2] : g === 500 ? [kilo * 2] : [];
+    const produit = r.choix(PRODUITS_KILO), kilo = r.choix(produit.kilos), g = r.choix([250, 500]);
+    const prix = (kilo * g) / 10, economie = r.entier(1, 4), grand = kilo - economie; // prix en centimes
     return { section: 'Consommation', titre: 'Le prix au kilo',
-      texte: `${produit.nom.replace('@', g)} coûte ${eurosCts(prix)} €, soit ${nombre(r, kilo, { detail: calcul, fmt: CQ.euros, classiques, voisins: [kilo + 2, kilo - 2, kilo + 1] })} € le kilo.` };
+      texte: `${produit.petit.replace('@', g)} coûte ${eurosCts(prix)} €, soit ${nombre(r, kilo, { detail: `${eurosCts(prix)} € × ${1000 / g} = ${kilo} €`, fmt: CQ.euros, classiques: [g === 250 ? kilo / 2 : kilo * 2], voisins: [kilo + 2, kilo - 2] })} € le kilo. ${produit.grand} coûte ${grand} € : on économise ${nombre(r, economie, { detail: `${kilo} − ${grand} = ${economie} €`, fmt: CQ.euros, voisins: [economie + 1, economie + 2, economie - 1] })} € par kilo.` };
   } });
 
   gen({ pub: ['adulte'], niv: 2, fn(r) {
-    const n = r.choix([200, 300, 400, 500, 800, 1200]), pct = r.choix([10, 15, 20, 25, 30, 40, 60, 75]), res = (n * pct) / 100;
+    const n = r.choix([200, 300, 400, 500, 800, 1200]), pct = r.choix([10, 15, 20, 25, 30, 40, 60, 75]), oui = (n * pct) / 100, autres = n - oui;
     return { section: 'Vie locale', titre: 'Le référendum local',
-      texte: `Sur ${CQ.milliers(n)} votants, ${pct} % ont voté pour le projet, soit ${nombre(r, res, { detail: `${pct} % de ${CQ.milliers(n)} = ${CQ.milliers(n)} × ${pct} ÷ 100 = ${CQ.milliers(res)}`, fmt: CQ.milliers, voisins: [res + n / 20, res - n / 20, res + 10] })} personnes.` };
+      texte: `Sur ${CQ.milliers(n)} votants, ${pct} % ont voté pour le projet, soit ${nombre(r, oui, { detail: `${pct} % de ${CQ.milliers(n)} = ${CQ.milliers(n)} × ${pct} ÷ 100 = ${CQ.milliers(oui)}`, fmt: CQ.milliers, pas: 10, voisins: [oui + n / 20, oui - n / 20, oui + 10] })} personnes. Les ${nombre(r, autres, { detail: `${CQ.milliers(n)} − ${CQ.milliers(oui)} = ${CQ.milliers(autres)}`, fmt: CQ.milliers, pas: 10, voisins: [autres + 10, autres - 10, autres + 100] })} autres ont voté contre ou blanc.` };
   } });
 
   gen({ pub: ['adulte'], niv: 2, fn(r) {
     const parPers = r.choix([50, 60, 75, 100, 125]), a = r.choix([2, 4]), b = r.choix([3, 5, 6, 8].filter((x) => x !== a));
     const q = parPers * a, res = parPers * b;
     return { section: 'Cuisine', titre: 'Règle de trois en cuisine',
-      texte: `Pour ${a} personnes, il faut ${q} g de farine. Pour ${b} personnes, il en faut donc ${nombre(r, res, { detail: `${q} g ÷ ${a} × ${b} = ${res} g`, classiques: [q + (b - a) * 10], voisins: [res + parPers, res - parPers] })} g.` };
+      texte: `Pour ${a} personnes, il faut ${q} g de farine, soit ${nombre(r, parPers, { detail: `${q} ÷ ${a} = ${parPers} g`, pas: 5, voisins: [parPers + 10, parPers - 10, parPers + 25] })} g par personne. Pour ${b} personnes, il en faut donc ${nombre(r, res, { detail: `${parPers} × ${b} = ${res} g`, pas: 10, voisins: [res + parPers, res - parPers, res + 50] })} g.` };
   } });
 
   gen({ pub: ['adulte'], niv: 3, fn(r) {
     const v = r.choix([16, 18, 20, 22, 24, 26, 28, 30]), t = r.choix([90, 120, 150, 180]), dist = (v * t) / 60;
-    const h = t / 60;
-    const fauxDecimal = t % 60 ? Math.round(dist / (Math.floor(h) + (t % 60) / 100)) : 0;
+    const t2 = r.choix([60, 90, 120, 150, 180].filter((x) => x !== t)), dist2 = (v * t2) / 60;
+    const fauxDecimal = t % 60 ? Math.round(dist / (Math.floor(t / 60) + (t % 60) / 100)) : 0;
     return { section: 'Sports', titre: 'Sortie vélo du dimanche',
-      texte: `Le cycliste a parcouru ${dist} km en ${CQ.duree(t)}, soit une moyenne de ${nombre(r, v, { detail: `${CQ.duree(t)} = ${decimal(h)} h ; ${dist} ÷ ${decimal(h)} = ${v} km/h.`, classiques: [fauxDecimal], voisins: [v + 2, v - 2] })} km/h.` };
+      texte: `Le cycliste a parcouru ${dist} km en ${CQ.duree(t)}, soit une moyenne de ${nombre(r, v, { detail: `${CQ.duree(t)} = ${decimal(t / 60)} h ; ${dist} ÷ ${decimal(t / 60)} = ${v} km/h.`, classiques: [fauxDecimal], voisins: [v + 2, v - 2, v + 4] })} km/h. À ce rythme, il lui faudrait ${nombre(r, t2, { detail: `${dist2} ÷ ${v} = ${decimal(t2 / 60)} h, soit ${CQ.duree(t2)}.`, fmt: CQ.duree, pas: 15, voisins: [t2 + 30, t2 - 30, t2 + 15] })} pour parcourir ${dist2} km.` };
   } });
 
   gen({ pub: ['adulte'], niv: 3, fn(r) {
-    const ht = r.entier(3, 24) * 50, ttc = (ht * 12) / 10;
+    const ht = r.entier(3, 24) * 50, tva = ht / 5, ttc = ht + tva;
     return { section: 'Pratique', titre: 'Le devis du plombier',
-      texte: `Un artisan facture ${CQ.milliers(ht)} € HT. Avec une TVA de 20 %, le client paiera ${nombre(r, ttc, { detail: `${CQ.milliers(ht)} × 1,2 = ${CQ.milliers(ttc)} €`, fmt: CQ.milliers, classiques: [ht + 20], voisins: [ttc + ht / 10, ttc - ht / 10] })} € TTC.` };
+      texte: `Un artisan facture ${CQ.milliers(ht)} € HT. La TVA à 20 % s'élève à ${nombre(r, tva, { detail: `20 % de ${CQ.milliers(ht)} = ${CQ.milliers(ht)} ÷ 5 = ${CQ.milliers(tva)} €`, fmt: CQ.milliers, pas: 10, classiques: [20], voisins: [tva + ht / 10, tva - ht / 10, tva + 10] })} €, soit ${nombre(r, ttc, { detail: `${CQ.milliers(ht)} + ${CQ.milliers(tva)} = ${CQ.milliers(ttc)} €`, fmt: CQ.milliers, pas: 10, classiques: [ht + 20], voisins: [ttc + ht / 10, ttc - ht / 10] })} € TTC.` };
   } });
 
   gen({ pub: ['adulte'], niv: 3, fn(r) {
-    const loyer = r.choix([500, 600, 700, 800, 900, 1000, 1200]), res = Math.round(loyer * 1.21);
+    const loyer = r.choix([500, 600, 700, 800, 900, 1000, 1200]), l1 = (loyer * 11) / 10, l2 = Math.round((loyer * 121) / 100);
     return { section: 'Logement', titre: 'Deux hausses de loyer',
-      texte: `Un loyer de ${CQ.milliers(loyer)} € augmente de 10 % en janvier, puis encore de 10 % en juillet. Il passe donc à ${nombre(r, res, { detail: `${CQ.milliers(loyer)} × 1,1 × 1,1 = ${CQ.milliers(res)} € : deux hausses de 10 % font +21 %, pas +20 %.`, fmt: CQ.milliers, classiques: [(loyer * 12) / 10], voisins: [res + 10] })} €.` };
+      texte: `Un loyer de ${CQ.milliers(loyer)} € augmente de 10 % en janvier, à ${nombre(r, l1, { detail: `${CQ.milliers(loyer)} + 10 % = ${CQ.milliers(loyer)} × 1,1 = ${CQ.milliers(l1)} €`, fmt: CQ.milliers, pas: 10, voisins: [l1 + 10, l1 - 10, l1 + 100] })} €, puis encore de 10 % en juillet, à ${nombre(r, l2, { detail: `${CQ.milliers(l1)} × 1,1 = ${CQ.milliers(l2)} € : deux hausses de 10 % font +21 %, pas +20 %.`, fmt: CQ.milliers, pas: 10, classiques: [(loyer * 12) / 10], voisins: [l2 + 10, l2 - 10] })} €.` };
   } });
 
   gen({ pub: ['adulte'], niv: 3, fn(r) {
-    const cours = r.choix([40, 60, 80, 100, 120, 200]), res = cours * 0.75;
+    const cours = r.choix([40, 60, 80, 100, 120, 200]), c1 = cours / 2, c2 = (c1 * 3) / 2;
     return { section: 'Bourse', titre: 'Les montagnes russes',
-      texte: `Une action cotée ${cours} € perd 50 % lundi, puis regagne 50 % mardi. Elle vaut désormais ${nombre(r, res, { detail: `${cours} × 0,5 = ${cours / 2} € ; ${cours / 2} × 1,5 = ${res} €. Une hausse de 50 % ne rattrape pas une baisse de 50 %.`, classiques: [cours], voisins: [res + 10] })} €.` };
+      texte: `Une action cotée ${cours} € perd 50 % lundi : elle vaut ${nombre(r, c1, { detail: `${cours} ÷ 2 = ${c1} €`, pas: 5, voisins: [c1 + 10, c1 - 10, c1 + 5] })} €. Mardi, elle regagne 50 % : elle vaut ${nombre(r, c2, { detail: `${c1} + 50 % = ${c1} × 1,5 = ${c2} €. Une hausse de 50 % ne rattrape pas une baisse de 50 %.`, pas: 5, classiques: [cours], voisins: [c2 + 10, c2 - 10] })} €.` };
   } });
 
-  // ---------- Apprenants : nombres en lettres ----------
-  const enLettres = { fmt: L };
+  // ---------- Apprenants : nombres en lettres, réponse en chiffres ----------
+  const enLettres = { fmt: L, chiffres: true, min: 2 };
+  const enLettresF = { fmt: LF, chiffres: true, min: 2 };
+  const T = (r, juste, opts, lettres) => nombre(r, juste, Object.assign({}, opts, lettres || enLettres));
+
   gen({ pub: ['apprenant'], niv: 1, fn(r) {
-    const a = r.entier(3, 6), b = r.entier(2, 4), s = a + b;
+    const a = r.entier(3, 5), b = r.entier(2, 3), s = a + b, rendu = 10 - s;
     return { section: 'Restaurant', titre: 'Un déjeuner rapide',
-      texte: `Un sandwich coûte ${L(a)} euros et une boisson ${L(b)} euros. Je paie ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, voisins: [s + 1, s - 1, s + 2] }, enLettres))} euros en tout.` };
+      texte: `Un sandwich coûte ${L(a)} euros et une boisson ${L(b)} euros : je paie ${T(r, s, { detail: `${a} + ${b} = ${s} (${L(s)})`, voisins: [s + 1, s - 1, s + 2] })} euros. Je donne dix euros : on me rend ${T(r, rendu, { detail: `10 − ${s} = ${rendu} (${L(rendu)})`, voisins: [rendu + 1, rendu + 2, rendu - 1] })} euros.` };
   } });
 
   gen({ pub: ['apprenant'], niv: 1, fn(r) {
-    const a = r.entier(6, 12), b = r.entier(2, 6), s = a + b;
-    return { section: 'Famille', titre: 'Ma grande sœur',
-      texte: `J'ai ${L(a)} ans. Ma sœur a ${L(b)} ans de plus que moi : elle a ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, voisins: [s + 1, s - 1, s + 2] }, enLettres))} ans.` };
+    const a = r.entier(8, 12), b = r.entier(2, 5), c = r.entier(2, 4);
+    return { section: 'Famille', titre: 'Mon frère et ma sœur',
+      texte: `J'ai ${L(a)} ans. Ma sœur a ${L(b)} ans de plus que moi : elle a ${T(r, a + b, { detail: `${a} + ${b} = ${a + b} (${L(a + b)})`, voisins: [a + b + 1, a + b - 1, a + b + 2] })} ans. Mon frère a ${L(c)} ans de moins que moi : il a ${T(r, a - c, { detail: `${a} − ${c} = ${a - c} (${L(a - c)})`, voisins: [a - c + 1, a - c - 1, a + c] })} ans.` };
   } });
 
   gen({ pub: ['apprenant'], niv: 2, fn(r) {
-    const a = r.entier(18, 40), b = r.entier(5, 19), s = a + b;
+    const a = r.entier(18, 35), b = r.entier(5, 19), s = a + b, ecart = r.entier(24, 30), pere = s + ecart;
     return { section: 'Famille', titre: 'Mon grand frère',
-      texte: `J'ai ${L(a)} ans. Mon frère a ${L(b)} ans de plus que moi : il a ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, voisins: [s + 1, s - 1, s + 10, s - 10] }, enLettres))} ans.` };
+      texte: `J'ai ${L(a)} ans. Mon frère a ${L(b)} ans de plus que moi : il a ${T(r, s, { detail: `${a} + ${b} = ${s} (${L(s)})`, voisins: [s + 1, s - 1, s + 10, s - 10] })} ans. Notre père a ${L(ecart)} ans de plus que lui : il a ${T(r, pere, { detail: `${s} + ${ecart} = ${pere} (${L(pere)})`, voisins: [pere + 1, pere - 1, pere + 10, pere - 10] })} ans.` };
   } });
 
   gen({ pub: ['apprenant'], niv: 2, fn(r) {
-    const a = r.entier(12, 35), b = r.entier(10, 34), s = a + b;
+    const a = r.entier(12, 35), b = r.entier(10, 30), s = a + b, reste = r.entier(3, 9), prepare = s + reste;
     return { section: 'Commerces', titre: 'La boulangerie du quartier',
-      texte: `La boulangerie a vendu ${LF(a)} baguettes le matin et ${LF(b)} l'après-midi : ${nombre(r, s, { fmt: LF, detail: `${a} + ${b} = ${s} (${LF(s)})`, voisins: [s + 1, s - 1, s + 10, s - 10] })} baguettes au total.` };
+      texte: `La boulangerie a vendu ${LF(a)} baguettes le matin et ${LF(b)} l'après-midi : ${T(r, s, { detail: `${a} + ${b} = ${s} (${LF(s)})`, voisins: [s + 1, s - 1, s + 10, s - 10] }, enLettresF)} baguettes au total. Il en reste ${LF(reste)} : elle en avait préparé ${T(r, prepare, { detail: `${s} + ${reste} = ${prepare} (${LF(prepare)})`, voisins: [prepare + 1, prepare - 1, prepare + 10] }, enLettresF)}.` };
   } });
 
   gen({ pub: ['apprenant'], niv: 2, fn(r) {
-    const depart = r.entier(6, 12), d = r.entier(2, 5), arrivee = depart + d;
+    const depart = r.entier(6, 11), d = r.entier(2, 4), arrivee = depart + d;
     return { section: 'Transports', titre: 'Le voyage en train',
-      texte: `Le train part à ${L(depart)} heures et arrive à ${L(arrivee)} heures : le voyage dure ${nombre(r, d, Object.assign({ detail: `${arrivee} − ${depart} = ${d} (${L(d)})`, voisins: [d + 1, d - 1] }, enLettres))} heures.` };
+      texte: `Le train part à ${L(depart)} heures et arrive à ${L(arrivee)} heures : le voyage dure ${T(r, d, { detail: `${arrivee} − ${depart} = ${d} (${L(d)})`, voisins: [d + 1, d - 1, d + 2] })} heures. Le retour dure une heure de plus : ${T(r, d + 1, { detail: `${d} + 1 = ${d + 1} (${L(d + 1)})`, voisins: [d + 2, d, d + 3] })} heures.` };
   } });
 
   gen({ pub: ['apprenant'], niv: 3, fn(r) {
-    const nuit = r.entier(35, 49), s = nuit * 2;
+    const nuit = r.entier(35, 49), s = nuit * 2, dej = r.entier(6, 9), total = s + 2 * dej;
     return { section: 'Voyages', titre: "Une chambre d'hôtel",
-      texte: `Une nuit à l'hôtel coûte ${L(nuit)} euros. Pour deux nuits, je paie ${nombre(r, s, Object.assign({ detail: `2 × ${nuit} = ${s} (${L(s)})`, classiques: [s + 20, s - 20], voisins: [s + 1, s - 1, s + 10] }, enLettres))} euros.` };
+      texte: `Une nuit à l'hôtel coûte ${L(nuit)} euros. Pour deux nuits, je paie ${T(r, s, { detail: `2 × ${nuit} = ${s} (${L(s)})`, classiques: [s + 20, s - 20], voisins: [s + 1, s - 1, s + 10] })} euros. Avec deux petits-déjeuners à ${L(dej)} euros, le total est de ${T(r, total, { detail: `${s} + 2 × ${dej} = ${total} (${L(total)})`, classiques: [s + dej], voisins: [total + 1, total - 1, total + 10] })} euros.` };
   } });
 
   gen({ pub: ['apprenant'], niv: 3, fn(r) {
     let a, b;
     do { a = r.entier(35, 50); b = r.entier(30, 49); } while (a + b < 70 || a + b > 99);
-    const s = a + b;
+    const s = a + b, reste = 100 - s;
     return { section: 'Commerces', titre: 'Un samedi à la boulangerie',
-      texte: `Samedi, la boulangerie a vendu ${LF(a)} baguettes le matin et ${LF(b)} l'après-midi : ${nombre(r, s, { fmt: LF, detail: `${a} + ${b} = ${s} (${LF(s)})`, classiques: [s + 20, s - 20], voisins: [s + 1, s - 1, s + 10] })} baguettes au total.` };
+      texte: `Samedi, la boulangerie a vendu ${LF(a)} baguettes le matin et ${LF(b)} l'après-midi : ${T(r, s, { detail: `${a} + ${b} = ${s} (${LF(s)})`, classiques: [s + 20, s - 20], voisins: [s + 1, s - 1, s + 10] }, enLettresF)} baguettes au total. Elle en avait préparé cent : il en reste ${T(r, reste, { detail: `100 − ${s} = ${reste} (${LF(reste)})`, voisins: [reste + 1, reste - 1, reste + 10] }, enLettresF)}.` };
   } });
 
   // ---------- Mise en page : le sommaire ----------
@@ -1806,13 +1941,16 @@ legend {
   }
 
   function lireJeton(corps, avertir) {
-    let code = null, detail = null;
+    let code = null, detail = null, valeur = null;
     const diese = corps.indexOf('#');
     if (diese >= 0) {
       const meta = corps.slice(diese + 1);
       corps = corps.slice(0, diese);
       const deux = meta.indexOf(':');
       if (deux >= 0) { code = meta.slice(0, deux); detail = meta.slice(deux + 1); } else code = meta;
+      // « #calc=12:… » : la réponse que le joueur doit retrouver.
+      const egal = code.indexOf('=');
+      if (egal >= 0) { valeur = code.slice(egal + 1); code = code.slice(0, egal); }
     }
     const options = corps.split('|');
     const correct = options[0], fautes = options.slice(1);
@@ -1820,7 +1958,9 @@ legend {
     if (!code) code = CQ.detecterRegle(correct, fautes[0] || '');
     if (!code) { avertir(`règle introuvable pour {${corps}}`); code = 'usage'; }
     if (!CQ.REGLES[code]) avertir(`règle inconnue « ${code} » pour {${corps}}`);
-    return { type: 'jeton', correct, fautes, code, detail, pre: '', post: '' };
+    const jeton = { type: 'jeton', correct, fautes, code, detail, pre: '', post: '' };
+    if (valeur !== null) jeton.valeur = valeur;
+    return jeton;
   }
 
   // « Le chat {a|à} faim. » → [mot, mot, jeton, mot]
@@ -1923,9 +2063,9 @@ legend {
   function folio(r, n, actif) {
     const fautes = [n + 1, n - 1];
     const inverse = +String(n).split('').reverse().join('');
-    if (n >= 10 && inverse !== n && n % 10) fautes.push(inverse);
+    fautes.push(n >= 10 && inverse !== n && n % 10 ? inverse : n + 2);
     const f = {
-      type: 'jeton', code: 'folio', correct: String(n), fautes: fautes.filter((x) => x >= 1).map(String),
+      type: 'jeton', code: 'folio', correct: String(n), valeur: String(n), fautes: fautes.filter((x) => x >= 1).map(String),
       detail: n === 2 ? 'La une est la page 1 : le premier article est en page 2.' : `Après la page ${n - 1} vient la page ${n}.`,
       coquille: false, affiche: String(n), pre: '', post: '',
     };
@@ -1955,7 +2095,7 @@ legend {
       // Les candidats : les jetons des rubriques choisies, plus une coquille d'imprimerie possible.
       const candidats = jetons.filter((j) => opts.rubriques[CQ.rubriqueDe(j.code)]).map((j) => ({ j, poids: faiblesse(opts.stats, j.code) }));
       if (opts.rubriques.typo) candidats.push({ typo: true, poids: (fiche.genere ? 0.35 : 0.8) * faiblesse(opts.stats, 'lettres') });
-      let n = Math.min(candidats.length, fiche.genere ? (r.chance(0.8) ? 1 : 0) : combienDeCoquilles(r, opts.niveau));
+      let n = Math.min(candidats.length, fiche.genere ? (r.chance(0.7) ? 1 : 0) : combienDeCoquilles(r, opts.niveau));
       while (n-- > 0 && candidats.length) {
         const choisi = candidats.splice(r.pondere(candidats.map((c) => c.poids)), 1)[0];
         if (choisi.typo) {
@@ -2142,7 +2282,8 @@ legend {
   const TURBO = 9;           // accélération après un « bon à tirer »
   const ACCELERATION = 0.03; // +3 % de vitesse par article imprimé…
   const ACCELERATION_MAX = 1.7; // … jusqu'à +70 %
-  const PTS = { trouve: 100, serie: 20, zele: 40, propre: 25 };
+  const PTS = { trouve: 100, serie: 20, zele: 40, propre: 25, calcul: 50, repere: 20 };
+  const DUREE_CORRECTION = { tranquille: 30, normale: 20, rapide: 12 }; // secondes pour corriger un résultat
   CQ.REPUTATION = 5;
 
   const typo = CQ.typo;
@@ -2164,7 +2305,7 @@ legend {
     const etat = {
       cartes: [], servis: 0, imprimes: 0,
       score: 0, serie: 0, meilleureSerie: 0, reputation: CQ.REPUTATION,
-      trouvees: 0, ratees: 0, zeles: 0,
+      trouvees: 0, ratees: 0, zeles: 0, corrJustes: 0, corrTotal: 0,
       resultats: [], pieges: new Map(),
       enCours: true, enPause: false, turbo: null, dernier: 0, raf: 0, H: 0, vitesse: 0,
     };
@@ -2328,6 +2469,10 @@ legend {
     function toucher(c, it, ev) {
       if (it.etat) return;
       const e = it.data;
+      if (e.coquille && e.valeur !== undefined) {
+        demanderCorrection(c, it, ev);
+        return;
+      }
       if (e.coquille) {
         it.etat = 'corrige';
         c.restantes--;
@@ -2368,6 +2513,166 @@ legend {
       }
       majTableau();
       c.h = c.el.offsetHeight;
+    }
+
+    // ---------- Corriger un résultat : trois propositions (niveaux 1 et 2) ou le clavier (niveau 3) ----------
+    let correction = null;
+
+    function melanger(liste) {
+      const l = liste.slice();
+      for (let i = l.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [l[i], l[j]] = [l[j], l[i]];
+      }
+      return l;
+    }
+
+    function aideSaisie(e) {
+      if (/minute/.test(e.correct)) return 'Écris le nombre de minutes.';
+      if (/\sh(\s|$)|heure/.test(e.correct)) return "Écris l'heure ou la durée avec h, par exemple 10h35.";
+      if (e.correct.includes(',')) return 'Utilise la virgule pour les centimes, par exemple 4,60.';
+      if (/[a-z]/.test(e.correct)) return 'Écris le nombre en chiffres.';
+      return '';
+    }
+
+    function majSaisie() {
+      $('corr-saisie').textContent = correction.saisie || '?';
+      $('corr-saisie').classList.toggle('vide', !correction.saisie);
+      $('corr-valider').disabled = !/\d/.test(correction.saisie);
+    }
+
+    function demanderCorrection(c, it, ev) {
+      const e = it.data;
+      it.etat = 'enCours';
+      etat.enPause = true;
+      rotative.classList.add('arret');
+      const clavier = opts.niveau >= 3;
+      correction = { c, it, ev, clavier, saisie: '' };
+
+      const contexte = $('corr-contexte');
+      contexte.textContent = '';
+      if (e.code === 'folio') {
+        const n = +e.correct;
+        contexte.textContent = typo(n === 2 ? `La une est la page 1. Cet article porte le numéro ${e.affiche}.` : `L'article précédent est en page ${n - 1}. Celui-ci porte le numéro ${e.affiche}.`);
+      } else {
+        const copie = it.el.closest('.corps, .titre').cloneNode(true);
+        const cible = copie.querySelector(`[data-i="${it.el.dataset.i}"]`);
+        if (cible) cible.classList.add('cible');
+        contexte.append(...copie.childNodes);
+      }
+
+      $('corr-choix').hidden = clavier;
+      $('corr-pave').hidden = !clavier;
+      if (clavier) {
+        $('corr-aide').textContent = typo(aideSaisie(e));
+        majSaisie();
+      } else {
+        const zone = $('corr-choix');
+        zone.textContent = '';
+        melanger([e.correct].concat(e.fautes.filter((f) => f !== e.affiche).slice(0, 2))).forEach((v) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn choix-valeur';
+          b.dataset.valeur = v;
+          b.textContent = typo(e.code === 'folio' ? 'page ' + v : v).replace(/ /g, '\u00A0');
+          zone.appendChild(b);
+        });
+      }
+
+      const duree = DUREE_CORRECTION[opts.vitesse || 'normale'];
+      const barre = $('corr-chrono');
+      barre.style.transition = 'none';
+      barre.style.transform = 'scaleX(1)';
+      void barre.offsetWidth;
+      barre.style.transition = `transform ${duree}s linear`;
+      barre.style.transform = 'scaleX(0)';
+      correction.minuteur = setTimeout(() => conclure(null, 'temps'), duree * 1000);
+
+      $('voile-correction').hidden = false;
+      const premier = $('voile-correction').querySelector(clavier ? '#corr-passer' : '.choix-valeur');
+      if (premier) premier.focus({ preventScroll: true });
+    }
+
+    function conclure(reponse, raison) {
+      if (!correction) return;
+      const { c, it, ev, clavier } = correction;
+      clearTimeout(correction.minuteur);
+      correction = null;
+      $('voile-correction').hidden = true;
+
+      const e = it.data;
+      const juste = reponse !== null && (clavier ? CQ.memeValeur(reponse, e.valeur) : reponse === e.correct);
+      it.etat = 'corrige';
+      c.restantes--;
+      it.el.dataset.correction = typo(e.correct);
+      it.el.classList.add('corrige');
+      etat.trouvees++;
+      etat.corrTotal++;
+      if (juste) {
+        etat.corrJustes++;
+        etat.serie++;
+        etat.meilleureSerie = Math.max(etat.meilleureSerie, etat.serie);
+        const pts = PTS.trouve + PTS.calcul + PTS.serie * (etat.serie - 1);
+        etat.score += pts;
+        flotter('+' + pts, ev);
+        dire('ok', `Bien corrigé : ${libelle(e, e.affiche)} → ${libelle(e, e.correct)}`, explication(e));
+        noter(e.code, 'trouve');
+        CQ.Son.jouer('trouve', etat.serie);
+      } else {
+        etat.serie = 0;
+        c.zele = true;
+        etat.score += PTS.repere;
+        flotter('+' + PTS.repere, ev);
+        const proposee = reponse === null ? '' : clavier ? reponse : typo(reponse);
+        // Nombre écrit en lettres : on redonne aussi les chiffres, « treize » (13).
+        const attendu = libelle(e, e.correct) + (CQ.memeValeur(e.valeur, e.correct) ? '' : ` (${e.valeur})`);
+        const titre = raison === 'temps' ? `Temps écoulé : il fallait ${attendu}.`
+          : raison === 'passe' ? `Il fallait ${attendu}.`
+          : `Bien repéré, mais il fallait ${attendu}, pas ${e.code === 'folio' ? 'page ' + proposee : '« ' + proposee + ' »'}.`;
+        dire('zele', titre, explication(e));
+        noter(e.code, 'rate');
+        retenir(e, 'correction');
+        CQ.Son.jouer('zele');
+      }
+      majTableau();
+      c.h = c.el.offsetHeight;
+      etat.enPause = false;
+      etat.dernier = 0;
+      rotative.classList.remove('arret');
+    }
+
+    function surCorrection(ev) {
+      if (!correction) return;
+      const choix = ev.target.closest('.choix-valeur');
+      if (choix) return conclure(choix.dataset.valeur, 'choix');
+      if (ev.target.closest('#corr-passer')) return conclure(null, 'passe');
+      const touche = ev.target.closest('[data-touche]');
+      if (touche) saisir(touche.dataset.touche);
+    }
+
+    function saisir(t) {
+      if (!correction || !correction.clavier) return;
+      if (t === 'valider') {
+        if (/\d/.test(correction.saisie)) conclure(correction.saisie, 'saisie');
+        return;
+      }
+      if (t === 'effacer') correction.saisie = correction.saisie.slice(0, -1);
+      else if (correction.saisie.length < 8) correction.saisie += t;
+      majSaisie();
+    }
+
+    function surClavier(ev) {
+      if (!correction) return;
+      const k = ev.key;
+      if (k === 'Escape') { ev.preventDefault(); conclure(null, 'passe'); return; }
+      if (!correction.clavier) return;
+      if (/^[0-9]$/.test(k)) saisir(k);
+      else if (k === ',' || k === '.') saisir(',');
+      else if (k === 'h' || k === 'H') saisir('h');
+      else if (k === 'Backspace') saisir('effacer');
+      else if (k === 'Enter') saisir('valider');
+      else return;
+      ev.preventDefault();
     }
 
     function bonATirer(c) {
@@ -2475,6 +2780,8 @@ legend {
       rotative.classList.add('arret');
       rail.removeEventListener('pointerdown', surPointeur);
       rail.removeEventListener('click', surClic);
+      $('voile-correction').removeEventListener('click', surCorrection);
+      document.removeEventListener('keydown', surClavier);
       window.removeEventListener('resize', mesurer);
       document.removeEventListener('visibilitychange', surVisibilite);
       CQ.stock.ecrire('stats', stats);
@@ -2485,6 +2792,8 @@ legend {
         trouvees: etat.trouvees,
         ratees: etat.ratees,
         zeles: etat.zeles,
+        corrJustes: etat.corrJustes,
+        corrTotal: etat.corrTotal,
         meilleureSerie: etat.meilleureSerie,
         resultats: etat.resultats,
         pieges: Array.from(etat.pieges.values()),
@@ -2493,14 +2802,14 @@ legend {
 
     const controle = {
       pause() {
-        if (!etat.enCours) return;
+        if (!etat.enCours || correction) return;
         etat.enPause = true;
         rotative.classList.add('arret');
         $('voile-pause').hidden = false;
         $('btn-reprendre').focus();
       },
       reprendre() {
-        if (!etat.enCours) return;
+        if (!etat.enCours || correction) return;
         $('voile-pause').hidden = true;
         etat.enPause = false;
         etat.dernier = 0;
@@ -2524,6 +2833,8 @@ legend {
     mesurer();
     rail.addEventListener('pointerdown', surPointeur);
     rail.addEventListener('click', surClic);
+    $('voile-correction').addEventListener('click', surCorrection);
+    document.addEventListener('keydown', surClavier);
     window.addEventListener('resize', mesurer);
     document.addEventListener('visibilitychange', surVisibilite);
     ajouterCarte(Math.round(etat.H * 0.3));
@@ -2679,15 +2990,18 @@ legend {
     $('b-ratees').textContent = res.ratees;
     $('b-zeles').textContent = res.zeles;
     $('b-serie').textContent = res.meilleureSerie;
+    $('b-corrections').textContent = res.corrTotal ? `${res.corrJustes}/${res.corrTotal}` : '—';
+    $('b-articles').textContent = res.resultats.length;
 
     const liste = $('bilan-pieges');
     liste.innerHTML = '';
     // Les coquilles ratées d'abord, puis les fautes de zèle.
-    const pieges = res.pieges.slice().sort((a, b) => (a.quoi === 'rate' ? 0 : 1) - (b.quoi === 'rate' ? 0 : 1));
+    const ordre = { rate: 0, correction: 1, zele: 2 };
+    const pieges = res.pieges.slice().sort((a, b) => ordre[a.quoi] - ordre[b.quoi]);
     pieges.slice(0, 8).forEach((p) => {
       const li = document.createElement('li');
       const nom = document.createElement('b');
-      nom.textContent = p.nom + (p.quoi === 'zele' ? ' (tu as cru voir une faute)' : '');
+      nom.textContent = p.nom + (p.quoi === 'zele' ? ' (tu as cru voir une faute)' : p.quoi === 'correction' ? ' (bien repéré, mal corrigé)' : '');
       li.appendChild(nom);
       if (p.exemple) {
         const ex = document.createElement('span');

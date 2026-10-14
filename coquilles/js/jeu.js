@@ -10,7 +10,8 @@
   const TURBO = 9;           // accélération après un « bon à tirer »
   const ACCELERATION = 0.03; // +3 % de vitesse par article imprimé…
   const ACCELERATION_MAX = 1.7; // … jusqu'à +70 %
-  const PTS = { trouve: 100, serie: 20, zele: 40, propre: 25 };
+  const PTS = { trouve: 100, serie: 20, zele: 40, propre: 25, calcul: 50, repere: 20 };
+  const DUREE_CORRECTION = { tranquille: 30, normale: 20, rapide: 12 }; // secondes pour corriger un résultat
   CQ.REPUTATION = 5;
 
   const typo = CQ.typo;
@@ -32,7 +33,7 @@
     const etat = {
       cartes: [], servis: 0, imprimes: 0,
       score: 0, serie: 0, meilleureSerie: 0, reputation: CQ.REPUTATION,
-      trouvees: 0, ratees: 0, zeles: 0,
+      trouvees: 0, ratees: 0, zeles: 0, corrJustes: 0, corrTotal: 0,
       resultats: [], pieges: new Map(),
       enCours: true, enPause: false, turbo: null, dernier: 0, raf: 0, H: 0, vitesse: 0,
     };
@@ -196,6 +197,10 @@
     function toucher(c, it, ev) {
       if (it.etat) return;
       const e = it.data;
+      if (e.coquille && e.valeur !== undefined) {
+        demanderCorrection(c, it, ev);
+        return;
+      }
       if (e.coquille) {
         it.etat = 'corrige';
         c.restantes--;
@@ -236,6 +241,166 @@
       }
       majTableau();
       c.h = c.el.offsetHeight;
+    }
+
+    // ---------- Corriger un résultat : trois propositions (niveaux 1 et 2) ou le clavier (niveau 3) ----------
+    let correction = null;
+
+    function melanger(liste) {
+      const l = liste.slice();
+      for (let i = l.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [l[i], l[j]] = [l[j], l[i]];
+      }
+      return l;
+    }
+
+    function aideSaisie(e) {
+      if (/minute/.test(e.correct)) return 'Écris le nombre de minutes.';
+      if (/\sh(\s|$)|heure/.test(e.correct)) return "Écris l'heure ou la durée avec h, par exemple 10h35.";
+      if (e.correct.includes(',')) return 'Utilise la virgule pour les centimes, par exemple 4,60.';
+      if (/[a-z]/.test(e.correct)) return 'Écris le nombre en chiffres.';
+      return '';
+    }
+
+    function majSaisie() {
+      $('corr-saisie').textContent = correction.saisie || '?';
+      $('corr-saisie').classList.toggle('vide', !correction.saisie);
+      $('corr-valider').disabled = !/\d/.test(correction.saisie);
+    }
+
+    function demanderCorrection(c, it, ev) {
+      const e = it.data;
+      it.etat = 'enCours';
+      etat.enPause = true;
+      rotative.classList.add('arret');
+      const clavier = opts.niveau >= 3;
+      correction = { c, it, ev, clavier, saisie: '' };
+
+      const contexte = $('corr-contexte');
+      contexte.textContent = '';
+      if (e.code === 'folio') {
+        const n = +e.correct;
+        contexte.textContent = typo(n === 2 ? `La une est la page 1. Cet article porte le numéro ${e.affiche}.` : `L'article précédent est en page ${n - 1}. Celui-ci porte le numéro ${e.affiche}.`);
+      } else {
+        const copie = it.el.closest('.corps, .titre').cloneNode(true);
+        const cible = copie.querySelector(`[data-i="${it.el.dataset.i}"]`);
+        if (cible) cible.classList.add('cible');
+        contexte.append(...copie.childNodes);
+      }
+
+      $('corr-choix').hidden = clavier;
+      $('corr-pave').hidden = !clavier;
+      if (clavier) {
+        $('corr-aide').textContent = typo(aideSaisie(e));
+        majSaisie();
+      } else {
+        const zone = $('corr-choix');
+        zone.textContent = '';
+        melanger([e.correct].concat(e.fautes.filter((f) => f !== e.affiche).slice(0, 2))).forEach((v) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn choix-valeur';
+          b.dataset.valeur = v;
+          b.textContent = typo(e.code === 'folio' ? 'page ' + v : v).replace(/ /g, '\u00A0');
+          zone.appendChild(b);
+        });
+      }
+
+      const duree = DUREE_CORRECTION[opts.vitesse || 'normale'];
+      const barre = $('corr-chrono');
+      barre.style.transition = 'none';
+      barre.style.transform = 'scaleX(1)';
+      void barre.offsetWidth;
+      barre.style.transition = `transform ${duree}s linear`;
+      barre.style.transform = 'scaleX(0)';
+      correction.minuteur = setTimeout(() => conclure(null, 'temps'), duree * 1000);
+
+      $('voile-correction').hidden = false;
+      const premier = $('voile-correction').querySelector(clavier ? '#corr-passer' : '.choix-valeur');
+      if (premier) premier.focus({ preventScroll: true });
+    }
+
+    function conclure(reponse, raison) {
+      if (!correction) return;
+      const { c, it, ev, clavier } = correction;
+      clearTimeout(correction.minuteur);
+      correction = null;
+      $('voile-correction').hidden = true;
+
+      const e = it.data;
+      const juste = reponse !== null && (clavier ? CQ.memeValeur(reponse, e.valeur) : reponse === e.correct);
+      it.etat = 'corrige';
+      c.restantes--;
+      it.el.dataset.correction = typo(e.correct);
+      it.el.classList.add('corrige');
+      etat.trouvees++;
+      etat.corrTotal++;
+      if (juste) {
+        etat.corrJustes++;
+        etat.serie++;
+        etat.meilleureSerie = Math.max(etat.meilleureSerie, etat.serie);
+        const pts = PTS.trouve + PTS.calcul + PTS.serie * (etat.serie - 1);
+        etat.score += pts;
+        flotter('+' + pts, ev);
+        dire('ok', `Bien corrigé : ${libelle(e, e.affiche)} → ${libelle(e, e.correct)}`, explication(e));
+        noter(e.code, 'trouve');
+        CQ.Son.jouer('trouve', etat.serie);
+      } else {
+        etat.serie = 0;
+        c.zele = true;
+        etat.score += PTS.repere;
+        flotter('+' + PTS.repere, ev);
+        const proposee = reponse === null ? '' : clavier ? reponse : typo(reponse);
+        // Nombre écrit en lettres : on redonne aussi les chiffres, « treize » (13).
+        const attendu = libelle(e, e.correct) + (CQ.memeValeur(e.valeur, e.correct) ? '' : ` (${e.valeur})`);
+        const titre = raison === 'temps' ? `Temps écoulé : il fallait ${attendu}.`
+          : raison === 'passe' ? `Il fallait ${attendu}.`
+          : `Bien repéré, mais il fallait ${attendu}, pas ${e.code === 'folio' ? 'page ' + proposee : '« ' + proposee + ' »'}.`;
+        dire('zele', titre, explication(e));
+        noter(e.code, 'rate');
+        retenir(e, 'correction');
+        CQ.Son.jouer('zele');
+      }
+      majTableau();
+      c.h = c.el.offsetHeight;
+      etat.enPause = false;
+      etat.dernier = 0;
+      rotative.classList.remove('arret');
+    }
+
+    function surCorrection(ev) {
+      if (!correction) return;
+      const choix = ev.target.closest('.choix-valeur');
+      if (choix) return conclure(choix.dataset.valeur, 'choix');
+      if (ev.target.closest('#corr-passer')) return conclure(null, 'passe');
+      const touche = ev.target.closest('[data-touche]');
+      if (touche) saisir(touche.dataset.touche);
+    }
+
+    function saisir(t) {
+      if (!correction || !correction.clavier) return;
+      if (t === 'valider') {
+        if (/\d/.test(correction.saisie)) conclure(correction.saisie, 'saisie');
+        return;
+      }
+      if (t === 'effacer') correction.saisie = correction.saisie.slice(0, -1);
+      else if (correction.saisie.length < 8) correction.saisie += t;
+      majSaisie();
+    }
+
+    function surClavier(ev) {
+      if (!correction) return;
+      const k = ev.key;
+      if (k === 'Escape') { ev.preventDefault(); conclure(null, 'passe'); return; }
+      if (!correction.clavier) return;
+      if (/^[0-9]$/.test(k)) saisir(k);
+      else if (k === ',' || k === '.') saisir(',');
+      else if (k === 'h' || k === 'H') saisir('h');
+      else if (k === 'Backspace') saisir('effacer');
+      else if (k === 'Enter') saisir('valider');
+      else return;
+      ev.preventDefault();
     }
 
     function bonATirer(c) {
@@ -343,6 +508,8 @@
       rotative.classList.add('arret');
       rail.removeEventListener('pointerdown', surPointeur);
       rail.removeEventListener('click', surClic);
+      $('voile-correction').removeEventListener('click', surCorrection);
+      document.removeEventListener('keydown', surClavier);
       window.removeEventListener('resize', mesurer);
       document.removeEventListener('visibilitychange', surVisibilite);
       CQ.stock.ecrire('stats', stats);
@@ -353,6 +520,8 @@
         trouvees: etat.trouvees,
         ratees: etat.ratees,
         zeles: etat.zeles,
+        corrJustes: etat.corrJustes,
+        corrTotal: etat.corrTotal,
         meilleureSerie: etat.meilleureSerie,
         resultats: etat.resultats,
         pieges: Array.from(etat.pieges.values()),
@@ -361,14 +530,14 @@
 
     const controle = {
       pause() {
-        if (!etat.enCours) return;
+        if (!etat.enCours || correction) return;
         etat.enPause = true;
         rotative.classList.add('arret');
         $('voile-pause').hidden = false;
         $('btn-reprendre').focus();
       },
       reprendre() {
-        if (!etat.enCours) return;
+        if (!etat.enCours || correction) return;
         $('voile-pause').hidden = true;
         etat.enPause = false;
         etat.dernier = 0;
@@ -392,6 +561,8 @@
     mesurer();
     rail.addEventListener('pointerdown', surPointeur);
     rail.addEventListener('click', surClic);
+    $('voile-correction').addEventListener('click', surCorrection);
+    document.addEventListener('keydown', surClavier);
     window.addEventListener('resize', mesurer);
     document.addEventListener('visibilitychange', surVisibilite);
     ajouterCarte(Math.round(etat.H * 0.3));

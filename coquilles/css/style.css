@@ -531,6 +531,63 @@ legend {
 .regles-jeu { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; font: 400 1rem/1.45 var(--f-journal); }
 .regles-jeu b { font-weight: 700; }
 
+/* ---------- Pupitre de correction ---------- */
+.pupitre { display: grid; gap: 10px; }
+.pupitre h2 { margin: 0; }
+.corr-contexte {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 2px solid var(--stylo);
+  background: #e3e1da;
+  font: 400 1.05rem/1.6 var(--f-journal);
+  color: var(--encre);
+}
+.corr-contexte .m.cible {
+  padding: 1px 3px;
+  background: var(--jaune);
+  color: var(--encre);
+  font-weight: 700;
+  text-decoration: none;
+}
+.corr-contexte .m.corrige::after { display: none; }
+.chrono { height: 4px; background: var(--papier-ombre); overflow: hidden; }
+.chrono i { display: block; height: 100%; background: var(--stylo); transform-origin: left; }
+.corr-choix { display: grid; gap: 8px; }
+.choix-valeur.btn {
+  align-items: center;
+  background: var(--encre);
+  border-color: var(--encre);
+  color: var(--papier);
+  font: 700 1.3rem/1.2 var(--f-compteur);
+  font-variant-numeric: tabular-nums;
+}
+.corr-pave { display: grid; gap: 6px; }
+.corr-saisie {
+  display: block;
+  padding: 8px 12px;
+  border: 2px solid var(--encre);
+  background: #fff;
+  font: 600 1.6rem/1.2 var(--f-compteur);
+  text-align: right;
+  min-height: 2.6rem;
+}
+.corr-saisie.vide { color: var(--papier-ombre); }
+.corr-aide { margin: 0; font: 500 0.75rem/1.3 var(--f-compteur); color: var(--encre-douce); }
+.pave { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.pave button {
+  min-height: 48px;
+  border: 1px solid var(--encre);
+  border-radius: 2px;
+  background: var(--papier);
+  color: var(--encre);
+  font: 600 1.25rem/1 var(--f-compteur);
+}
+.pave button:active { background: var(--papier-ombre); }
+.pave .large { grid-column: span 2; }
+.pave .valider { background: var(--jaune); border-color: var(--jaune); font-family: var(--f-journal); font-weight: 700; font-size: 1.1rem; }
+.pave .valider:disabled { background: var(--papier-ombre); border-color: var(--papier-ombre); color: var(--encre-douce); }
+.pupitre .lien { justify-self: center; color: var(--encre-douce); }
+
 /* ---------- Animations ---------- */
 @keyframes secoue {
   20% { transform: translateX(-3px); }

@@ -144,15 +144,18 @@
     $('b-ratees').textContent = res.ratees;
     $('b-zeles').textContent = res.zeles;
     $('b-serie').textContent = res.meilleureSerie;
+    $('b-corrections').textContent = res.corrTotal ? `${res.corrJustes}/${res.corrTotal}` : '—';
+    $('b-articles').textContent = res.resultats.length;
 
     const liste = $('bilan-pieges');
     liste.innerHTML = '';
     // Les coquilles ratées d'abord, puis les fautes de zèle.
-    const pieges = res.pieges.slice().sort((a, b) => (a.quoi === 'rate' ? 0 : 1) - (b.quoi === 'rate' ? 0 : 1));
+    const ordre = { rate: 0, correction: 1, zele: 2 };
+    const pieges = res.pieges.slice().sort((a, b) => ordre[a.quoi] - ordre[b.quoi]);
     pieges.slice(0, 8).forEach((p) => {
       const li = document.createElement('li');
       const nom = document.createElement('b');
-      nom.textContent = p.nom + (p.quoi === 'zele' ? ' (tu as cru voir une faute)' : '');
+      nom.textContent = p.nom + (p.quoi === 'zele' ? ' (tu as cru voir une faute)' : p.quoi === 'correction' ? ' (bien repéré, mal corrigé)' : '');
       li.appendChild(nom);
       if (p.exemple) {
         const ex = document.createElement('span');

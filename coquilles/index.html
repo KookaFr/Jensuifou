@@ -108,12 +108,14 @@
       <h2 class="bilan-titre" id="bilan-titre">Édition bouclée</h2>
       <p class="bilan-score"><b id="bilan-score">0</b> points <span class="bilan-record" id="bilan-record"></span></p>
       <div class="grille" id="bilan-grille"></div>
-      <p class="legende-grille"><span><i class="case parfait"></i>sans faute</span> <span><i class="case zele"></i>faute de zèle</span> <span><i class="case rate"></i>coquille imprimée</span></p>
+      <p class="legende-grille"><span><i class="case parfait"></i>sans faute</span> <span><i class="case zele"></i>zèle ou correction ratée</span> <span><i class="case rate"></i>coquille imprimée</span></p>
       <dl class="chiffres">
         <div><dt>Coquilles trouvées</dt><dd id="b-trouvees">0</dd></div>
         <div><dt>Coquilles imprimées</dt><dd id="b-ratees">0</dd></div>
         <div><dt>Fautes de zèle</dt><dd id="b-zeles">0</dd></div>
+        <div><dt>Corrections justes</dt><dd id="b-corrections">0</dd></div>
         <div><dt>Meilleure série</dt><dd id="b-serie">0</dd></div>
+        <div><dt>Articles imprimés</dt><dd id="b-articles">0</dd></div>
       </dl>
       <h3 class="pieges-titre" id="pieges-titre">À retenir</h3>
       <ul class="pieges" id="bilan-pieges"></ul>
@@ -138,6 +140,28 @@
     </div>
   </div>
 
+  <!-- Correction d'un résultat faux -->
+  <div class="voile voile-correction" id="voile-correction" hidden>
+    <div class="carte-voile pupitre" role="dialog" aria-modal="true" aria-labelledby="corr-titre">
+      <p class="surtitre">Correction</p>
+      <h2 id="corr-titre">Quelle est la bonne valeur ?</h2>
+      <p class="corr-contexte" id="corr-contexte"></p>
+      <div class="chrono" aria-hidden="true"><i id="corr-chrono"></i></div>
+      <div class="corr-choix" id="corr-choix"></div>
+      <div class="corr-pave" id="corr-pave" hidden>
+        <output class="corr-saisie vide" id="corr-saisie" aria-live="polite">?</output>
+        <p class="corr-aide" id="corr-aide"></p>
+        <div class="pave">
+          <button type="button" data-touche="7">7</button><button type="button" data-touche="8">8</button><button type="button" data-touche="9">9</button><button type="button" data-touche="effacer" aria-label="Effacer">⌫</button>
+          <button type="button" data-touche="4">4</button><button type="button" data-touche="5">5</button><button type="button" data-touche="6">6</button><button type="button" data-touche=",">,</button>
+          <button type="button" data-touche="1">1</button><button type="button" data-touche="2">2</button><button type="button" data-touche="3">3</button><button type="button" data-touche="h">h</button>
+          <button type="button" data-touche="0" class="large">0</button><button type="button" data-touche="valider" class="large valider" id="corr-valider" disabled>Corriger</button>
+        </div>
+      </div>
+      <button type="button" class="lien" id="corr-passer">Je ne sais pas</button>
+    </div>
+  </div>
+
   <!-- Aide -->
   <div class="voile" id="voile-aide" hidden>
     <div class="carte-voile" role="dialog" aria-modal="true" aria-labelledby="aide-titre">
@@ -146,6 +170,7 @@
         <li>Les articles montent vers la rotative. <b>Touche chaque coquille</b> avant qu'elle soit imprimée : faute d'orthographe ou de grammaire, lettres inversées, mot répété, erreur de calcul, information fausse.</li>
         <li>Le texte a toujours raison. Si <b>la photo</b> ne correspond pas au texte, touche la photo.</li>
         <li>Vérifie aussi <b>le numéro de page</b> en haut de chaque article : les pages se suivent. La rotative affiche la date du journal et la dernière page imprimée.</li>
+        <li>Dans un calcul, les données de départ sont justes : <b>vérifie chaque résultat</b>. Quand tu en trouves un faux, donne la bonne valeur : parmi trois propositions aux niveaux 1 et 2, au clavier au niveau 3.</li>
         <li>Toucher un mot juste est une <b>faute de zèle</b> : tu perds 40 points et ta série.</li>
         <li>Chaque article imprimé avec une coquille te coûte <b>un point de réputation</b>. À zéro, le rédacteur en chef arrête les rotatives.</li>
         <li><b>Bon à tirer</b> envoie le prochain article à l'impression. S'il est propre, tu gagnes un bonus d'avance.</li>

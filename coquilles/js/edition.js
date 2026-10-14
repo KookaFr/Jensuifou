@@ -53,13 +53,16 @@
   }
 
   function lireJeton(corps, avertir) {
-    let code = null, detail = null;
+    let code = null, detail = null, valeur = null;
     const diese = corps.indexOf('#');
     if (diese >= 0) {
       const meta = corps.slice(diese + 1);
       corps = corps.slice(0, diese);
       const deux = meta.indexOf(':');
       if (deux >= 0) { code = meta.slice(0, deux); detail = meta.slice(deux + 1); } else code = meta;
+      // « #calc=12:… » : la réponse que le joueur doit retrouver.
+      const egal = code.indexOf('=');
+      if (egal >= 0) { valeur = code.slice(egal + 1); code = code.slice(0, egal); }
     }
     const options = corps.split('|');
     const correct = options[0], fautes = options.slice(1);
@@ -67,7 +70,9 @@
     if (!code) code = CQ.detecterRegle(correct, fautes[0] || '');
     if (!code) { avertir(`règle introuvable pour {${corps}}`); code = 'usage'; }
     if (!CQ.REGLES[code]) avertir(`règle inconnue « ${code} » pour {${corps}}`);
-    return { type: 'jeton', correct, fautes, code, detail, pre: '', post: '' };
+    const jeton = { type: 'jeton', correct, fautes, code, detail, pre: '', post: '' };
+    if (valeur !== null) jeton.valeur = valeur;
+    return jeton;
   }
 
   // « Le chat {a|à} faim. » → [mot, mot, jeton, mot]
@@ -170,9 +175,9 @@
   function folio(r, n, actif) {
     const fautes = [n + 1, n - 1];
     const inverse = +String(n).split('').reverse().join('');
-    if (n >= 10 && inverse !== n && n % 10) fautes.push(inverse);
+    fautes.push(n >= 10 && inverse !== n && n % 10 ? inverse : n + 2);
     const f = {
-      type: 'jeton', code: 'folio', correct: String(n), fautes: fautes.filter((x) => x >= 1).map(String),
+      type: 'jeton', code: 'folio', correct: String(n), valeur: String(n), fautes: fautes.filter((x) => x >= 1).map(String),
       detail: n === 2 ? 'La une est la page 1 : le premier article est en page 2.' : `Après la page ${n - 1} vient la page ${n}.`,
       coquille: false, affiche: String(n), pre: '', post: '',
     };
@@ -202,7 +207,7 @@
       // Les candidats : les jetons des rubriques choisies, plus une coquille d'imprimerie possible.
       const candidats = jetons.filter((j) => opts.rubriques[CQ.rubriqueDe(j.code)]).map((j) => ({ j, poids: faiblesse(opts.stats, j.code) }));
       if (opts.rubriques.typo) candidats.push({ typo: true, poids: (fiche.genere ? 0.35 : 0.8) * faiblesse(opts.stats, 'lettres') });
-      let n = Math.min(candidats.length, fiche.genere ? (r.chance(0.8) ? 1 : 0) : combienDeCoquilles(r, opts.niveau));
+      let n = Math.min(candidats.length, fiche.genere ? (r.chance(0.7) ? 1 : 0) : combienDeCoquilles(r, opts.niveau));
       while (n-- > 0 && candidats.length) {
         const choisi = candidats.splice(r.pondere(candidats.map((c) => c.poids)), 1)[0];
         if (choisi.typo) {
