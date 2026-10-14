@@ -10,11 +10,12 @@
     apprenant: ['A1', 'A2', 'B1'],
   };
   const LECTEURS = { enfant: 'Enfant', adulte: 'Adulte', apprenant: 'Apprenant' };
+  const t = CQ.t;
   const TOUTES = { ortho: true, gram: true, typo: true, calc: true, faits: true, image: true, page: true };
   const ARTICLES_DU_JOUR = 10;
   const CASES = { parfait: '🟦', zele: '🟨', rate: '🟥' };
 
-  const DEFAUT = { public: 'adulte', niveau: 1, vitesse: 'normale', rubriques: TOUTES };
+  const DEFAUT = { public: 'adulte', niveau: 1, vitesse: 'normale', rubriques: TOUTES, langue: 'fr' };
   let reglages = Object.assign({}, DEFAUT, CQ.stock.lire('reglages', {}));
   reglages.rubriques = Object.assign({}, TOUTES, reglages.rubriques);
 
@@ -23,6 +24,8 @@
   let apresAide = null;
 
   const etoiles = (n) => '★'.repeat(n);
+  // Les explications dans une autre langue sont proposées aux personnes qui apprennent le français.
+  const langueActive = () => (reglages.public === 'apprenant' && CQ.LANGUES[reglages.langue] ? reglages.langue : 'fr');
   const cleJour = () => `jour:${CQ.cleDuJour()}:${reglages.public}:${reglages.niveau}`;
   const cleRecord = () => `record:${reglages.public}:${reglages.niveau}`;
 
@@ -41,6 +44,9 @@
     $('vit-' + reglages.vitesse).checked = true;
     Object.keys(TOUTES).forEach((r) => { $('rub-' + r).checked = !!reglages.rubriques[r]; });
     NIVEAUX[reglages.public].forEach((nom, i) => { $(`niv-${i + 1}-nom`).textContent = nom; });
+    $('champ-langue').hidden = reglages.public !== 'apprenant';
+    const choixLangue = $('lang-' + reglages.langue) || $('lang-fr');
+    if (choixLangue) choixLangue.checked = true;
 
     const jour = CQ.stock.lire(cleJour(), null);
     $('etat-jour').textContent = jour
@@ -59,6 +65,8 @@
     reglages.public = f.querySelector('input[name=public]:checked').value;
     reglages.niveau = +f.querySelector('input[name=niveau]:checked').value;
     reglages.vitesse = f.querySelector('input[name=vitesse]:checked').value;
+    const langue = f.querySelector('input[name=langue]:checked');
+    reglages.langue = langue ? langue.value : 'fr';
     const rub = {};
     f.querySelectorAll('input[name=rubrique]').forEach((c) => { rub[c.value] = c.checked; });
     reglages.rubriques = rub;
@@ -84,8 +92,33 @@
     return Object.assign(base, { pioche });
   }
 
+  function construireChoixLangue() {
+    const zone = $('choix-langue');
+    zone.textContent = '';
+    Object.keys(CQ.LANGUES).forEach((code) => {
+      const L = CQ.LANGUES[code];
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'langue';
+      input.id = 'lang-' + code;
+      input.value = code;
+      const label = document.createElement('label');
+      label.htmlFor = input.id;
+      label.lang = code;
+      label.textContent = L.nom;
+      if (code !== 'fr') {
+        const s = document.createElement('small');
+        s.lang = 'fr';
+        s.textContent = L.nomFr;
+        label.appendChild(s);
+      }
+      zone.append(input, label);
+    });
+  }
+
   function lancer(mode) {
     CQ.Son.reveiller();
+    CQ.choisirLangue(langueActive());
     if (!CQ.stock.lire('aideVue', false)) {
       apresAide = () => lancer(mode);
       ouvrirAide();
@@ -104,14 +137,14 @@
   function montrerBilan(opts, res) {
     const jour = opts.mode === 'jour';
     const numero = CQ.numeroEdition();
-    const lecteur = `${LECTEURS[opts.public]} ${etoiles(opts.niveau)}`;
+    const lecteur = `${t('lecteur.' + opts.public)} ${etoiles(opts.niveau)}`;
     const total = res.trouvees + res.ratees;
 
-    $('bilan-surtitre').textContent = jour ? `Édition n°${numero} · ${lecteur}` : `Partie libre · ${lecteur}`;
+    $('bilan-surtitre').textContent = jour ? t('bilan.jour', { n: numero, lecteur }) : t('bilan.libre', { lecteur });
     $('bilan-titre').textContent = {
-      bouclage: res.ratees === 0 ? 'Édition parfaite' : 'Édition bouclée',
-      reputation: 'Le rédacteur en chef a arrêté les rotatives',
-      abandon: 'Partie arrêtée',
+      bouclage: res.ratees === 0 ? t('bilan.parfait') : t('bilan.boucle'),
+      reputation: t('bilan.reputation'),
+      abandon: t('bilan.abandon'),
     }[res.raison];
     $('bilan-score').textContent = CQ.milliers(res.score);
 
@@ -119,14 +152,14 @@
     if (jour) {
       const deja = CQ.stock.lire(cleJour(), null);
       if (!deja) CQ.stock.ecrire(cleJour(), { score: res.score, resultats: res.resultats, trouvees: res.trouvees, total });
-      else mention = `Score retenu pour aujourd'hui : ${CQ.milliers(deja.score)} points`;
+      else mention = t('bilan.retenu', { n: CQ.milliers(deja.score) });
     } else {
       const record = CQ.stock.lire(cleRecord(), 0);
       if (res.score > record) {
         CQ.stock.ecrire(cleRecord(), res.score);
-        mention = record ? `Nouveau record ! L'ancien : ${CQ.milliers(record)} points` : 'Premier record enregistré';
+        mention = record ? t('bilan.nouveau', { n: CQ.milliers(record) }) : t('bilan.premier');
       } else {
-        mention = `Record : ${CQ.milliers(record)} points`;
+        mention = t('bilan.record', { n: CQ.milliers(record) });
       }
     }
     $('bilan-record').textContent = mention;
@@ -138,7 +171,7 @@
       c.className = 'case ' + r;
       grille.appendChild(c);
     });
-    grille.setAttribute('aria-label', `${res.resultats.filter((r) => r === 'parfait').length} articles sans faute sur ${res.resultats.length}`);
+    grille.setAttribute('aria-label', t('bilan.grille', { p: res.resultats.filter((r) => r === 'parfait').length, n: res.resultats.length }));
 
     $('b-trouvees').textContent = `${res.trouvees}/${total}`;
     $('b-ratees').textContent = res.ratees;
@@ -155,7 +188,7 @@
     pieges.slice(0, 8).forEach((p) => {
       const li = document.createElement('li');
       const nom = document.createElement('b');
-      nom.textContent = p.nom + (p.quoi === 'zele' ? ' (tu as cru voir une faute)' : p.quoi === 'correction' ? ' (bien repéré, mal corrigé)' : '');
+      nom.textContent = p.nom + (p.quoi === 'rate' ? '' : t('piege.suffixe.' + p.quoi));
       li.appendChild(nom);
       if (p.exemple) {
         const ex = document.createElement('span');
@@ -168,18 +201,18 @@
       li.appendChild(expl);
       liste.appendChild(li);
     });
-    $('pieges-titre').textContent = res.pieges.length ? 'À retenir' : 'Aucun piège ne t’a eu cette fois.';
+    $('pieges-titre').textContent = res.pieges.length ? t('bilan.retenir') : t('bilan.aucun');
 
     const texte = [
-      jour ? `Coquilles n°${numero} · ${lecteur}` : `Coquilles · partie libre · ${lecteur}`,
+      jour ? t('partage.jour', { n: numero, lecteur }) : t('partage.libre', { lecteur }),
       res.resultats.slice(0, 30).map((r) => CASES[r]).join(''),
-      `${CQ.milliers(res.score)} points · ${res.trouvees}/${total} coquilles trouvées`,
+      t('partage.score', { score: CQ.milliers(res.score), t: res.trouvees, total }),
     ].join('\n');
     const zone = $('texte-partage');
     zone.value = texte;
     zone.hidden = true;
-    $('btn-partager').firstChild.textContent = 'Copier le résultat';
-    $('rejouer-detail').textContent = jour ? "Rejouer l'édition du jour (hors classement)" : 'Nouvelle partie libre';
+    $('partager-texte').textContent = t('partage.copier');
+    $('rejouer-detail').textContent = jour ? t('rejouer.jour') : t('rejouer.libre');
 
     CQ.typographier($('ecran-bilan'));
     afficher('ecran-bilan');
@@ -188,15 +221,14 @@
 
   function partager() {
     const zone = $('texte-partage');
-    const bouton = $('btn-partager');
     const montrer = () => {
       zone.hidden = false;
       zone.focus();
       zone.select();
-      bouton.firstChild.textContent = 'Sélectionne le texte ci-dessus';
+      $('partager-texte').textContent = t('partage.selection');
     };
     try {
-      navigator.clipboard.writeText(zone.value).then(() => { bouton.firstChild.textContent = 'Résultat copié'; }, montrer);
+      navigator.clipboard.writeText(zone.value).then(() => { $('partager-texte').textContent = t('partage.copie'); }, montrer);
     } catch (e) {
       montrer();
     }
@@ -204,6 +236,7 @@
 
   // ---------- Aide ----------
   function ouvrirAide() {
+    CQ.choisirLangue(langueActive());
     $('voile-aide').hidden = false;
     $('btn-aide-ok').focus();
   }
@@ -218,6 +251,7 @@
   // ---------- Branchements ----------
   function demarrer() {
     document.documentElement.lang = 'fr';
+    construireChoixLangue();
     CQ.typographier(document.body);
     majUne();
     $('reglages').addEventListener('change', (ev) => {
@@ -236,7 +270,7 @@
     $('btn-abandonner').addEventListener('click', () => partie && partie.abandonner());
     $('btn-partager').addEventListener('click', partager);
     $('btn-rejouer').addEventListener('click', () => lancer(derniere || 'libre'));
-    $('btn-une').addEventListener('click', () => { majUne(); afficher('ecran-une'); });
+    $('btn-une').addEventListener('click', () => { CQ.choisirLangue('fr'); majUne(); afficher('ecran-une'); });
     document.addEventListener('keydown', (ev) => {
       if (ev.key !== 'Escape') return;
       if (!$('voile-aide').hidden) fermerAide();

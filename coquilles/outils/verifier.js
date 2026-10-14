@@ -9,7 +9,7 @@ const vm = require('vm');
 
 const racine = path.join(__dirname, '..');
 const FICHIERS = [
-  'js/util.js', 'js/regles.js',
+  'js/util.js', 'js/langue.js', 'js/langues/ja.js', 'js/regles.js',
   'js/contenu/breves-enfant.js', 'js/contenu/breves-adulte.js', 'js/contenu/breves-apprenant.js', 'js/contenu/faits.js',
   'js/contenu/images.js', 'js/contenu/generateurs.js', 'js/edition.js',
 ];
@@ -129,6 +129,39 @@ for (const pub of PUBLICS) {
       if (Object.keys(rub).length === 4) bilan[`${pub} niv.${niveau}`] = `${(coquilles / 60).toFixed(2)} coquille(s)/article, ${vides}/60 sans faute`;
     }
   }
+}
+
+// 5. Langues des explications : tout doit être traduit pour les apprenants.
+const html = fs.readFileSync(path.join(racine, 'index.html'), 'utf8');
+const clesPage = [...html.matchAll(/data-t(?:-aria)?="([^"]+)"/g)].map((m) => m[1]);
+const clesUi = Object.keys(CQ.LANGUES.fr.ui).concat(clesPage);
+for (const code of Object.keys(CQ.LANGUES).filter((c) => c !== 'fr')) {
+  const L = CQ.LANGUES[code];
+  const manque = (quoi) => erreur(`langue ${code} : ${quoi}`);
+  for (const k of clesUi) if (!L.ui || L.ui[k] === undefined) manque(`texte d'interface « ${k} » non traduit`);
+  for (const k of Object.keys(CQ.LANGUES.fr.gabarits)) if (!L.gabarits || !L.gabarits[k]) manque(`modèle « ${k} » non traduit`);
+  for (const k of Object.keys(CQ.REGLES)) if (!L.regles || !L.regles[k] || !L.regles[k].nom || !L.regles[k].expl) manque(`règle « ${k} » non traduite`);
+  for (const k of Object.keys(L.details || {})) {
+    if (/[|{}#]/.test(L.details[k])) manque(`la traduction de « ${k} » contient | { } ou #`);
+  }
+  CQ.langue = code;
+  const nonTraduit = new Set();
+  const controler = (texte, ou) => { if (texte && CQ.detail(texte) === null) nonTraduit.add(`${ou} : ${texte}`); };
+  for (const b of CQ.BREVES.filter((b) => b.pub === 'apprenant')) {
+    for (const e of CQ.analyser(b.titre + ' ' + b.texte)) if (e.type === 'jeton') controler(e.detail, `brève « ${b.titre} »`);
+  }
+  for (const i of CQ.IMAGES.filter((i) => i.pub.includes('apprenant'))) controler(i.expl, `image « ${i.titre} »`);
+  for (const niveau of [1, 2, 3]) {
+    const p = CQ.creerPioche({ public: 'apprenant', niveau, rubriques: TOUTES, hasard: CQ.hasard(77 + niveau), stats: {} });
+    for (let n = 0; n < 300; n++) {
+      const a = p.suivant();
+      for (const e of a.titre.concat(a.texte, a.folio ? [a.folio] : [])) if (e.type === 'jeton') controler(e.detail, `article « ${a.titre.map((x) => x.texte || x.correct).join(' ')} »`);
+      if (a.image) controler(a.image.expl, 'photo');
+    }
+  }
+  CQ.langue = 'fr';
+  for (const x of nonTraduit) manque(`explication non traduite — ${x}`);
+  console.log(`Langue ${code} : ${Object.keys(L.details || {}).length} explications, ${Object.keys(L.regles || {}).length} règles, ${Object.keys(L.ui || {}).length} textes d'interface.`);
 }
 
 console.log('\nBrèves :', CQ.BREVES.length, '· images :', CQ.IMAGES.length, '· générateurs :', CQ.GENERATEURS.length);

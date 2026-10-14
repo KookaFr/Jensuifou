@@ -162,8 +162,8 @@
     const { e, coeur, ponct } = r.choix(candidats[sorte]);
     let faute = null, detail = null;
     if (sorte === 'lettres') faute = abimer(r, coeur);
-    if (sorte === 'doublon') { faute = coeur + ' ' + coeur; detail = `« ${coeur} » est imprimé deux fois de suite.`; }
-    if (sorte === 'majuscule') { faute = coeur[0].toLowerCase() + coeur.slice(1); detail = `« ${coeur} » est un nom propre : il prend une majuscule.`; }
+    if (sorte === 'doublon') { faute = coeur + ' ' + coeur; detail = CQ.D('doublon', { mot: coeur }); }
+    if (sorte === 'majuscule') { faute = coeur[0].toLowerCase() + coeur.slice(1); detail = CQ.D('majuscule', { mot: coeur }); }
     if (sorte === 'accentmaj') faute = SANS_ACCENT[coeur[0]] + coeur.slice(1);
     if (!faute || faute === coeur) return false;
     delete e.texte;
@@ -178,7 +178,7 @@
     fautes.push(n >= 10 && inverse !== n && n % 10 ? inverse : n + 2);
     const f = {
       type: 'jeton', code: 'folio', correct: String(n), valeur: String(n), fautes: fautes.filter((x) => x >= 1).map(String),
-      detail: n === 2 ? 'La une est la page 1 : le premier article est en page 2.' : `Après la page ${n - 1} vient la page ${n}.`,
+      detail: n === 2 ? CQ.D('folioUne') : CQ.D('folio', { precedente: n - 1, n }),
       coquille: false, affiche: String(n), pre: '', post: '',
     };
     if (actif && r.chance(0.12)) {

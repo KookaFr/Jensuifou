@@ -57,6 +57,11 @@
         </div>
       </fieldset>
 
+      <fieldset id="champ-langue" hidden>
+        <legend>Langue des explications</legend>
+        <div class="choix" id="choix-langue"></div>
+      </fieldset>
+
       <fieldset>
         <legend>Rubriques de la partie libre</legend>
         <div class="choix">
@@ -85,14 +90,14 @@
   <!-- La salle des rotatives : la partie -->
   <section class="ecran ecran-jeu" id="ecran-jeu" hidden>
     <div class="tableau">
-      <div class="compteur"><span class="etiquette">Points</span><b id="hud-score">0</b></div>
-      <div class="compteur"><span class="etiquette">Série</span><b id="hud-serie">×0</b></div>
-      <div class="compteur"><span class="etiquette">Réputation</span><span class="pastilles" id="hud-reputation"></span></div>
-      <button type="button" class="btn-pause" id="btn-pause" aria-label="Mettre en pause"><span></span><span></span></button>
+      <div class="compteur"><span class="etiquette" data-t="hud.points">Points</span><b id="hud-score">0</b></div>
+      <div class="compteur"><span class="etiquette" data-t="hud.serie">Série</span><b id="hud-serie">×0</b></div>
+      <div class="compteur"><span class="etiquette" data-t="hud.reputation">Réputation</span><span class="pastilles" id="hud-reputation"></span></div>
+      <button type="button" class="btn-pause" id="btn-pause" aria-label="Mettre en pause" data-t-aria="hud.pause"><span></span><span></span></button>
     </div>
     <div class="rotative" id="rotative">
       <span class="date-rotative" id="hud-date">Édition du jour</span>
-      <span class="tirage">Dernière page <b id="hud-tirage">1</b></span>
+      <span class="tirage"><span data-t="hud.page">Dernière page</span> <b id="hud-tirage">1</b></span>
     </div>
     <div class="plateau" id="plateau"><div class="rail" id="rail"></div></div>
     <div class="marbre" id="marbre" aria-live="polite">
@@ -106,24 +111,24 @@
     <div class="feuille">
       <p class="surtitre" id="bilan-surtitre">Édition n°1</p>
       <h2 class="bilan-titre" id="bilan-titre">Édition bouclée</h2>
-      <p class="bilan-score"><b id="bilan-score">0</b> points <span class="bilan-record" id="bilan-record"></span></p>
+      <p class="bilan-score"><b id="bilan-score">0</b> <span data-t="bilan.points">points</span> <span class="bilan-record" id="bilan-record"></span></p>
       <div class="grille" id="bilan-grille"></div>
-      <p class="legende-grille"><span><i class="case parfait"></i>sans faute</span> <span><i class="case zele"></i>zèle ou correction ratée</span> <span><i class="case rate"></i>coquille imprimée</span></p>
+      <p class="legende-grille"><span><i class="case parfait"></i><span data-t="case.parfait">sans faute</span></span> <span><i class="case zele"></i><span data-t="case.zele">zèle ou correction ratée</span></span> <span><i class="case rate"></i><span data-t="case.rate">coquille imprimée</span></span></p>
       <dl class="chiffres">
-        <div><dt>Coquilles trouvées</dt><dd id="b-trouvees">0</dd></div>
-        <div><dt>Coquilles imprimées</dt><dd id="b-ratees">0</dd></div>
-        <div><dt>Fautes de zèle</dt><dd id="b-zeles">0</dd></div>
-        <div><dt>Corrections justes</dt><dd id="b-corrections">0</dd></div>
-        <div><dt>Meilleure série</dt><dd id="b-serie">0</dd></div>
-        <div><dt>Articles imprimés</dt><dd id="b-articles">0</dd></div>
+        <div><dt data-t="b.trouvees">Coquilles trouvées</dt><dd id="b-trouvees">0</dd></div>
+        <div><dt data-t="b.ratees">Coquilles imprimées</dt><dd id="b-ratees">0</dd></div>
+        <div><dt data-t="b.zeles">Fautes de zèle</dt><dd id="b-zeles">0</dd></div>
+        <div><dt data-t="b.corrections">Corrections justes</dt><dd id="b-corrections">0</dd></div>
+        <div><dt data-t="b.serie">Meilleure série</dt><dd id="b-serie">0</dd></div>
+        <div><dt data-t="b.articles">Articles imprimés</dt><dd id="b-articles">0</dd></div>
       </dl>
       <h3 class="pieges-titre" id="pieges-titre">À retenir</h3>
       <ul class="pieges" id="bilan-pieges"></ul>
-      <textarea class="texte-partage" id="texte-partage" readonly hidden aria-label="Résultat à partager"></textarea>
+      <textarea class="texte-partage" id="texte-partage" readonly hidden aria-label="Résultat à partager" data-t-aria="partage.zone"></textarea>
       <div class="actions">
-        <button type="button" class="btn btn-principal" id="btn-partager">Copier le résultat<small>Pour le partager</small></button>
-        <button type="button" class="btn" id="btn-rejouer">Rejouer<small id="rejouer-detail">Nouvelle partie libre</small></button>
-        <button type="button" class="lien" id="btn-une">Retour à la une</button>
+        <button type="button" class="btn btn-principal" id="btn-partager"><span id="partager-texte">Copier le résultat</span><small data-t="partage.pour">Pour le partager</small></button>
+        <button type="button" class="btn" id="btn-rejouer"><span data-t="btn.rejouer">Rejouer</span><small id="rejouer-detail">Nouvelle partie libre</small></button>
+        <button type="button" class="lien" id="btn-une" data-t="btn.une">Retour à la une</button>
       </div>
     </div>
   </section>
@@ -131,11 +136,11 @@
   <!-- Pause -->
   <div class="voile" id="voile-pause" hidden>
     <div class="carte-voile" role="dialog" aria-modal="true" aria-labelledby="pause-titre">
-      <h2 id="pause-titre">Rotative à l'arrêt</h2>
-      <p>La partie reprend où tu l'as laissée.</p>
+      <h2 id="pause-titre" data-t="pause.titre">Rotative à l'arrêt</h2>
+      <p data-t="pause.texte">La partie reprend où tu l'as laissée.</p>
       <div class="actions">
-        <button type="button" class="btn btn-principal" id="btn-reprendre">Reprendre</button>
-        <button type="button" class="btn" id="btn-abandonner">Arrêter la partie</button>
+        <button type="button" class="btn btn-principal" id="btn-reprendre" data-t="pause.reprendre">Reprendre</button>
+        <button type="button" class="btn" id="btn-abandonner" data-t="pause.arreter">Arrêter la partie</button>
       </div>
     </div>
   </div>
@@ -143,8 +148,8 @@
   <!-- Correction d'un résultat faux -->
   <div class="voile voile-correction" id="voile-correction" hidden>
     <div class="carte-voile pupitre" role="dialog" aria-modal="true" aria-labelledby="corr-titre">
-      <p class="surtitre">Correction</p>
-      <h2 id="corr-titre">Quelle est la bonne valeur ?</h2>
+      <p class="surtitre" data-t="corr.surtitre">Correction</p>
+      <h2 id="corr-titre" data-t="corr.titre">Quelle est la bonne valeur ?</h2>
       <p class="corr-contexte" id="corr-contexte"></p>
       <div class="chrono" aria-hidden="true"><i id="corr-chrono"></i></div>
       <div class="corr-choix" id="corr-choix"></div>
@@ -152,38 +157,40 @@
         <output class="corr-saisie vide" id="corr-saisie" aria-live="polite">?</output>
         <p class="corr-aide" id="corr-aide"></p>
         <div class="pave">
-          <button type="button" data-touche="7">7</button><button type="button" data-touche="8">8</button><button type="button" data-touche="9">9</button><button type="button" data-touche="effacer" aria-label="Effacer">⌫</button>
+          <button type="button" data-touche="7">7</button><button type="button" data-touche="8">8</button><button type="button" data-touche="9">9</button><button type="button" data-touche="effacer" aria-label="Effacer" data-t-aria="corr.effacer">⌫</button>
           <button type="button" data-touche="4">4</button><button type="button" data-touche="5">5</button><button type="button" data-touche="6">6</button><button type="button" data-touche=",">,</button>
           <button type="button" data-touche="1">1</button><button type="button" data-touche="2">2</button><button type="button" data-touche="3">3</button><button type="button" data-touche="h">h</button>
-          <button type="button" data-touche="0" class="large">0</button><button type="button" data-touche="valider" class="large valider" id="corr-valider" disabled>Corriger</button>
+          <button type="button" data-touche="0" class="large">0</button><button type="button" data-touche="valider" class="large valider" id="corr-valider" disabled data-t="corr.valider">Corriger</button>
         </div>
       </div>
-      <button type="button" class="lien" id="corr-passer">Je ne sais pas</button>
+      <button type="button" class="lien" id="corr-passer" data-t="corr.passer">Je ne sais pas</button>
     </div>
   </div>
 
   <!-- Aide -->
   <div class="voile" id="voile-aide" hidden>
     <div class="carte-voile" role="dialog" aria-modal="true" aria-labelledby="aide-titre">
-      <h2 id="aide-titre">Comment jouer</h2>
+      <h2 id="aide-titre" data-t="aide.titre">Comment jouer</h2>
       <ol class="regles-jeu">
-        <li>Les articles montent vers la rotative. <b>Touche chaque coquille</b> avant qu'elle soit imprimée : faute d'orthographe ou de grammaire, lettres inversées, mot répété, erreur de calcul, information fausse.</li>
-        <li>Le texte a toujours raison. Si <b>la photo</b> ne correspond pas au texte, touche la photo.</li>
-        <li>Vérifie aussi <b>le numéro de page</b> en haut de chaque article : les pages se suivent. La rotative affiche la date du journal et la dernière page imprimée.</li>
-        <li>Dans un calcul, les données de départ sont justes : <b>vérifie chaque résultat</b>. Quand tu en trouves un faux, donne la bonne valeur : parmi trois propositions aux niveaux 1 et 2, au clavier au niveau 3.</li>
-        <li>Toucher un mot juste est une <b>faute de zèle</b> : tu perds 40 points et ta série.</li>
-        <li>Chaque article imprimé avec une coquille te coûte <b>un point de réputation</b>. À zéro, le rédacteur en chef arrête les rotatives.</li>
-        <li><b>Bon à tirer</b> envoie le prochain article à l'impression. S'il est propre, tu gagnes un bonus d'avance.</li>
-        <li>Certains articles n'ont aucune faute. Après chaque correction, la règle s'affiche en bas de l'écran.</li>
+        <li data-t="aide.1">Les articles montent vers la rotative. <b>Touche chaque coquille</b> avant qu'elle soit imprimée : faute d'orthographe ou de grammaire, lettres inversées, mot répété, erreur de calcul, information fausse.</li>
+        <li data-t="aide.2">Le texte a toujours raison. Si <b>la photo</b> ne correspond pas au texte, touche la photo.</li>
+        <li data-t="aide.3">Vérifie aussi <b>le numéro de page</b> en haut de chaque article : les pages se suivent. La rotative affiche la date du journal et la dernière page imprimée.</li>
+        <li data-t="aide.4">Dans un calcul, les données de départ sont justes : <b>vérifie chaque résultat</b>. Quand tu en trouves un faux, donne la bonne valeur : parmi trois propositions aux niveaux 1 et 2, au clavier au niveau 3.</li>
+        <li data-t="aide.5">Toucher un mot juste est une <b>faute de zèle</b> : tu perds 40 points et ta série.</li>
+        <li data-t="aide.6">Chaque article imprimé avec une coquille te coûte <b>un point de réputation</b>. À zéro, le rédacteur en chef arrête les rotatives.</li>
+        <li data-t="aide.7"><b>Bon à tirer</b> envoie le prochain article à l'impression. S'il est propre, tu gagnes un bonus d'avance.</li>
+        <li data-t="aide.8">Certains articles n'ont aucune faute. Après chaque correction, la règle s'affiche en bas de l'écran.</li>
       </ol>
       <div class="actions">
-        <button type="button" class="btn btn-principal" id="btn-aide-ok">C'est parti</button>
+        <button type="button" class="btn btn-principal" id="btn-aide-ok" data-t="aide.ok">C'est parti</button>
       </div>
     </div>
   </div>
 
 </div>
 <script src="js/util.js"></script>
+<script src="js/langue.js"></script>
+<script src="js/langues/ja.js"></script>
 <script src="js/regles.js"></script>
 <script src="js/contenu/breves-enfant.js"></script>
 <script src="js/contenu/breves-adulte.js"></script>

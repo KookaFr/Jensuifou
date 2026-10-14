@@ -18,13 +18,13 @@
   // Codes dont le détail suffit : inutile d'y ajouter la règle générale.
   const SEUL_DETAIL = ['usage', 'calc', 'date', 'fait', 'age', 'jour', 'sommaire', 'titre', 'coherence', 'majuscule', 'doublon', 'folio'];
 
-  const libelle = (e, v) => (e.code === 'folio' ? 'page ' + v : `« ${typo(v)} »`);
+  const t = CQ.t;
+  const libelle = (e, v) => (e.code === 'folio' ? t('page', { n: v }) : t('citation', { x: typo(v) }));
 
+  // L'explication propre au mot si elle existe dans la langue choisie, sinon celle de la règle.
   function explication(e) {
-    if (e.type === 'image') return e.expl;
-    if (e.detail) return typo(e.detail);
-    const r = CQ.REGLES[e.code];
-    return r ? typo(r.expl) : '';
+    const propre = CQ.detail(e.type === 'image' ? e.expl : e.detail);
+    return typo(propre || CQ.regle(e.code).expl);
   }
 
   // Lance une partie. opts : mode, public, niveau, vitesse, rubriques, pioche ou file.
@@ -47,12 +47,13 @@
     function retenir(e, quoi) {
       const cle = e.code + (e.detail ? ':' + e.detail : '');
       if (etat.pieges.has(cle)) return;
-      const regle = CQ.REGLES[e.code] || CQ.REGLES.usage;
+      const regle = CQ.regle(e.code);
+      const propre = CQ.detail(e.type === 'image' ? e.expl : e.detail);
       etat.pieges.set(cle, {
         quoi,
         nom: regle.nom,
-        exemple: e.type === 'image' ? '' : quoi === 'zele' ? `${libelle(e, e.correct)} était juste` : `${libelle(e, e.affiche)} → ${libelle(e, e.correct)}`,
-        expl: e.type === 'image' ? e.expl : e.detail ? typo(e.detail) + (SEUL_DETAIL.includes(e.code) ? '' : ' ' + typo(regle.expl)) : typo(regle.expl),
+        exemple: e.type === 'image' ? '' : quoi === 'zele' ? t('piege.zele', { juste: libelle(e, e.correct) }) : `${libelle(e, e.affiche)} → ${libelle(e, e.correct)}`,
+        expl: typo(propre ? propre + (SEUL_DETAIL.includes(e.code) || e.type === 'image' ? '' : t('separateur') + regle.expl) : regle.expl),
       });
     }
 
@@ -117,6 +118,7 @@
     function construire(article) {
       const el = document.createElement('article');
       el.className = 'epreuve';
+      el.lang = 'fr'; // l'article reste en français, quelle que soit la langue des explications
       const items = [];
 
       const tete = document.createElement('div');
@@ -216,7 +218,7 @@
         }
         it.el.classList.add('corrige');
         flotter('+' + pts, ev);
-        dire('ok', e.type === 'image' ? 'Bien vu : la photo ne correspondait pas.' : `Bien vu : ${libelle(e, e.affiche)} → ${libelle(e, e.correct)}`, explication(e));
+        dire('ok', e.type === 'image' ? t('ok.photo') : t('ok.mot', { faux: libelle(e, e.affiche), juste: libelle(e, e.correct) }), explication(e));
         noter(e.code, 'trouve');
         CQ.Son.jouer('trouve', etat.serie);
       } else {
@@ -228,13 +230,13 @@
         etat.zeles++;
         flotter('−' + PTS.zele, ev, true);
         if (e.type === 'jeton') {
-          dire('zele', `Faute de zèle : ${libelle(e, e.correct)} était juste.`, explication(e));
+          dire('zele', t('zele.mot', { juste: libelle(e, e.correct) }), explication(e));
           noter(e.code, 'zele');
           retenir(e, 'zele');
         } else if (e.type === 'image') {
-          dire('zele', 'Faute de zèle : la photo était juste.', e.expl);
+          dire('zele', t('zele.photo'), explication(e));
         } else {
-          dire('zele', `Faute de zèle : « ${typo(e.texte)} » était juste.`, "Ne touche que les vraies coquilles : chaque erreur coûte 40 points et ta série.");
+          dire('zele', t('zele.mot', { juste: t('citation', { x: typo(e.texte) }) }), t('zele.conseil'));
         }
         CQ.Son.jouer('zele');
         CQ.vibrer(40);
@@ -256,10 +258,10 @@
     }
 
     function aideSaisie(e) {
-      if (/minute/.test(e.correct)) return 'Écris le nombre de minutes.';
-      if (/\sh(\s|$)|heure/.test(e.correct)) return "Écris l'heure ou la durée avec h, par exemple 10h35.";
-      if (e.correct.includes(',')) return 'Utilise la virgule pour les centimes, par exemple 4,60.';
-      if (/[a-z]/.test(e.correct)) return 'Écris le nombre en chiffres.';
+      if (/minute/.test(e.correct)) return t('aide.minutes');
+      if (/\sh(\s|$)|heure/.test(e.correct)) return t('aide.heure');
+      if (e.correct.includes(',')) return t('aide.virgule');
+      if (/[a-z]/.test(e.correct)) return t('aide.chiffres');
       return '';
     }
 
@@ -281,8 +283,10 @@
       contexte.textContent = '';
       if (e.code === 'folio') {
         const n = +e.correct;
-        contexte.textContent = typo(n === 2 ? `La une est la page 1. Cet article porte le numéro ${e.affiche}.` : `L'article précédent est en page ${n - 1}. Celui-ci porte le numéro ${e.affiche}.`);
+        contexte.lang = CQ.langue;
+        contexte.textContent = typo(n === 2 ? t('corr.une', { n: e.affiche }) : t('corr.precedent', { p: n - 1, n: e.affiche }));
       } else {
+        contexte.lang = 'fr';
         const copie = it.el.closest('.corps, .titre').cloneNode(true);
         const cible = copie.querySelector(`[data-i="${it.el.dataset.i}"]`);
         if (cible) cible.classList.add('cible');
@@ -302,7 +306,7 @@
           b.type = 'button';
           b.className = 'btn choix-valeur';
           b.dataset.valeur = v;
-          b.textContent = typo(e.code === 'folio' ? 'page ' + v : v).replace(/ /g, '\u00A0');
+          b.textContent = typo(e.code === 'folio' ? t('page', { n: v }) : v).replace(/ /g, '\u00A0');
           zone.appendChild(b);
         });
       }
@@ -343,7 +347,7 @@
         const pts = PTS.trouve + PTS.calcul + PTS.serie * (etat.serie - 1);
         etat.score += pts;
         flotter('+' + pts, ev);
-        dire('ok', `Bien corrigé : ${libelle(e, e.affiche)} → ${libelle(e, e.correct)}`, explication(e));
+        dire('ok', t('ok.corrige', { faux: libelle(e, e.affiche), juste: libelle(e, e.correct) }), explication(e));
         noter(e.code, 'trouve');
         CQ.Son.jouer('trouve', etat.serie);
       } else {
@@ -354,9 +358,9 @@
         const proposee = reponse === null ? '' : clavier ? reponse : typo(reponse);
         // Nombre écrit en lettres : on redonne aussi les chiffres, « treize » (13).
         const attendu = libelle(e, e.correct) + (CQ.memeValeur(e.valeur, e.correct) ? '' : ` (${e.valeur})`);
-        const titre = raison === 'temps' ? `Temps écoulé : il fallait ${attendu}.`
-          : raison === 'passe' ? `Il fallait ${attendu}.`
-          : `Bien repéré, mais il fallait ${attendu}, pas ${e.code === 'folio' ? 'page ' + proposee : '« ' + proposee + ' »'}.`;
+        const titre = raison === 'temps' ? t('corr.temps', { juste: attendu })
+          : raison === 'passe' ? t('corr.passe', { juste: attendu })
+          : t('corr.faux', { juste: attendu, propose: e.code === 'folio' ? t('page', { n: proposee }) : t('citation', { x: proposee }) });
         dire('zele', titre, explication(e));
         noter(e.code, 'rate');
         retenir(e, 'correction');
@@ -447,7 +451,7 @@
         etat.resultats.push('rate');
         restantes.forEach((it) => { noter(it.data.code, 'rate'); retenir(it.data, 'rate'); });
         const e = restantes[0].data;
-        dire('rate', e.type === 'image' ? 'Coquille imprimée : la photo ne correspondait pas.' : `Coquille imprimée : ${libelle(e, e.affiche)} au lieu de ${libelle(e, e.correct)}`, explication(e));
+        dire('rate', e.type === 'image' ? t('rate.photo') : t('rate.mot', { faux: libelle(e, e.affiche), juste: libelle(e, e.correct) }), explication(e));
         eclair('rate');
         CQ.Son.jouer('rate');
         CQ.vibrer([30, 50, 30]);
@@ -456,7 +460,7 @@
         etat.resultats.push(c.zele ? 'zele' : 'parfait');
         eclair('ok');
         CQ.Son.jouer('imprime');
-        if (c.bonus) dire('ok', `Bon à tirer : +${c.bonus + PTS.propre} points.`, "L'article est parti propre, en avance sur la rotative.");
+        if (c.bonus) dire('ok', t('bat.titre', { n: c.bonus + PTS.propre }), t('bat.detail'));
       }
       majTableau();
       marquerPremiere();
@@ -554,8 +558,8 @@
     plateau.querySelectorAll('.points').forEach((p) => p.remove());
     rotative.classList.remove('arret', 'flash-ok', 'flash-rate');
     marbre.dataset.etat = '';
-    $('marbre-titre').textContent = typo("Touche les coquilles avant qu'elles partent à l'impression.");
-    $('marbre-detail').textContent = typo('Faute, lettres inversées, calcul faux, information fausse, photo ou numéro de page qui ne colle pas : touche-la.');
+    $('marbre-titre').textContent = typo(t('debut.titre'));
+    $('marbre-detail').textContent = typo(t('debut.detail'));
     $('hud-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     majTableau();
     mesurer();

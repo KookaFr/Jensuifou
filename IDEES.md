@@ -21,5 +21,5 @@ les voix ou une première version des contenus, toujours relue).
 - Encore plus de brèves (230 écrites à la main aujourd'hui, de 22 à 32 par public et par niveau), et des coquilles de bon sens (« il neige à 35 °C »).
 - Légendes de photos, renvois « suite en page 6 », chiffres qui changent au sein d'un même article.
 - Mode classe : un enseignant choisit les règles travaillées et voit les erreurs du groupe.
-- Interface traduite pour les débutants en français (anglais, espagnol, arabe…).
+- Explications en anglais (le japonais est fait), puis espagnol, arabe… ; traduire aussi le menu pour les grands débutants.
 - Carnet de progrès : règles maîtrisées, règles à revoir.

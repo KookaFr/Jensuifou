@@ -137,7 +137,7 @@
       const mois = fevrier ? 'février' : r.choix(MOIS_30);
       const max = fevrier ? 28 : 30;
       const jour = r.entier(max - 9, max);
-      const detail = fevrier ? "Février n'a que 28 jours (29 les années bissextiles)." : `${cap(mois)} n'a que 30 jours.`;
+      const detail = fevrier ? CQ.D('datefev') : CQ.D('date30', { mois });
       const modele = r.choix(PHRASES_DATE[pub]);
       const jeton = `{${jour} ${mois}|${fevrier ? r.choix([30, 31]) : 31} ${mois}#date:${detail}}`;
       return { section: modele.section, titre: modele.titre, texte: modele.phrase.replace('@', jeton) };
@@ -291,10 +291,10 @@
     let faux, detail;
     if (k < 3 && pages[k - 1] > 2 && r.chance(0.5)) {
       faux = Math.max(2, pages[k - 1] - r.entier(1, 3));
-      detail = `Le sommaire suit l'ordre des pages : après ${sections[k - 1]} en page ${pages[k - 1]}, la rubrique suivante ne peut pas être en page ${faux}.`;
+      detail = CQ.D('sommaireOrdre', { rubrique: sections[k - 1], page: pages[k - 1], faux });
     } else {
       faux = total + r.entier(2, 9);
-      detail = `Ce numéro n'a que ${total} pages : la page ${faux} n'existe pas.`;
+      detail = CQ.D('sommaireTotal', { total, faux });
     }
     const ligne = (i) => `${sections[i]}, page ${i === k ? `{${pages[i]}|${faux}#sommaire:${detail}}` : pages[i]}.`;
     return { section: 'Sommaire', titre: 'Dans ce numéro',
@@ -351,7 +351,7 @@
       const juste = dateLongue(d);
       const fautes = [1, -1].map((x) => dateLongue(d, (d.getDay() + x + 7) % 7));
       const modele = r.choix(PHRASES_JOUR[pub][ecart.temps]);
-      const detail = `Nous sommes ${dateLongue(auj)} : ${ecart.mot}, c'est ${juste}.`;
+      const detail = CQ.D('jour', { auj: dateLongue(auj), mot: ecart.mot, juste });
       return { section: 'Agenda', titre: modele.titre,
         texte: modele.phrase.replace('@', `${ecart.mot}, {${juste}|${r.melanger(fautes).join('|')}#jour:${detail}}`) };
     } });
@@ -365,6 +365,6 @@
     return { section: 'Photo du jour', titre: objet.titre,
       texte: cap(objet.phrase(p, L(n))),
       ok: objet.e.repeat(n), ko: [objet.e.repeat(n + 1), objet.e.repeat(n - 1)],
-      expl: `Le texte dit « ${L(n)} » : il en fallait ${n}.` };
+      expl: CQ.D('compter', { lettres: L(n), n }) };
   } });
 })();
