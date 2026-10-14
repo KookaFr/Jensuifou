@@ -9,7 +9,7 @@ const vm = require('vm');
 
 const racine = path.join(__dirname, '..');
 const FICHIERS = [
-  'js/util.js', 'js/langue.js', 'js/langues/ja.js', 'js/regles.js',
+  'js/util.js', 'js/langue.js', 'js/langues/en.js', 'js/langues/ja.js', 'js/regles.js',
   'js/contenu/breves-enfant.js', 'js/contenu/breves-adulte.js', 'js/contenu/breves-apprenant.js', 'js/contenu/faits.js',
   'js/contenu/images.js', 'js/contenu/generateurs.js', 'js/edition.js',
 ];

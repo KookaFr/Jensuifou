@@ -107,9 +107,13 @@
   };
 
   // Explication fabriquée par le jeu (dates, sommaire, numéros de page…), dans la langue choisie.
+  // On garde la trace de ces textes : ils sont déjà dans la bonne langue.
+  const produits = new Set();
   CQ.D = function (cle, p) {
     const g = (langue().gabarits && langue().gabarits[cle]) || CQ.LANGUES.fr.gabarits[cle];
-    return g(p || {});
+    const texte = g(p || {});
+    produits.add(texte);
+    return texte;
   };
 
   // Nom et explication d'une règle, dans la langue choisie.
@@ -119,7 +123,6 @@
     return tr ? Object.assign({}, base, tr) : base;
   };
 
-  const JAPONAIS = /[぀-ヿ㐀-鿿]/;
   // Une explication sans phrase en français (un calcul, des nombres) se lit dans toutes les langues.
   CQ.estNeutre = function (texte) {
     const reste = texte.replace(/\([^)]*\)/g, '').replace(/«[^»]*»/g, '');
@@ -132,7 +135,7 @@
     if (!texte || CQ.langue === 'fr') return texte || null;
     const d = langue().details;
     if (d && d[texte]) return d[texte];
-    if (JAPONAIS.test(texte) || CQ.estNeutre(texte)) return texte;
+    if (produits.has(texte) || CQ.estNeutre(texte)) return texte;
     return null;
   };
 

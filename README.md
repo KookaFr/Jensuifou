@@ -46,7 +46,7 @@ Trois lecteurs, trois niveaux chacun, trois vitesses de rotative :
 Deux modes : l'**édition du jour** (10 articles, la même pour tout le monde,
 résultat à partager) et la **partie libre** (sans fin, rubriques au choix).
 
-### Jeu en japonais (et bientôt en anglais)
+### Jeu en anglais ou en japonais
 
 Pour « J'apprends le français », le bulletin propose la langue des explications.
 Les articles restent en français ; le menu, les règles, les messages du bas de
@@ -54,13 +54,14 @@ l'écran, le pupitre de correction, l'aide et le bilan passent dans la langue
 choisie. Le choix est gardé d'une visite à l'autre, et reste modifiable dans le
 bulletin tant qu'une autre langue que le français est active.
 
-Chaque langue est un fichier de `coquilles/js/langues/` (voir `ja.js`) avec :
+Langues disponibles : français, anglais (`en.js`), japonais (`ja.js`).
+Chaque langue est un fichier de `coquilles/js/langues/` avec :
 `ui` (textes d'interface), `regles` (nom et explication de chaque règle),
 `details` (explications propres aux brèves, la clé étant le texte français) et
 `gabarits` (explications fabriquées par le jeu : dates, sommaire, pages…).
-Pour ajouter l'anglais : copier `ja.js` en `en.js`, traduire, puis ajouter
-`<script src="js/langues/en.js"></script>` dans `index.html` et le fichier dans
-la liste de `outils/verifier.js`. La langue apparaît alors toute seule dans le
+Pour ajouter une langue (espagnol, arabe…) : copier `en.js` sous un nouveau nom,
+traduire, puis ajouter la balise `<script>` correspondante dans `index.html` et le
+fichier dans la liste de `outils/verifier.js`. La langue apparaît alors toute seule dans le
 bulletin, et le vérificateur signale chaque texte non traduit.
 
 ### Jouer
