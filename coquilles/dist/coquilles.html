@@ -1,0 +1,2462 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coquilles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Traquez les fautes d'orthographe, de grammaire, de calcul et les photos fausses avant l'impression du journal.">
+<meta name="theme-color" content="#141924">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=IBM+Plex+Mono:wght@500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&family=UnifrakturMaguntia&display=swap">
+<style>
+/* Mise en page : la salle des rotatives. Des épreuves papier montent vers la presse ;
+   le marbre (pupitre du correcteur) ferme l'écran en bas. Un seul univers, sombre,
+   avec les encres d'imprimerie (cyan, magenta, jaune) comme seules couleurs. */
+:root {
+  --salle: #141924;        /* acier bleuté de la salle des machines */
+  --tole: #1e2532;         /* panneaux et pupitre */
+  --tole-claire: #2a3243;
+  --rivet: #3d475c;        /* filets et bordures sur fond sombre */
+  --papier: #ecebe6;       /* papier journal */
+  --papier-trame: #d8d6ce; /* fond tramé des photos */
+  --papier-ombre: #c4c1b7;
+  --encre: #1b1d22;        /* encre noire sur papier */
+  --encre-douce: #5a5f69;
+  --cyan: #26b5e8;         /* sur fond sombre : réussite */
+  --cyan-encre: #00739a;   /* sur papier : tampon « bon à tirer » */
+  --magenta: #ff4fa3;      /* sur fond sombre : coquille imprimée */
+  --stylo: #c3005e;        /* stylo du correcteur, sur papier */
+  --jaune: #ffd400;        /* sur fond sombre : points, faute de zèle */
+  --jaune-encre: #9a7b00;  /* sur papier */
+  --clair: #e7e9ee;        /* texte sur fond sombre */
+  --gris: #9ba4b6;
+  --gouttiere-g: max(16px, env(safe-area-inset-left, 0px));
+  --gouttiere-d: max(16px, env(safe-area-inset-right, 0px));
+
+  --f-manchette: 'UnifrakturMaguntia', 'Old English Text MT', 'Times New Roman', serif;
+  --f-journal: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --f-stylo: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+  --f-compteur: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+
+  color-scheme: dark;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html { height: 100%; box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--salle);
+  color: var(--clair);
+  font-family: var(--f-journal);
+  font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+.app { position: relative; height: 100%; max-width: 34rem; margin: 0 auto; }
+
+.ecran {
+  height: 100%;
+  overflow-y: auto;
+  padding-left: var(--gouttiere-g);
+  padding-right: var(--gouttiere-d);
+  padding-block: 12px 28px;
+}
+
+/* ---------- La une ---------- */
+.manchette { text-align: center; }
+.filet-haut {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rivet);
+  font: 500 0.7rem/1.2 var(--f-compteur);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gris);
+}
+.filet-haut b { color: var(--clair); font-weight: 600; }
+.titre-journal {
+  margin: 0.12em 0 0;
+  font: 400 clamp(3.6rem, 19vw, 5.4rem)/1 var(--f-manchette);
+  color: var(--papier);
+  letter-spacing: 0.01em;
+}
+.devise {
+  margin: 0.1em 0 0;
+  padding-bottom: 10px;
+  border-bottom: 3px double var(--rivet);
+  font: italic 400 1rem/1.3 var(--f-journal);
+  color: var(--gris);
+  text-wrap: balance;
+}
+
+/* Feuilles de papier : bulletin, bilan, aide. Hirondelles de coupe aux coins. */
+.bulletin, .feuille, .carte-voile {
+  position: relative;
+  background: var(--papier);
+  color: var(--encre);
+  box-shadow: 0 1px 0 var(--papier-ombre), 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+.bulletin::before, .feuille::before, .epreuve::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  pointer-events: none;
+  --h: var(--rivet);
+  background:
+    linear-gradient(var(--h), var(--h)) left 8px top 0 / 1px 5px no-repeat,
+    linear-gradient(var(--h), var(--h)) left 0 top 8px / 5px 1px no-repeat,
+    linear-gradient(var(--h), var(--h)) right 8px top 0 / 1px 5px no-repeat,
+    linear-gradient(var(--h), var(--h)) right 0 top 8px / 5px 1px no-repeat,
+    linear-gradient(var(--h), var(--h)) left 8px bottom 0 / 1px 5px no-repeat,
+    linear-gradient(var(--h), var(--h)) left 0 bottom 8px / 5px 1px no-repeat,
+    linear-gradient(var(--h), var(--h)) right 8px bottom 0 / 1px 5px no-repeat,
+    linear-gradient(var(--h), var(--h)) right 0 bottom 8px / 5px 1px no-repeat;
+}
+
+.bulletin { margin-top: 20px; padding: 14px 16px 6px; }
+.bulletin-titre {
+  margin: 0 0 4px;
+  font: 600 0.72rem/1.2 var(--f-compteur);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+fieldset { border: 0; margin: 0; padding: 10px 0 12px; min-width: 0; }
+fieldset + fieldset { border-top: 1px dotted var(--papier-ombre); }
+legend {
+  padding: 0 0 8px;
+  font: 600 1rem/1.2 var(--f-journal);
+  color: var(--encre);
+}
+
+.choix { display: flex; flex-wrap: wrap; gap: 8px; }
+.choix-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+.choix input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.choix label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 44px;
+  padding: 7px 12px;
+  border: 1.5px solid var(--encre);
+  border-radius: 2px;
+  font: 600 1rem/1.15 var(--f-journal);
+  cursor: pointer;
+  user-select: none;
+}
+.choix-3 label { align-items: center; text-align: center; padding-inline: 6px; }
+.choix label small {
+  font: 500 0.68rem/1.3 var(--f-compteur);
+  letter-spacing: 0.04em;
+  color: var(--encre-douce);
+}
+.choix input:checked + label { background: var(--encre); color: var(--papier); }
+.choix input:checked + label small { color: var(--papier-trame); }
+.choix input:focus-visible + label { outline: 2px solid var(--cyan-encre); outline-offset: 2px; }
+
+.actions { display: grid; gap: 10px; margin-top: 18px; }
+.btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid var(--rivet);
+  border-radius: 2px;
+  background: var(--tole-claire);
+  color: var(--clair);
+  font: 700 1.15rem/1.2 var(--f-journal);
+  text-align: left;
+}
+.btn small { font: 500 0.72rem/1.3 var(--f-compteur); letter-spacing: 0.03em; color: var(--gris); }
+.btn-principal { background: var(--jaune); border-color: var(--jaune); color: var(--encre); }
+.btn-principal small { color: #4d4410; }
+.btn:active { transform: translateY(1px); }
+
+.pied { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.lien {
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  color: var(--gris);
+  font: 500 0.8rem/1.2 var(--f-compteur);
+  letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- La partie ---------- */
+.ecran-jeu {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-block: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.tableau {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: end;
+  gap: 14px;
+  padding-block: 10px 8px;
+}
+.compteur { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.etiquette {
+  font: 500 0.62rem/1 var(--f-compteur);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gris);
+}
+.compteur b {
+  font: 600 1.3rem/1 var(--f-compteur);
+  font-variant-numeric: tabular-nums;
+  color: var(--clair);
+}
+#hud-score { color: var(--jaune); }
+#hud-serie.chaud { color: var(--cyan); }
+.pastilles { display: flex; gap: 4px; height: 1.3rem; align-items: center; }
+.pastilles i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--clair);
+  transition: background 0.3s, transform 0.3s;
+}
+.pastilles i.perdue { background: transparent; box-shadow: inset 0 0 0 1.5px var(--rivet); transform: scale(0.85); }
+.btn-pause {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 40px;
+  border: 1px solid var(--rivet);
+  border-radius: 2px;
+  background: var(--tole-claire);
+}
+.btn-pause span { width: 4px; height: 15px; background: var(--clair); }
+
+/* La rotative : un cylindre d'acier dont la surface défile. */
+.rotative {
+  position: relative;
+  z-index: 2;
+  height: 30px;
+  margin-left: calc(-1 * var(--gouttiere-g));
+  margin-right: calc(-1 * var(--gouttiere-d));
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 7px),
+    linear-gradient(180deg, #07090d 0%, #3a4252 30%, #707a8d 50%, #3a4252 70%, #07090d 100%);
+  background-size: 100% 7px, 100% 100%;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.55);
+  animation: cylindre 0.6s linear infinite;
+}
+.rotative.arret { animation-play-state: paused; }
+@keyframes cylindre { to { background-position: 0 -7px, 0 0; } }
+.tirage {
+  position: absolute;
+  right: var(--gouttiere-d);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 2px 6px;
+  background: rgba(7, 9, 13, 0.85);
+  font: 500 0.62rem/1.3 var(--f-compteur);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gris);
+}
+.tirage b { color: var(--clair); font-weight: 600; font-variant-numeric: tabular-nums; }
+.rotative.flash-ok { box-shadow: 0 6px 12px rgba(0, 0, 0, 0.55), 0 0 0 2px var(--cyan); }
+.rotative.flash-rate { box-shadow: 0 6px 18px rgba(255, 79, 163, 0.55), 0 0 0 2px var(--magenta); }
+
+.plateau {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  margin-left: calc(-1 * var(--gouttiere-g));
+  margin-right: calc(-1 * var(--gouttiere-d));
+  background: linear-gradient(180deg, #10141d, var(--salle) 30%);
+}
+.rail { position: absolute; top: 0; bottom: 0; left: var(--gouttiere-g); right: var(--gouttiere-d); }
+
+/* L'épreuve : un article sur papier journal. */
+.epreuve {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 16px 14px;
+  background: var(--papier);
+  color: var(--encre);
+  box-shadow: 0 1px 0 var(--papier-ombre), 0 12px 24px rgba(0, 0, 0, 0.4);
+  will-change: transform;
+}
+.tete { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 30px; }
+.section {
+  font: 600 0.66rem/1.2 var(--f-compteur);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+.bat {
+  position: relative;
+  visibility: hidden;
+  padding: 5px 8px;
+  border: 2px solid var(--cyan-encre);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--cyan-encre);
+  font: 600 0.66rem/1 var(--f-compteur);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transform: rotate(-2deg);
+}
+.bat::after { content: ''; position: absolute; inset: -10px -8px; }
+.epreuve.premiere .bat { visibility: visible; }
+.epreuve.tamponnee .bat { visibility: hidden; }
+
+.titre {
+  margin: 4px 0 6px;
+  font: 700 1.3rem/1.2 var(--f-journal);
+  font-variation-settings: 'opsz' 40;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.corps { margin: 0; font: 400 1.125rem/1.75 var(--f-journal); font-variation-settings: 'opsz' 14; }
+
+.m { border-radius: 2px; cursor: pointer; }
+.m.corrige {
+  position: relative;
+  color: var(--encre-douce);
+  text-decoration: line-through 2px var(--stylo);
+}
+.m.corrige::after {
+  content: attr(data-correction);
+  position: absolute;
+  left: 50%;
+  bottom: 0.92em;
+  transform: translateX(-50%) rotate(-4deg);
+  font: 600 1.2em/1 var(--f-stylo);
+  color: var(--stylo);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: ecrire 0.3s ease-out;
+}
+.m.zele {
+  text-decoration: underline wavy 1px var(--jaune-encre);
+  text-underline-offset: 4px;
+  animation: secoue 0.3s;
+}
+
+.photo {
+  position: relative;
+  margin: 6px 0 10px;
+  padding: 14px 8px;
+  border: 1px solid var(--papier-ombre);
+  background-color: var(--papier-trame);
+  background-image: radial-gradient(rgba(27, 29, 34, 0.16) 1px, transparent 1.5px);
+  background-size: 6px 6px;
+  font-size: 2.2rem;
+  line-height: 1.25;
+  letter-spacing: 0.06em;
+  text-align: center;
+  cursor: pointer;
+}
+.photo.corrige { outline: 2px solid var(--stylo); outline-offset: 2px; }
+.photo.corrige::after, .photo.zele::after {
+  position: absolute;
+  right: 8px;
+  top: 2px;
+  font: 600 1.05rem/1 var(--f-stylo);
+  transform: rotate(-3deg);
+  letter-spacing: 0;
+}
+.photo.corrige::after { content: 'photo remplacée'; color: var(--stylo); }
+.photo.zele { animation: secoue 0.3s; }
+.photo.zele::after { content: 'elle était juste'; color: var(--jaune-encre); }
+
+.epreuve.tamponnee::after {
+  content: 'Bon à tirer';
+  position: absolute;
+  right: 18px;
+  top: 38%;
+  padding: 6px 10px;
+  border: 3px double var(--cyan-encre);
+  color: var(--cyan-encre);
+  font: 600 1rem/1 var(--f-compteur);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: rotate(-12deg);
+  pointer-events: none;
+  animation: tampon 0.2s ease-out;
+}
+
+.points {
+  position: absolute;
+  z-index: 3;
+  font: 600 1rem/1 var(--f-compteur);
+  color: var(--jaune);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  transform: translate(-50%, -120%);
+  animation: monte 0.8s ease-out forwards;
+}
+.points.negatif { color: var(--magenta); }
+
+/* Le marbre : le pupitre où s'affiche la règle. */
+.marbre {
+  height: 112px;
+  margin-left: calc(-1 * var(--gouttiere-g));
+  margin-right: calc(-1 * var(--gouttiere-d));
+  padding: 10px var(--gouttiere-d) 10px var(--gouttiere-g);
+  border-top: 1px solid var(--rivet);
+  background: var(--tole);
+  overflow: hidden;
+}
+.marbre-titre { margin: 0 0 3px; font: 600 0.98rem/1.3 var(--f-journal); color: var(--clair); }
+.marbre-detail {
+  margin: 0;
+  font: 400 0.86rem/1.38 var(--f-journal);
+  color: var(--gris);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.marbre[data-etat='ok'] .marbre-titre { color: var(--cyan); }
+.marbre[data-etat='zele'] .marbre-titre { color: var(--jaune); }
+.marbre[data-etat='rate'] .marbre-titre { color: var(--magenta); }
+.marbre.neuf { animation: apparait 0.25s ease-out; }
+
+/* ---------- Le bilan ---------- */
+.feuille { margin-top: 14px; padding: 18px 16px 16px; }
+.surtitre {
+  margin: 0;
+  font: 600 0.7rem/1.3 var(--f-compteur);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+.bilan-titre { margin: 6px 0 8px; font: 700 1.7rem/1.15 var(--f-journal); font-variation-settings: 'opsz' 60; text-wrap: balance; }
+.bilan-score { margin: 0 0 14px; font: 400 1rem/1.2 var(--f-journal); color: var(--encre-douce); }
+.bilan-score b {
+  font: 700 3rem/1 var(--f-journal);
+  font-variation-settings: 'opsz' 72;
+  font-variant-numeric: tabular-nums;
+  color: var(--encre);
+}
+.bilan-record { display: block; margin-top: 4px; font: 600 0.75rem/1.3 var(--f-compteur); color: var(--stylo); }
+.grille { display: flex; flex-wrap: wrap; gap: 5px; }
+.case { display: inline-block; width: 22px; height: 22px; border-radius: 2px; background: var(--papier-ombre); }
+.case.parfait { background: var(--cyan-encre); }
+.case.zele { background: #d9b200; }
+.case.rate { background: var(--stylo); }
+.legende-grille {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 8px 0 0;
+  font: 500 0.68rem/1.3 var(--f-compteur);
+  color: var(--encre-douce);
+}
+.legende-grille span { white-space: nowrap; }
+.legende-grille .case { width: 10px; height: 10px; margin-right: 4px; vertical-align: -1px; }
+.chiffres { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin: 16px 0 0; padding-top: 14px; border-top: 1px dotted var(--papier-ombre); }
+.chiffres div { min-width: 0; }
+.chiffres dt { font: 500 0.66rem/1.3 var(--f-compteur); letter-spacing: 0.06em; text-transform: uppercase; color: var(--encre-douce); }
+.chiffres dd { margin: 2px 0 0; font: 700 1.5rem/1.1 var(--f-journal); font-variant-numeric: tabular-nums; }
+.pieges-titre { margin: 20px 0 6px; font: 700 1.15rem/1.2 var(--f-journal); }
+.pieges { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.pieges li { padding-left: 12px; border-left: 2px solid var(--stylo); }
+.pieges b { display: block; font: 700 1rem/1.3 var(--f-journal); }
+.pieges .exemple { display: block; font: 600 1.2rem/1.2 var(--f-stylo); color: var(--stylo); }
+.pieges p { margin: 2px 0 0; font: 400 0.95rem/1.45 var(--f-journal); color: var(--encre); }
+.feuille .lien { color: var(--encre-douce); justify-self: start; }
+.feuille .btn:not(.btn-principal) { background: var(--encre); border-color: var(--encre); color: var(--papier); }
+.feuille .btn:not(.btn-principal) small { color: var(--papier-ombre); }
+.texte-partage {
+  width: 100%;
+  min-height: 90px;
+  margin-top: 14px;
+  padding: 8px;
+  border: 1px solid var(--papier-ombre);
+  background: #fff;
+  color: var(--encre);
+  font: 500 0.85rem/1.4 var(--f-compteur);
+}
+
+/* ---------- Voiles ---------- */
+.voile {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: max(16px, env(safe-area-inset-top, 0px)) var(--gouttiere-d) max(16px, env(safe-area-inset-bottom, 0px)) var(--gouttiere-g);
+  background: rgba(8, 10, 15, 0.84);
+}
+.carte-voile { width: 100%; max-width: 30rem; padding: 18px 18px 16px; }
+.carte-voile h2 { margin: 0 0 8px; font: 700 1.5rem/1.2 var(--f-journal); }
+.carte-voile p { margin: 0; font: 400 1rem/1.5 var(--f-journal); color: var(--encre-douce); }
+.carte-voile .btn:not(.btn-principal) { background: var(--encre); border-color: var(--encre); color: var(--papier); }
+.regles-jeu { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; font: 400 1rem/1.45 var(--f-journal); }
+.regles-jeu b { font-weight: 700; }
+
+/* ---------- Animations ---------- */
+@keyframes secoue {
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes ecrire { from { opacity: 0; transform: translateX(-50%) translateY(4px) rotate(-4deg); } }
+@keyframes tampon { from { opacity: 0; transform: rotate(-12deg) scale(1.6); } }
+@keyframes monte { to { opacity: 0; transform: translate(-50%, -260%); } }
+@keyframes apparait { from { opacity: 0.2; transform: translateY(4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .rotative { animation: none; }
+  .m.zele, .photo.zele, .marbre.neuf, .m.corrige::after, .epreuve.tamponnee::after { animation: none; }
+  .points { animation-duration: 0.01s; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- La une : réglages et lancement -->
+  <section class="ecran ecran-une" id="ecran-une">
+    <header class="manchette">
+      <p class="filet-haut">
+        <span id="date-edition">Édition du jour</span>
+        <span>N° <b id="num-edition">1</b></span>
+        <span>Gratuit</span>
+      </p>
+      <h1 class="titre-journal">Coquilles</h1>
+      <p class="devise">Le quotidien qui traque les fautes avant l'impression</p>
+    </header>
+
+    <form class="bulletin" id="reglages" onsubmit="return false">
+      <h2 class="bulletin-titre">Bulletin d'abonnement</h2>
+
+      <fieldset>
+        <legend>Lecteur</legend>
+        <div class="choix">
+          <input type="radio" name="public" id="pub-enfant" value="enfant"><label for="pub-enfant">Enfant<small>8 à 11 ans</small></label>
+          <input type="radio" name="public" id="pub-adulte" value="adulte"><label for="pub-adulte">Adulte<small>francophone</small></label>
+          <input type="radio" name="public" id="pub-apprenant" value="apprenant"><label for="pub-apprenant">J'apprends le français<small>FLE</small></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Niveau</legend>
+        <div class="choix choix-3">
+          <input type="radio" name="niveau" id="niv-1" value="1"><label for="niv-1">★<small id="niv-1-nom">Courant</small></label>
+          <input type="radio" name="niveau" id="niv-2" value="2"><label for="niv-2">★★<small id="niv-2-nom">Exigeant</small></label>
+          <input type="radio" name="niveau" id="niv-3" value="3"><label for="niv-3">★★★<small id="niv-3-nom">Expert</small></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Vitesse de la rotative</legend>
+        <div class="choix choix-3">
+          <input type="radio" name="vitesse" id="vit-tranquille" value="tranquille"><label for="vit-tranquille">Tranquille</label>
+          <input type="radio" name="vitesse" id="vit-normale" value="normale"><label for="vit-normale">Normale</label>
+          <input type="radio" name="vitesse" id="vit-rapide" value="rapide"><label for="vit-rapide">Rapide</label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Rubriques de la partie libre</legend>
+        <div class="choix">
+          <input type="checkbox" name="rubrique" id="rub-ortho" value="ortho"><label for="rub-ortho">Orthographe</label>
+          <input type="checkbox" name="rubrique" id="rub-gram" value="gram"><label for="rub-gram">Grammaire</label>
+          <input type="checkbox" name="rubrique" id="rub-calc" value="calc"><label for="rub-calc">Calcul</label>
+          <input type="checkbox" name="rubrique" id="rub-image" value="image"><label for="rub-image">Images</label>
+        </div>
+      </fieldset>
+    </form>
+
+    <div class="actions">
+      <button type="button" class="btn btn-principal" id="btn-jour">Édition du jour<small id="etat-jour">10 articles, la même pour tous les lecteurs</small></button>
+      <button type="button" class="btn" id="btn-libre">Partie libre<small id="etat-libre">Sans fin, jusqu'à la dernière plainte</small></button>
+    </div>
+
+    <nav class="pied">
+      <button type="button" class="lien" id="btn-aide">Comment jouer</button>
+      <button type="button" class="lien" id="btn-son" aria-pressed="true">Son activé</button>
+    </nav>
+  </section>
+
+  <!-- La salle des rotatives : la partie -->
+  <section class="ecran ecran-jeu" id="ecran-jeu" hidden>
+    <div class="tableau">
+      <div class="compteur"><span class="etiquette">Points</span><b id="hud-score">0</b></div>
+      <div class="compteur"><span class="etiquette">Série</span><b id="hud-serie">×0</b></div>
+      <div class="compteur"><span class="etiquette">Réputation</span><span class="pastilles" id="hud-reputation"></span></div>
+      <button type="button" class="btn-pause" id="btn-pause" aria-label="Mettre en pause"><span></span><span></span></button>
+    </div>
+    <div class="rotative" id="rotative">
+      <span class="tirage">Tirage <b id="hud-tirage">000</b></span>
+    </div>
+    <div class="plateau" id="plateau"><div class="rail" id="rail"></div></div>
+    <div class="marbre" id="marbre" aria-live="polite">
+      <p class="marbre-titre" id="marbre-titre">Touche les coquilles avant qu'elles partent à l'impression.</p>
+      <p class="marbre-detail" id="marbre-detail">Faute, erreur de calcul ou photo qui ne colle pas au texte : touche-la.</p>
+    </div>
+  </section>
+
+  <!-- Le bilan de l'édition -->
+  <section class="ecran ecran-bilan" id="ecran-bilan" hidden>
+    <div class="feuille">
+      <p class="surtitre" id="bilan-surtitre">Édition n°1</p>
+      <h2 class="bilan-titre" id="bilan-titre">Édition bouclée</h2>
+      <p class="bilan-score"><b id="bilan-score">0</b> points <span class="bilan-record" id="bilan-record"></span></p>
+      <div class="grille" id="bilan-grille"></div>
+      <p class="legende-grille"><span><i class="case parfait"></i>sans faute</span> <span><i class="case zele"></i>faute de zèle</span> <span><i class="case rate"></i>coquille imprimée</span></p>
+      <dl class="chiffres">
+        <div><dt>Coquilles trouvées</dt><dd id="b-trouvees">0</dd></div>
+        <div><dt>Coquilles imprimées</dt><dd id="b-ratees">0</dd></div>
+        <div><dt>Fautes de zèle</dt><dd id="b-zeles">0</dd></div>
+        <div><dt>Meilleure série</dt><dd id="b-serie">0</dd></div>
+      </dl>
+      <h3 class="pieges-titre" id="pieges-titre">À retenir</h3>
+      <ul class="pieges" id="bilan-pieges"></ul>
+      <textarea class="texte-partage" id="texte-partage" readonly hidden aria-label="Résultat à partager"></textarea>
+      <div class="actions">
+        <button type="button" class="btn btn-principal" id="btn-partager">Copier le résultat<small>Pour le partager</small></button>
+        <button type="button" class="btn" id="btn-rejouer">Rejouer<small id="rejouer-detail">Nouvelle partie libre</small></button>
+        <button type="button" class="lien" id="btn-une">Retour à la une</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pause -->
+  <div class="voile" id="voile-pause" hidden>
+    <div class="carte-voile" role="dialog" aria-modal="true" aria-labelledby="pause-titre">
+      <h2 id="pause-titre">Rotative à l'arrêt</h2>
+      <p>La partie reprend où tu l'as laissée.</p>
+      <div class="actions">
+        <button type="button" class="btn btn-principal" id="btn-reprendre">Reprendre</button>
+        <button type="button" class="btn" id="btn-abandonner">Arrêter la partie</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Aide -->
+  <div class="voile" id="voile-aide" hidden>
+    <div class="carte-voile" role="dialog" aria-modal="true" aria-labelledby="aide-titre">
+      <h2 id="aide-titre">Comment jouer</h2>
+      <ol class="regles-jeu">
+        <li>Les articles montent vers la rotative. <b>Touche chaque coquille</b> avant qu'elle soit imprimée : faute d'orthographe, de grammaire, erreur de calcul, date impossible.</li>
+        <li>Le texte a toujours raison. Si <b>la photo</b> ne correspond pas au texte, touche la photo.</li>
+        <li>Toucher un mot juste est une <b>faute de zèle</b> : tu perds 40 points et ta série.</li>
+        <li>Chaque article imprimé avec une coquille te coûte <b>un point de réputation</b>. À zéro, le rédacteur en chef arrête les rotatives.</li>
+        <li><b>Bon à tirer</b> envoie le prochain article à l'impression. S'il est propre, tu gagnes un bonus d'avance.</li>
+        <li>Certains articles n'ont aucune faute. Après chaque correction, la règle s'affiche en bas de l'écran.</li>
+      </ol>
+      <div class="actions">
+        <button type="button" class="btn btn-principal" id="btn-aide-ok">C'est parti</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+/* Coquilles — utilitaires partagés (hasard reproductible, nombres, stockage). */
+(function () {
+  'use strict';
+  const CQ = (window.CQ = window.CQ || {});
+
+  // Générateur pseudo-aléatoire reproductible (mulberry32) : même graine, même édition.
+  CQ.hasard = function (graine) {
+    let a = graine >>> 0;
+    const r = function () {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    r.entier = (min, max) => min + Math.floor(r() * (max - min + 1));
+    r.choix = (liste) => liste[Math.floor(r() * liste.length)];
+    r.chance = (p) => r() < p;
+    r.melanger = (liste) => {
+      const l = liste.slice();
+      for (let i = l.length - 1; i > 0; i--) {
+        const j = Math.floor(r() * (i + 1));
+        [l[i], l[j]] = [l[j], l[i]];
+      }
+      return l;
+    };
+    // Tire un indice selon des poids positifs.
+    r.pondere = (poids) => {
+      const total = poids.reduce((s, p) => s + p, 0);
+      let x = r() * total;
+      for (let i = 0; i < poids.length; i++) {
+        x -= poids[i];
+        if (x < 0) return i;
+      }
+      return poids.length - 1;
+    };
+    return r;
+  };
+
+  // Empreinte FNV-1a d'une chaîne, pour fabriquer une graine.
+  CQ.empreinte = function (texte) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < texte.length; i++) {
+      h ^= texte.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+    return h >>> 0;
+  };
+
+  const UNITES = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf',
+    'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize'];
+  const DIZAINES = ['', 'dix', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante'];
+
+  // Nombres en lettres, orthographe traditionnelle (vingt et un, quatre-vingts).
+  CQ.enLettres = function enLettres(n) {
+    if (n < 17) return UNITES[n];
+    if (n < 20) return 'dix-' + UNITES[n - 10];
+    if (n < 70) {
+      const d = Math.floor(n / 10), u = n % 10;
+      if (u === 0) return DIZAINES[d];
+      if (u === 1) return DIZAINES[d] + ' et un';
+      return DIZAINES[d] + '-' + UNITES[u];
+    }
+    if (n < 80) return n === 71 ? 'soixante et onze' : 'soixante-' + enLettres(n - 60);
+    if (n < 100) return n === 80 ? 'quatre-vingts' : 'quatre-vingt-' + enLettres(n - 80);
+    if (n < 1000) {
+      const c = Math.floor(n / 100), reste = n % 100;
+      const cent = c === 1 ? 'cent' : UNITES[c] + ' cent';
+      if (reste === 0) return c > 1 ? cent + 's' : cent;
+      return cent + ' ' + enLettres(reste);
+    }
+    return String(n);
+  };
+
+  // 6.5 → « 6,50 » ; 12 → « 12 ».
+  CQ.euros = function (x) {
+    const arrondi = Math.round(x * 100) / 100;
+    return Number.isInteger(arrondi) ? String(arrondi) : arrondi.toFixed(2).replace('.', ',');
+  };
+
+  // Grands nombres avec espace fine : 12500 → « 12 500 ».
+  CQ.milliers = function (n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  };
+
+  // (9, 5) → « 9 h 05 » ; (14, 0) → « 14 h ».
+  CQ.heure = function (h, m) {
+    return m === 0 ? h + ' h' : h + ' h ' + String(m).padStart(2, '0');
+  };
+
+  // Durée en minutes → « 1 h 25 » ou « 45 minutes ».
+  CQ.duree = function (minutes) {
+    const h = Math.floor(minutes / 60), m = minutes % 60;
+    if (h === 0) return m + ' minutes';
+    return m === 0 ? h + (h > 1 ? ' heures' : ' heure') : h + ' h ' + String(m).padStart(2, '0');
+  };
+
+  // Stockage local tolérant : un navigateur privé ou bloqué ne casse pas le jeu.
+  CQ.stock = {
+    lire(cle, defaut) {
+      try {
+        const v = localStorage.getItem('coquilles:' + cle);
+        return v == null ? defaut : JSON.parse(v);
+      } catch (e) {
+        return defaut;
+      }
+    },
+    ecrire(cle, valeur) {
+      try {
+        localStorage.setItem('coquilles:' + cle, JSON.stringify(valeur));
+      } catch (e) { /* stockage indisponible : on continue sans */ }
+    },
+  };
+
+  // Typographie française à l'affichage : apostrophe courbe, espaces insécables
+  // avant ; ! ? : » et après «. Idempotent : on peut l'appliquer deux fois.
+  CQ.typo = function (s) {
+    return s
+      .replace(/'/g, '\u2019')
+      .replace(/ ([;!?])/g, '\u202F$1')
+      .replace(/ ([:»])/g, '\u00A0$1')
+      .replace(/« /g, '«\u00A0');
+  };
+
+  // Applique CQ.typo à tous les textes affichés sous un élément.
+  CQ.typographier = function (racine) {
+    const marcheur = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => (/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    });
+    for (let n = marcheur.nextNode(); n; n = marcheur.nextNode()) {
+      const v = CQ.typo(n.nodeValue);
+      if (v !== n.nodeValue) n.nodeValue = v;
+    }
+  };
+
+  CQ.normaliser = function (s) {
+    return s.replace(/’/g, "'").toLowerCase();
+  };
+})();
+</script>
+<script>
+/* Coquilles — règles expliquées après chaque coquille trouvée, ratée ou imaginée.
+   Chaque règle appartient à une rubrique : ortho, gram, calc ou image. */
+(function () {
+  'use strict';
+  const CQ = window.CQ;
+
+  CQ.RUBRIQUES = {
+    ortho: 'Orthographe',
+    gram: 'Grammaire',
+    calc: 'Calcul',
+    image: 'Images',
+  };
+
+  CQ.REGLES = {
+    // Homophones grammaticaux
+    a: { nom: 'a / à', rub: 'gram', expl: "« a » est le verbe avoir : on peut dire « avait ». Sinon, on écrit « à »." },
+    et: { nom: 'et / est', rub: 'gram', expl: "« est » est le verbe être : on peut dire « était ». Sinon, on écrit « et »." },
+    son: { nom: 'son / sont', rub: 'gram', expl: "« sont » est le verbe être : on peut dire « étaient ». « son » se remplace par « mon »." },
+    on: { nom: 'on / ont', rub: 'gram', expl: "« ont » est le verbe avoir : on peut dire « avaient ». « on » se remplace par « il »." },
+    ou: { nom: 'ou / où', rub: 'gram', expl: "« ou » veut dire « ou bien ». « où » indique un lieu ou un moment." },
+    ce: { nom: 'ce / se', rub: 'gram', expl: "« se » va avec un verbe (il se lave). « ce » va avec un nom (ce matin) ou « que » (ce que je veux)." },
+    ces: { nom: "ces / ses / c'est / s'est", rub: 'gram', expl: "« c'est » = cela est. « s'est » précède un participe (il s'est levé). « ces » montre (ces jours-ci). « ses » = les siens." },
+    leur: { nom: 'leur / leurs', rub: 'gram', expl: "Devant un verbe, « leur » (= à eux) ne prend jamais de « s ». Devant un nom au pluriel, on écrit « leurs »." },
+    quel: { nom: "quel / qu'elle", rub: 'gram', expl: "« qu'elle » se remplace par « qu'il ». « quel » s'accorde avec le nom : quelle idée, quelles que soient les causes." },
+    quand: { nom: 'quand / quant', rub: 'gram', expl: "« quand » = lorsque. « quant à » = en ce qui concerne." },
+    quoique: { nom: 'quoique / quoi que', rub: 'gram', expl: "« quoique » = bien que. « quoi que » = quelle que soit la chose que (quoi que tu fasses)." },
+    quelque: { nom: 'quelque / quelques', rub: 'gram', expl: "Devant un nombre, « quelque » veut dire « environ » et reste invariable : quelque 2 000 logements." },
+    pres: { nom: 'près / prêt', rub: 'gram', expl: "« prêt à » = disposé à (il est prêt à partir). « près de » = à côté de, ou presque." },
+
+    // Verbes et accords
+    inf: { nom: 'Infinitif ou participe', rub: 'gram', expl: "Après « aller », « pour », « de »… on met l'infinitif. Astuce : remplace par « vendre » ou « vendu »." },
+    ez: { nom: '-ez ou -er', rub: 'gram', expl: "Avec « vous », le verbe conjugué finit par -ez (vous chantez, ne cliquez pas). Astuce : remplace par « prenez »." },
+    verbe: { nom: 'Accord du verbe', rub: 'gram', expl: "Le verbe s'accorde avec son sujet : ils chantent, nous chantons. « on » se conjugue comme « il »." },
+    pluriel: { nom: 'Pluriel des noms', rub: 'gram', expl: "Au pluriel, les noms prennent un -s, ou un -x pour beaucoup de mots en -eau, -au, -eu (des oiseaux, des jeux)." },
+    accord: { nom: "Accord de l'adjectif", rub: 'gram', expl: "L'adjectif s'accorde en genre et en nombre avec le nom : des fleurs blanches, un appartement lumineux." },
+    ppe: { nom: 'Participe passé avec être', rub: 'gram', expl: "Avec être, le participe passé s'accorde avec le sujet : elles sont parties." },
+    ppa: { nom: 'Participe passé avec avoir', rub: 'gram', expl: "Avec avoir, le participe passé s'accorde avec le COD seulement s'il est placé avant : les pommes que j'ai achetées." },
+    ppr: { nom: 'Participe des verbes pronominaux', rub: 'gram', expl: "Avec un verbe pronominal, l'accord se fait avec le COD placé avant. Quand « se » n'est pas COD (se rendre compte, se succéder), le participe reste invariable." },
+    futcond: { nom: 'Futur ou conditionnel', rub: 'gram', expl: "-rai = futur (je viendrai demain). -rais = conditionnel (je viendrais si je pouvais). Astuce : remplace par « il » : il viendra / il viendrait." },
+    si: { nom: 'Si + conditionnel', rub: 'gram', expl: "Après le « si » de condition, jamais de conditionnel : si j'avais su, je serais venu." },
+    neg: { nom: 'La négation', rub: 'gram', expl: "À l'écrit, la négation a deux parties : « ne… pas ». Avec « on », on écrit « on n'a pas » : la liaison cache le « n' »." },
+
+    // Orthographe d'usage
+    usage: { nom: "Orthographe d'usage", rub: 'ortho', expl: "Pas de règle simple : ce mot s'écrit comme ça. À mémoriser." },
+    mbp: { nom: 'm devant m, b, p', rub: 'ortho', expl: "Devant m, b ou p, le n devient m : emporter, champion, pompier. Exceptions : bonbon, bonbonne, néanmoins." },
+    ge: { nom: 'ge / ç devant a, o', rub: 'ortho', expl: "Pour garder le son doux devant a ou o, on écrit « ge » ou « ç » : nous mangeons, nous commençons." },
+    vingt: { nom: 'vingt et cent', rub: 'ortho', expl: "« vingt » et « cent » prennent un -s quand ils sont multipliés et terminent le nombre : quatre-vingts, deux cents, mais quatre-vingt-trois." },
+
+    // Français langue étrangère
+    genre: { nom: 'Le genre des noms', rub: 'gram', expl: "Chaque nom a un genre qu'on apprend avec lui : un restaurant, une baguette." },
+    etav: { nom: 'Être ou avoir', rub: 'gram', expl: "On dit « être content », mais « avoir faim », « avoir froid », « avoir trente ans »." },
+    aux: { nom: 'Passé composé : être ou avoir', rub: 'gram', expl: "Les verbes de mouvement (aller, venir, partir, arriver, revenir…) et les verbes pronominaux se conjuguent avec « être »." },
+    prep: { nom: 'à, en, au + lieu', rub: 'gram', expl: "à + ville (à Lyon), en + pays féminin (en France), au + pays masculin (au Japon), aux + pays pluriel (aux États-Unis)." },
+    contr: { nom: 'au, du, des', rub: 'gram', expl: "à + le = au, de + le = du, de + les = des : je vais au marché, il vient du Japon." },
+    elision: { nom: "L'élision", rub: 'gram', expl: "Devant une voyelle ou un h muet, le et la deviennent l' : l'équipe, l'eau." },
+    conj: { nom: 'Conjugaison', rub: 'gram', expl: "Verbe irrégulier : sa conjugaison s'apprend par cœur." },
+    partitif: { nom: 'Négation et partitif', rub: 'gram', expl: "Après une négation, du, de la, des deviennent « de » : je ne bois pas de vin." },
+    qte: { nom: 'Les quantités', rub: 'gram', expl: "Après une quantité (beaucoup, peu, un kilo), on met « de » : beaucoup de monde." },
+    poss: { nom: 'Les possessifs', rub: 'gram', expl: "Le possessif s'accorde avec ce qu'on possède : son ami, sa sœur, ses amis." },
+    faire: { nom: 'Il fait beau', rub: 'gram', expl: "Pour la météo, on dit « il fait beau », « il fait froid », pas « il est »." },
+    yen: { nom: 'y ou en', rub: 'gram', expl: "« y » remplace un lieu (j'y vais, j'y suis allé). « en » remplace « de + nom » (j'en viens, j'en veux)." },
+    pron: { nom: 'le, les ou leur', rub: 'gram', expl: "« les » remplace un COD (je les vois). « leur » remplace « à eux, à elles » (je leur parle)." },
+    rel: { nom: 'qui ou que', rub: 'gram', expl: "« qui » est le sujet du verbe qui suit (les groupes qui jouent). « que » est le complément (les groupes que nous avons vus)." },
+
+    // Calcul et logique
+    calc: { nom: 'Calcul', rub: 'calc', expl: 'Le résultat ne correspond pas aux nombres du texte.' },
+    date: { nom: 'Date impossible', rub: 'calc', expl: "Avril, juin, septembre et novembre ont 30 jours ; février en a 28 (29 les années bissextiles)." },
+
+    // Images
+    image: { nom: 'Image', rub: 'image', expl: "La photo ne correspond pas au texte." },
+  };
+
+  // Familles de mots qui se confondent : la règle se devine toute seule.
+  const FAMILLES = [
+    [['a', 'à'], 'a'],
+    [['et', 'est'], 'et'],
+    [['son', 'sont'], 'son'],
+    [['on', 'ont'], 'on'],
+    [['ou', 'où'], 'ou'],
+    [['ce', 'se'], 'ce'],
+    [['ces', 'ses', "c'est", "s'est"], 'ces'],
+    [['leur', 'leurs'], 'leur'],
+    [['quel', 'quels', 'quelle', 'quelles', "qu'elle", "qu'elles"], 'quel'],
+    [['quand', 'quant', "qu'en"], 'quand'],
+  ];
+
+  CQ.detecterRegle = function (correct, faute) {
+    const c = CQ.normaliser(correct), f = CQ.normaliser(faute);
+    for (const [mots, code] of FAMILLES) {
+      if (mots.includes(c) && mots.includes(f)) return code;
+    }
+    return null;
+  };
+})();
+</script>
+<script>
+/* Coquilles — brèves pour les enfants (8-11 ans).
+   Syntaxe : {forme correcte|faute 1|faute 2#règle:explication propre à ce mot}.
+   La règle se devine seule pour les homophones courants (a/à, et/est, son/sont…). */
+(function () {
+  'use strict';
+  const CQ = window.CQ;
+  const B = (CQ.BREVES = CQ.BREVES || []);
+  const ajouter = (pub, liste) => liste.forEach((b) => B.push(Object.assign({ pub }, b)));
+
+  ajouter('enfant', [
+    // Niveau 1 : a/à, et/est, pluriel, m devant m-b-p
+    { niv: 1, section: 'École', titre: 'La kermesse',
+      texte: "Samedi, la kermesse {a|à} lieu dans la cour de l'école. Les parents {et|est} les enfants tiendront les stands {à|a} partir de dix heures." },
+    { niv: 1, section: 'Nature', titre: 'Un hérisson au jardin',
+      texte: "Tom {a|à} trouvé un hérisson sous un tas de feuilles. Il {est|et} tout petit {et|est} il dort beaucoup. Tom lui donne {à|a} boire." },
+    { niv: 1, section: 'Sports', titre: 'Victoire au football',
+      texte: "Les {joueurs|joueur#pluriel} de Saint-Malo ont gagné leur match trois {buts|but#pluriel} à zéro. Le gardien {a|à} arrêté un penalty {à|a} la dernière minute." },
+    { niv: 1, section: 'Météo', titre: 'Grand soleil demain',
+      texte: "Demain, il fera beau {et|est} chaud sur toute la région. Pensez {à|a} boire de l'eau {et|est} {à|a} porter un chapeau." },
+    { niv: 1, section: 'Ville', titre: 'La boulangerie de la place',
+      texte: "La boulangerie {a|à} ouvert {à|a} six heures. Les {croissants|croissant#pluriel} sont encore chauds {et|est} bien dorés." },
+    { niv: 1, section: 'Nature', titre: 'Les {oiseaux|oiseaus#pluriel:Les mots en -eau prennent un x au pluriel : des oiseaux, des bateaux.} du parc',
+      texte: "Au printemps, les {oiseaux|oiseaus#pluriel:Les mots en -eau prennent un x au pluriel : des oiseaux, des bateaux.} construisent leur nid dans les {arbres|arbre#pluriel}. La mésange {a|à} déjà pondu six œufs." },
+    { niv: 1, section: 'Culture', titre: 'Une nouvelle bibliothèque',
+      texte: "La ville {a|à} ouvert une bibliothèque {à|a} côté de la mairie. On peut y emprunter des {livres|livre#pluriel} {et|est} des bandes dessinées." },
+    { niv: 1, section: 'Sports', titre: 'Le {champion|chanpion#mbp} de saut',
+      texte: "Léo {a|à} sauté un mètre vingt ! Le jeune {champion|chanpion#mbp} {emporte|enporte#mbp} la médaille d'or {et|est} un {bonbon|bombon#mbp:« bonbon » est une exception : il garde son n devant le b.} géant." },
+    { niv: 1, section: 'Faits divers', titre: 'Le chat et les pompiers',
+      texte: "Un chat était coincé en haut d'un {arbre|arbres#pluriel:Un seul arbre : pas de s.}. Les {pompiers|ponpiers#mbp} sont arrivés avec une grande {échelle|échèle#usage:échelle : é, puis deux l.} {et|est} ils ont sauvé le chat." },
+    { niv: 1, section: 'École', titre: "C'est la rentrée !",
+      texte: "Lundi, les {élèves|élève#pluriel} retrouvent leur classe {et|est} leur maîtresse. Chacun {a|à} un cartable tout neuf {et|est} des crayons bien taillés." },
+    { niv: 1, section: 'Fêtes', titre: "Le carnaval de l'école",
+      texte: "Mardi, l'école fête le carnaval. Lucas {a|à} un costume de pirate {et|est} Jade {est|et} déguisée en princesse. Le défilé part {à|a} quatorze heures." },
+    { niv: 1, section: 'Météo', titre: 'La neige est tombée',
+      texte: "Cette nuit, la neige {est|et} tombée sur la ville. Les {enfants|enfant#pluriel} lancent des boules de neige {et|est} font des glissades. Attention {à|a} ne pas tomber !" },
+    { niv: 1, section: 'Nature', titre: 'Une {ombre|onbre#mbp} dans la forêt',
+      texte: "Zoé {a|à} vu une {ombre|onbre#mbp} passer entre les arbres. C'était un cerf ! Il {a|à} de grands bois {et|est} il court très vite." },
+
+    // Niveau 2 : son/sont, on/ont, ou/où, infinitif, ge/ç, accord du verbe
+    { niv: 2, section: 'Ville', titre: 'Le marché du dimanche',
+      texte: "Les marchands {sont|son} installés depuis l'aube. {On|Ont} y trouve des fruits, des légumes {ou|où} du fromage. Paul vend {son|sont} miel près de la fontaine." },
+    { niv: 2, section: 'École', titre: 'La classe verte',
+      texte: "Les élèves de CM1 {sont|son} partis en classe verte. Ils {ont|on} dormi dans un chalet {où|ou} il n'y avait pas de télé. Ils vont {rentrer|rentré#inf} vendredi." },
+    { niv: 2, section: 'Sciences', titre: 'Une éclipse de Soleil',
+      texte: "Mardi, la Lune va {passer|passé#inf} devant le Soleil. Pour {regarder|regardé#inf} l'éclipse, il faut des lunettes spéciales. Sans elles, {on|ont} risque de s'abîmer les yeux." },
+    { niv: 2, section: 'Sports', titre: 'Le tournoi de judo',
+      texte: "Samedi, nous {commençons|commencons#ge} le tournoi à neuf heures. Les judokas ont {mangé|manger#inf} des pâtes la veille pour avoir de l'énergie. Qui va {gagner|gagné#inf} ?" },
+    { niv: 2, section: 'Ville', titre: 'La piscine rouvre',
+      texte: "Après des travaux, la piscine {a|à} enfin rouvert. Les {enfants|enfant#pluriel} {peuvent|peut#verbe} de nouveau nager le mercredi. Le grand bassin {est|et} chauffé." },
+    { niv: 2, section: 'École', titre: "Le potager de l'école",
+      texte: "Les élèves {ont|on} planté des tomates {et|est} des radis. Chaque matin, ils {arrosent|arrose#verbe} le potager. {Où|Ou} mettre les citrouilles ? Au fond du jardin !" },
+    { niv: 2, section: 'Vacances', titre: 'Nous {voyageons|voyagons#ge} en train',
+      texte: "Nous {voyageons|voyagons#ge} jusqu'à la mer. Le train va {partir|parti#inf} {à|a} midi. Mes cousins {sont|son} déjà sur le quai." },
+    { niv: 2, section: 'Faits divers', titre: 'Le perroquet bavard',
+      texte: "Un perroquet s'est échappé de sa cage. Les voisins {ont|on} entendu un oiseau {crier|crié#inf} « Bonjour ! » dans le parc. Ses propriétaires {sont|son} venus le chercher." },
+    { niv: 2, section: 'Ville', titre: 'La fête des voisins',
+      texte: "Vendredi soir, {on|ont} organise un repas dans la rue. Chacun apporte un plat {ou|où} un dessert. Les enfants {jouent|joue#verbe} au ballon jusqu'à la nuit." },
+    { niv: 2, section: 'Nature', titre: "Les grenouilles de l'étang",
+      texte: "Au bord de l'étang, les grenouilles {chantent|chante#verbe} tous les soirs. Elles {sont|son} vertes {et|est} elles {sautent|saute#verbe} très loin." },
+    { niv: 2, section: 'Santé', titre: 'Nous {mangeons|mangons#ge} trop de sucre',
+      texte: "Selon une étude, les enfants {mangent|mange#verbe} trop de bonbons. Le docteur conseille de {boire|boit#inf} de l'eau {et|est} de {croquer|croqué#inf} des fruits." },
+
+    // Niveau 3 : ce/se, c'est/s'est, ces/ses, leur, accords
+    { niv: 3, section: 'Fêtes', titre: 'Le cirque arrive en ville',
+      texte: "Le cirque {s'est|c'est} installé sur la place. {C'est|S'est} le plus grand chapiteau de la région ! Les clowns {se|ce} maquillent avant le spectacle." },
+    { niv: 3, section: 'École', titre: 'Deux nouvelles élèves',
+      texte: "Inès et sa sœur sont {arrivées|arrivés|arrivé#ppe:Inès et sa sœur : deux filles, donc « arrivées ».} du Portugal en septembre. Elles {se|ce} sont vite fait des amies. {Ces|Ses} jours-ci, elles apprennent le français à toute vitesse." },
+    { niv: 3, section: 'Nature', titre: 'Le jardin en fleurs',
+      texte: "Le jardin public est plein de tulipes {blanches|blanche|blancs#accord} et de rosiers {fleuris|fleuri#accord}. {Ce|Se} printemps est très doux." },
+    { niv: 3, section: 'Culture', titre: 'Le concours de dessin',
+      texte: "Les gagnants du concours de dessin {ont|on} été applaudis. La mairie {leur|leurs} a offert des livres. {Ces|Ses} jours-ci, leurs œuvres sont {exposées|exposés#ppe:Les œuvres (féminin pluriel) sont exposées.} à la médiathèque." },
+    { niv: 3, section: 'Faits divers', titre: 'Le chien perdu',
+      texte: "Hier, un chien {s'est|c'est} perdu dans le quartier. Ses maîtres l'ont cherché partout. Finalement, il était caché chez la voisine, {ce|se} petit coquin !" },
+    { niv: 3, section: 'Sports', titre: 'Les basketteuses en finale',
+      texte: "Les filles du club {sont|son} {qualifiées|qualifiés#ppe:Les filles : féminin pluriel, donc « qualifiées ».} pour la finale. Elles {se|ce} préparent depuis des mois. {C'est|S'est} leur première finale !" },
+    { niv: 3, section: 'Sciences', titre: 'Les dinosaures au musée',
+      texte: "Le musée présente des squelettes {géants|géant#accord} de dinosaures. Les plus {anciens|ancien#accord} ont 150 millions d'années. Les enfants {se|ce} prennent en photo devant le T-rex." },
+    { niv: 3, section: 'Hiver', titre: 'Les {bonshommes|bonhommes#pluriel:Au pluriel, on écrit « des bonshommes » : les deux parties du mot prennent un s.} de neige',
+      texte: "Les enfants ont fait trois {bonshommes|bonhommes#pluriel:Au pluriel, on écrit « des bonshommes » : les deux parties du mot prennent un s.} de neige. Ils {leur|leurs} ont mis des écharpes {et|est} des {chapeaux|chapeaus#pluriel:Les mots en -eau prennent un x au pluriel.}." },
+    { niv: 3, section: 'Ville', titre: 'Le parc agrandi',
+      texte: "Le parc {s'est|c'est} agrandi : {c'est|s'est} maintenant le plus grand de la ville. Les jeux {sont|son} {installés|installé#ppe} près du lac {où|ou} nagent les canards." },
+  ]);
+})();
+</script>
+<script>
+/* Coquilles — brèves pour les adultes francophones.
+   Syntaxe : {forme correcte|faute 1|faute 2#règle:explication propre à ce mot}. */
+(function () {
+  'use strict';
+  const CQ = window.CQ;
+  const B = (CQ.BREVES = CQ.BREVES || []);
+  const ajouter = (pub, liste) => liste.forEach((b) => B.push(Object.assign({ pub }, b)));
+
+  ajouter('adulte', [
+    // Niveau 1 : homophones courants, infinitif, -ez
+    { niv: 1, section: 'Économie', titre: 'Le prix du café grimpe',
+      texte: "Le prix du café {a|à} augmenté de 12 % en un an. Les torréfacteurs {sont|son} inquiets {et|est} certains envisagent de {changer|changé#inf} de fournisseurs." },
+    { niv: 1, section: 'Vie locale', titre: 'Travaux rue Pasteur',
+      texte: "Les travaux de la rue Pasteur {ont|on} pris du retard. La circulation sera {coupée|coupé|couper#ppe:La circulation sera coupée : le participe s'accorde avec « la circulation ».} jusqu'à vendredi. Les riverains {peuvent|peut#verbe} se garer place du Marché." },
+    { niv: 1, section: 'Santé', titre: 'Grippe : pensez au vaccin',
+      texte: "La campagne de vaccination contre la grippe {a|à} commencé. Les pharmaciens {sont|son} prêts {à|a} vacciner sans rendez-vous." },
+    { niv: 1, section: 'Culture', titre: 'Le jazz fait le plein',
+      texte: "Le festival {a|à} attiré plus de 10 000 spectateurs. Les concerts {se|ce} sont {déroulés|déroulé#ppe:« Se dérouler » se conjugue avec être : accord avec « les concerts ».} sous un soleil radieux {et|est} l'ambiance était excellente." },
+    { niv: 1, section: 'Numérique', titre: 'La fibre arrive aux Lilas',
+      texte: "Le quartier des Lilas {est|et} enfin raccordé à la fibre. La {connexion|connection#usage:« connection » est anglais ; en français, on écrit « connexion ».} sera dix fois plus rapide. Les habitants {peuvent|peut#verbe} dès maintenant {souscrire|souscrit#inf} un abonnement." },
+    { niv: 1, section: 'Société', titre: 'Le covoiturage progresse',
+      texte: "De plus en plus de salariés {ont|on} choisi le covoiturage pour {aller|allé#inf} au travail. {On|Ont} estime que cela divise par deux le coût des trajets." },
+    { niv: 1, section: 'Sports', titre: 'Marathon : record battu',
+      texte: "Le marathon de la ville {s'est|c'est} couru dimanche. Le vainqueur {a|à} battu le record de l'épreuve de deux minutes. Les {coureurs|coureur#pluriel} ont été {encouragés|encouragé|encourager#ppe:Avec être, accord avec le sujet : les coureurs ont été encouragés.} tout au long du parcours." },
+    { niv: 1, section: 'Pratique', titre: 'Arnaques par SMS : prudence',
+      texte: "Des SMS frauduleux circulent en ce moment. Ils invitent {à|a} régler une amende {ou|où} des frais de livraison. Ne cliquez jamais sur le lien {et|est} ne {communiquez|communiquer#ez} pas vos coordonnées bancaires." },
+    { niv: 1, section: 'Vie locale', titre: 'Le marché de Noël',
+      texte: "Les chalets {sont|son} {installés|installé#ppe} sur la place depuis lundi. Les visiteurs pourront y {acheter|acheté#inf} des cadeaux {et|est} déguster du vin chaud." },
+    { niv: 1, section: 'Santé', titre: 'Canicule : les bons réflexes',
+      texte: "Avec la vague de chaleur, il faut {boire|boit#inf} régulièrement, même sans soif. Évitez de {sortir|sorti#inf} aux heures les plus chaudes {et|est} fermez les volets dans la journée." },
+    { niv: 1, section: 'Vie locale', titre: 'Le vide-grenier du quartier',
+      texte: "Le vide-grenier {a|à} lieu dimanche de 8 h à 18 h. Les exposants {doivent|doit#verbe} s'inscrire {à|a} la mairie. {On|Ont} attend plus de cent stands." },
+
+    // Niveau 2 : leur, quel/qu'elle, quant, futur/conditionnel, participe avec avoir, vingt/cent
+    { niv: 2, section: 'Vie locale', titre: 'Le budget voté',
+      texte: "Le budget {a|à} été adopté hier soir. {Apparemment|Apparament#usage:apparemment : deux p, deux m.}, l'opposition n'était pas au complet. Le maire {leur|leurs} a promis un nouveau débat en janvier." },
+    { niv: 2, section: 'Entreprise', titre: 'Une réunion interminable',
+      texte: "{Quelle|Qu'elle} réunion ! Les participants pensaient {qu'elle|quelle} durerait une heure ; elle {s'est|c'est} achevée à 22 heures." },
+    { niv: 2, section: 'Économie', titre: 'Le chômage recule',
+      texte: "Selon les derniers chiffres, le chômage {a|à} reculé de 0,3 point. {Quant|Quand} aux embauches, elles {ont|on} progressé dans le bâtiment." },
+    { niv: 2, section: 'Pratique', titre: 'Déménager sans stress',
+      texte: "Avant de déménager, pensez à {prévenir|prévenu#inf} votre assurance et votre banque de votre nouvelle {adresse|addresse#usage:Un seul d en français : adresse (deux en anglais : address).}. Un conseil : si j'étais vous, je {ferais|ferai#futcond:Avec « si j'étais vous », on emploie le conditionnel : je ferais.} suivre mon courrier." },
+    { niv: 2, section: 'Sports', titre: 'Le nouveau gymnase',
+      texte: "Le gymnase, dont les travaux {ont|on} duré deux ans, sera inauguré lundi. Les associations sportives {l'attendaient|l'attendait#verbe} avec impatience. Les clubs {devront|devrons#verbe} réserver leurs créneaux en ligne." },
+    { niv: 2, section: 'Cuisine', titre: 'Recette : courgettes farcies',
+      texte: "Les courgettes que j'ai {achetées|acheté|achetés#ppa:Le COD « que » (les courgettes) est placé avant : achetées.} au marché étaient superbes. Je les ai {farcies|farci#ppa:Le COD « les » (les courgettes) est placé avant : farcies.} avec de la viande {et|est} du riz." },
+    { niv: 2, section: 'Transports', titre: 'Grève jeudi dans les transports',
+      texte: "Une grève est prévue jeudi. La direction {prévoit|prévois#verbe} un bus sur deux et les usagers {seront|serons#verbe} informés en temps réel. « Je {prendrai|prendrais#futcond:Une décision certaine (« c'est décidé ») s'écrit au futur : je prendrai.} mon vélo, c'est décidé », confie une habitante." },
+    { niv: 2, section: 'Culture', titre: 'Le Rex fête ses {quatre-vingts|quatre-vingt#vingt} ans',
+      texte: "Le cinéma Le Rex fête ses {quatre-vingts|quatre-vingt#vingt} ans. Pour l'occasion, {deux cents|deux cent#vingt} places seront offertes. La salle a été {rénovée|rénové#ppe} l'an dernier." },
+    { niv: 2, section: 'Environnement', titre: 'Les retraités nettoient les berges',
+      texte: "Une vingtaine de retraités {se|ce} sont réunis pour nettoyer les berges du fleuve. Ils {comptent|compte#verbe} renouveler l'opération chaque mois. Les déchets {ramassés|ramassé#accord} rempliraient un camion." },
+    { niv: 2, section: 'Mobilité', titre: 'Des pistes cyclables plus {confortables|comfortables#usage:« comfortable » est anglais ; en français : confortable.}',
+      texte: "La métropole poursuit le {développement|dévelopement|dévellopement#usage:développement : deux p, un seul l.} de son réseau cyclable. Selon une enquête, les cyclistes {trouvent|trouve#verbe} les nouvelles pistes plus {confortables|comfortables#usage:« comfortable » est anglais ; en français : confortable.}." },
+    { niv: 2, section: 'Numérique', titre: 'Mots de passe : les erreurs à éviter',
+      texte: "Un bon mot de passe {doit|doivent#verbe} compter au moins douze caractères. Évitez votre date de naissance {ou|où} le nom de votre chat, et ne {réutilisez|réutiliser#ez} jamais le même partout." },
+
+    // Niveau 3 : participes difficiles, quoique, quelque, si + conditionnel, faux amis
+    { niv: 3, section: 'Social', titre: 'Réforme : les syndicats mobilisés',
+      texte: "Les mesures que le gouvernement a {prises|pris#ppa:Le COD « que » (les mesures, féminin pluriel) est placé avant : prises.} n'ont pas convaincu. Les syndicats, {quoiqu'ils|quoi qu'ils#quoique} soient divisés, appellent à manifester." },
+    { niv: 3, section: 'Économie', titre: 'Un écart dans les comptes',
+      texte: "La comptable s'est {rendu|rendue#ppr:« Se rendre compte » : le participe reste invariable.} compte d'une erreur dans le bilan. Les sommes qu'elle a {vérifiées|vérifié#ppa:Le COD « qu' » (les sommes) est placé avant : vérifiées.} montrent un écart de 3 000 €. {Quelles|Quels|Qu'elles} que soient les causes, un audit aura lieu." },
+    { niv: 3, section: 'Sports', titre: 'Une saison {exceptionnelle|exceptionelle#usage:exceptionnelle : deux n.}',
+      texte: "Le club féminin a vécu une saison {exceptionnelle|exceptionelle#usage:exceptionnelle : deux n.}. Les joueuses se sont {succédé|succédées#ppr:« Se succéder » : on succède à quelqu'un, « se » n'est pas COD, le participe reste invariable.} au poste de capitaine, et toutes se sont {imposées|imposé#ppr:« S'imposer » : « se » est COD et placé avant, accord au féminin pluriel.} comme des leaders." },
+    { niv: 3, section: 'Patrimoine', titre: 'Le {dilemme|dilemne#usage:dilemme : deux m, pas de n.} de la mairie',
+      texte: "La rénovation de l'église pose un {dilemme|dilemne#usage:dilemme : deux m, pas de n.} à la municipalité : les travaux coûteraient {davantage|d'avantage#usage:« davantage » (= plus) s'écrit en un seul mot.} que prévu. Les élus sont {censés|sensés#usage:« censé » = supposé ; « sensé » = raisonnable.} trancher avant l'été." },
+    { niv: 3, section: 'Logement', titre: "Les loyers s'envolent",
+      texte: "Les loyers ont grimpé de 8 % en deux ans. Beaucoup de familles sont {prêtes|près|prête#pres:« prêtes à » = disposées à, accordé avec « familles ».} à quitter le centre-ville, alors que {quelque|quelques#quelque} 2 000 logements restent vacants." },
+    { niv: 3, section: 'Vie locale', titre: 'Fusion des communes',
+      texte: "Les deux communes ont {fusionné|fusionnées#ppa:Avec avoir et sans COD, le participe reste invariable : elles ont fusionné.} le 1er janvier. Si le projet {avait|aurait#si} échoué, la dette serait devenue trop lourde. Les habitants, {quel|quels|qu'elle} que soit leur avis, gardent leur code postal." },
+    { niv: 3, section: 'Travail', titre: 'Télétravail : bilan mitigé',
+      texte: "Les salariés que nous avons {interrogés|interrogé#ppa:Le COD « que » (les salariés) est placé avant : interrogés.} apprécient le télétravail. Mais beaucoup se sont {plaints|plaint#ppr:« Se plaindre » : accord avec le sujet.} de l'isolement. « {On n'a|On a#neg} pas vu nos collègues depuis des mois », confie l'un d'eux." },
+    { niv: 3, section: 'Culture', titre: 'Le {langage|language#usage:« language » est anglais ; en français : langage.} des ados',
+      texte: "Une linguiste publie un livre sur le {langage|language#usage:« language » est anglais ; en français : langage.} des adolescents. Les expressions qu'elle a {recueillies|recueilli#ppa:Le COD « qu' » (les expressions) est placé avant : recueillies.} viennent souvent de l'anglais." },
+    { niv: 3, section: 'Santé', titre: 'Déserts médicaux : la commune agit',
+      texte: "Pour {pallier la|pallier à la#usage:On dit « pallier quelque chose », sans « à ».} pénurie de médecins, la commune finance un cabinet. Deux généralistes s'y sont {installés|installé#ppe} en septembre ; une troisième les rejoindra au printemps." },
+    { niv: 3, section: 'Transports', titre: 'Le périphérique, un {cauchemar|cauchemard#usage:cauchemar : pas de d à la fin, malgré « cauchemarder ».}',
+      texte: "Le chantier du périphérique tourne au {cauchemar|cauchemard#usage:cauchemar : pas de d à la fin, malgré « cauchemarder ».}. Les embouteillages se sont {multipliés|multiplié#ppr:« Se multiplier » : accord avec le sujet, les embouteillages.} et les commerçants {craignent|craigne#verbe} une baisse de fréquentation." },
+  ]);
+})();
+</script>
+<script>
+/* Coquilles — brèves pour les personnes qui apprennent le français (A1 à B1).
+   Les pièges visés : genre des noms, être/avoir, prépositions de lieu, contractions,
+   conjugaisons irrégulières, partitifs, accords. */
+(function () {
+  'use strict';
+  const CQ = window.CQ;
+  const B = (CQ.BREVES = CQ.BREVES || []);
+  const ajouter = (pub, liste) => liste.forEach((b) => B.push(Object.assign({ pub }, b)));
+
+  ajouter('apprenant', [
+    // Niveau 1 : genre, être/avoir, à/en/au, au/du, élision
+    { niv: 1, section: 'Ville', titre: 'Bienvenue à Lyon',
+      texte: "Marco habite {à|en|au#prep:Devant une ville, on dit « à » : à Lyon.} Lyon depuis un an. Il travaille dans {un|une#genre:« restaurant » est masculin : un restaurant.} restaurant italien. Le soir, il prend {le|la#genre:« métro » est masculin : le métro.} métro pour rentrer." },
+    { niv: 1, section: 'Vacances', titre: 'La famille Martin en vacances',
+      texte: "La famille Martin part {en|au|à#prep:« Espagne » est un pays féminin : en Espagne.} Espagne cet été. Les enfants {sont|ont#etav:On dit « être content ».} très contents. Ils vont {au|à le#contr} bord de la mer tous les jours." },
+    { niv: 1, section: 'Courses', titre: 'Au marché',
+      texte: "Sofia achète {une|un#genre:« baguette » est féminin : une baguette.} baguette {et|est} {du|de le#contr} fromage. Elle {a|est#etav:On dit « avoir faim ».} faim !" },
+    { niv: 1, section: 'Travail', titre: 'Le nouveau collègue',
+      texte: "Kenji vient {du|de le#contr} Japon. Il {a|est#etav:On dit « avoir trente ans ».} trente ans et il parle trois langues. {L'équipe|La équipe#elision} est contente de travailler avec lui." },
+    { niv: 1, section: 'Météo', titre: 'Beau temps sur Nice',
+      texte: "Aujourd'hui, il {fait|est#faire} beau à Nice, mais le matin il {fait|est#faire} froid. Prenez {un|une#genre:« pull » est masculin : un pull.} pull !" },
+    { niv: 1, section: 'Ville', titre: 'Une nouvelle boulangerie',
+      texte: "{Une|Un#genre:« boulangerie » est féminin : une boulangerie.} nouvelle boulangerie ouvre rue Victor-Hugo. Le pain est très bon et {les|le#pluriel:Au pluriel, l'article est « les » : les croissants.} croissants aussi. Elle {est|et} ouverte tous les jours." },
+    { niv: 1, section: 'Loisirs', titre: 'Le week-end de Paula',
+      texte: "Le samedi, Paula {va|vais#conj:aller : je vais, tu vas, il/elle va.} à la piscine. Le dimanche, elle {fait|faire#conj:faire : je fais, tu fais, il/elle fait.} du vélo avec {ses|son#poss:« amis » est au pluriel : ses amis.} amis." },
+    { niv: 1, section: 'Sorties', titre: 'Concert à la plage',
+      texte: "Ce soir, il y a {un|une#genre:« concert » est masculin : un concert.} concert {à la|au#genre:« plage » est féminin : à la plage.} plage. C'est {gratuit|gratuite#accord:Après « c'est », l'adjectif reste au masculin : c'est gratuit.} ! Les musiciens viennent {des|de les#contr} États-Unis." },
+    { niv: 1, section: 'Études', titre: 'La rentrée universitaire',
+      texte: "Les étudiants {étrangers|étranger#accord} arrivent {en|au|à#prep:« France » est un pays féminin : en France.} France. Ils cherchent {un|une#genre:« logement » est masculin : un logement.} logement près de l'université." },
+    { niv: 1, section: 'Ville', titre: 'Le café du coin',
+      texte: "Le café du coin {est|et} ouvert tous les jours. On peut y boire {un|une#genre:« café » est masculin : un café.} café ou {une|un#genre:« limonade » est féminin : une limonade.} limonade. Le serveur {s'appelle|s'appele#usage:appeler → il s'appelle (deux l).} Ahmed." },
+
+    // Niveau 2 : passé composé, partitif, quantités, verbes irréguliers
+    { niv: 2, section: 'Voyages', titre: 'Un été à Rome',
+      texte: "L'été dernier, nous {sommes|avons#aux:« aller » se conjugue avec être : nous sommes allés.} allés à Rome. Nous {avons|sommes#aux:« visiter » se conjugue avec avoir.} visité le Colisée et nous avons mangé des glaces {délicieuses|délicieux#accord:« glaces » est féminin pluriel : délicieuses.}." },
+    { niv: 2, section: 'Voyages', titre: 'Le retour de Clara',
+      texte: "Clara {est|a#aux:« revenir » se conjugue avec être.} revenue du Canada hier soir. Elle est {arrivée|arrivé#ppe:Clara est une femme : elle est arrivée.} à l'aéroport à minuit. Ses parents l'attendaient." },
+    { niv: 2, section: 'Restaurant', titre: 'Au restaurant',
+      texte: "Je ne bois pas {de|du#partitif} vin, je préfère {l'eau|la eau#elision}. Mon ami prend {de la|du#genre:« soupe » est féminin : de la soupe.} soupe et une salade {verte|vert#accord}." },
+    { niv: 2, section: 'Fêtes', titre: 'Le marché de Noël',
+      texte: "Il y a beaucoup {de|du#qte} monde au marché de Noël. Les enfants {font|faisent#conj:faire : nous faisons, vous faites, ils font.} des photos avec le père Noël. Il {fait|est#faire} très froid, alors on boit du chocolat chaud." },
+    { niv: 2, section: 'Sorties', titre: 'Une fête chez moi',
+      texte: "Samedi, nous {faisons|fesons#conj:faire : nous faisons (on prononce « fe », mais on écrit « fai »).} une fête chez moi. Mes amis {viennent|venent#conj:venir : ils viennent.} avec des gâteaux. Vous {pouvez|pouvons#conj:pouvoir : vous pouvez.} venir aussi !" },
+    { niv: 2, section: 'Travail', titre: "Un entretien d'embauche",
+      texte: "Je cherche un emploi depuis trois mois. Hier, {j'ai|je suis#aux:« passer un entretien » (avec un complément) se conjugue avec avoir.} passé un entretien dans une banque. La directrice était très {gentille|gentil#accord} et elle va me {rappeler|rappelé#inf} vendredi." },
+    { niv: 2, section: 'Courses', titre: 'Les Français et le pain',
+      texte: "Les Français {mangent|mange#verbe} beaucoup {de|du#qte} pain. Ils {l'achètent|l'achetent#usage:acheter → ils achètent (accent grave).} souvent {à la|au#genre:« boulangerie » est féminin : à la boulangerie.} boulangerie." },
+    { niv: 2, section: 'Logement', titre: 'Appartement à louer',
+      texte: "Appartement {lumineux|lumineuse#accord:« appartement » est masculin : lumineux.} de trois pièces, {au|à le#contr} centre-ville. La cuisine est {équipée|équipé#accord} et il y a {un|une#genre:« balcon » est masculin : un balcon.} grand balcon." },
+    { niv: 2, section: 'Santé', titre: 'Chez le médecin',
+      texte: "Ma fille {a|est#etav:On dit « avoir mal ».} mal à la gorge. Le médecin lui a donné {un|une#genre:« sirop » est masculin : un sirop.} sirop. Elle doit rester {à la|au#genre:« maison » est féminin : à la maison.} maison deux jours." },
+
+    // Niveau 3 : accords du participe, y/en, pronoms, qui/que
+    { niv: 3, section: 'Vacances', titre: 'Lucie et Marie en Bretagne',
+      texte: "Lucie et Marie {sont|ont#aux:« partir » se conjugue avec être.} parties en Bretagne. Elles se sont {baignées|baigné#ppr:« se baigner » : accord avec le sujet, Lucie et Marie.} tous les jours, même quand il {faisait|était#faire} froid." },
+    { niv: 3, section: 'Voyages', titre: 'Marseille, coup de cœur',
+      texte: "Tu connais Marseille ? {J'y|J'en#yen} suis allé l'année dernière. Les calanques ? Je {les|leur#pron} ai trouvées magnifiques. Il faut absolument {y|en#yen} aller !" },
+    { niv: 3, section: 'Travail', titre: 'Le stage de Youssef',
+      texte: "Youssef a fait un stage dans une entreprise {où|ou} il a beaucoup appris. Ses collègues {l'ont|l'a#verbe} bien aidé. Il espère {qu'on|qu'ont#on} lui proposera un contrat." },
+    { niv: 3, section: 'Cuisine', titre: 'La recette des crêpes',
+      texte: "Pour faire des crêpes, il faut {de la|du#genre:« farine » est féminin : de la farine.} farine, des œufs et {du|de la#genre:« lait » est masculin : du lait.} lait. Pour des crêpes salées, on ne met pas {de|du#partitif} sucre." },
+    { niv: 3, section: 'Transports', titre: 'À la gare',
+      texte: "Le train pour Bordeaux part {du|de la#genre:« quai » est masculin : du quai.} quai numéro 3. Les voyageurs {doivent|doit#verbe} se présenter dix minutes avant le départ. Le bar {se trouve|se trouvent#verbe} dans la voiture 4." },
+    { niv: 3, section: 'Culture', titre: 'La fête de la musique',
+      texte: "Le 21 juin, on {joue|jouent#verbe:« on » se conjugue comme « il » : on joue.} de la musique dans toutes les rues. Les groupes {que|qui#rel} nous avons {vus|vu#ppa:Le COD « que » (les groupes) est placé avant : vus.} étaient excellents." },
+  ]);
+})();
+</script>
+<script>
+/* Coquilles — articles illustrés. Le texte fait foi : si la photo ne correspond pas,
+   c'est elle qu'il faut toucher. « ok » = la bonne photo, « ko » = les photos fautives.
+   Les emoji servent d'illustrations provisoires, en attendant de vrais dessins. */
+(function () {
+  'use strict';
+  const CQ = window.CQ;
+  const TOUS = ['enfant', 'adulte', 'apprenant'];
+
+  CQ.IMAGES = [
+    { pub: TOUS, niv: 1, section: 'Faits divers', titre: 'Un renard au poulailler',
+      texte: 'Cette nuit, un renard est entré dans le poulailler. Les trois poules ont eu très peur !',
+      ok: '🦊🐔🐔🐔', ko: ['🐺🐔🐔🐔', '🦊🐔🐔'], expl: 'Il fallait un renard et trois poules.' },
+    { pub: TOUS, niv: 1, section: 'Météo', titre: 'Grand soleil sur la côte',
+      texte: "Grand soleil aujourd'hui sur la côte : les surfeurs sont ravis.",
+      ok: '☀️🏄🌊', ko: ['🌧️🏄🌊', '❄️🏄🌊'], expl: 'Le texte annonce du soleil.' },
+    { pub: TOUS, niv: 1, section: 'Culture', titre: 'Le chat de la bibliothèque',
+      texte: 'Un chat a adopté la bibliothèque municipale. Il dort toute la journée sur les livres.',
+      ok: '🐈📚', ko: ['🐕📚', '🐈🍕'], expl: 'Il fallait un chat et des livres.' },
+    { pub: TOUS, niv: 1, section: 'Transports', titre: 'Le tramway arrive',
+      texte: "Le nouveau tramway circule depuis lundi entre la gare et l'hôpital.",
+      ok: '🚊', ko: ['🚌', '🚂'], expl: "Le texte parle d'un tramway." },
+    { pub: TOUS, niv: 1, section: 'Nature', titre: 'Une belle cueillette',
+      texte: 'Les promeneurs ont rapporté des paniers pleins de champignons.',
+      ok: '🧺🍄🍄', ko: ['🧺🍓🍓', '🧺🌰🌰'], expl: 'Il fallait des champignons.' },
+    { pub: TOUS, niv: 1, section: 'Faits divers', titre: 'Le vélo retrouvé',
+      texte: 'La police a retrouvé le vélo volé de Mme Lefèvre.',
+      ok: '🚲👮', ko: ['🛴👮', '🏍️👮'], expl: 'Il fallait un vélo.' },
+    { pub: TOUS, niv: 1, section: 'Nature', titre: 'Une baleine au large',
+      texte: "Des pêcheurs ont aperçu une baleine au large de l'île.",
+      ok: '🐋⛵', ko: ['🦈⛵', '🐙⛵'], expl: 'Il fallait une baleine.' },
+    { pub: TOUS, niv: 1, section: 'Concours', titre: 'La meilleure baguette',
+      texte: 'Le boulanger du village a gagné le prix de la meilleure baguette.',
+      ok: '🥖🏆', ko: ['🥐🏆', '🥨🏆'], expl: 'Il fallait une baguette.' },
+    { pub: TOUS, niv: 1, section: 'Météo', titre: 'La neige bloque les routes',
+      texte: 'La neige tombe sur le Jura depuis ce matin : les routes sont bloquées.',
+      ok: '🌨️🚗', ko: ['☀️🚗', '🌧️🚗'], expl: 'Le texte parle de neige.' },
+    { pub: TOUS, niv: 1, section: 'Zoo', titre: 'Un bébé éléphant',
+      texte: 'Le zoo accueille un bébé éléphant, né la semaine dernière.',
+      ok: '🐘', ko: ['🦏', '🦛'], expl: 'Il fallait un éléphant.' },
+    { pub: TOUS, niv: 1, section: 'Musique', titre: 'Le guitariste de la place',
+      texte: 'Un guitariste joue tous les soirs sur la place du marché.',
+      ok: '🎸', ko: ['🎻', '🎺'], expl: 'Il fallait une guitare.' },
+    { pub: TOUS, niv: 1, section: 'Festival', titre: 'Sous la pluie',
+      texte: "La pluie n'a pas découragé les festivaliers, venus avec leurs parapluies.",
+      ok: '🌧️☂️☂️', ko: ['☀️😎', '❄️⛄'], expl: 'Le texte parle de pluie et de parapluies.' },
+    { pub: TOUS, niv: 1, section: 'Secours', titre: 'Feu de broussailles',
+      texte: 'Les pompiers ont éteint un feu de broussailles près de la route.',
+      ok: '🚒🔥', ko: ['🚑🔥', '🚓🔥'], expl: 'Il fallait un camion de pompiers.' },
+    { pub: TOUS, niv: 1, section: 'Nature', titre: 'Le retour des abeilles',
+      texte: 'Les apiculteurs sont contents : les abeilles sont de retour.',
+      ok: '🐝🍯', ko: ['🐞🍯', '🦋🍯'], expl: 'Il fallait des abeilles.' },
+    { pub: TOUS, niv: 1, section: 'Sciences', titre: "Nuit d'étoiles",
+      texte: 'Ciel dégagé cette nuit : idéal pour observer les étoiles.',
+      ok: '🌙⭐⭐⭐', ko: ['☀️⭐⭐⭐', '🌧️🌙'], expl: "C'est la nuit, avec des étoiles." },
+    { pub: TOUS, niv: 2, section: 'Nature', titre: 'Les tournesols',
+      texte: 'Les champs de tournesols attirent les photographes.',
+      ok: '🌻🌻🌻📷', ko: ['🌷🌷🌷📷', '🌹🌹🌹📷'], expl: 'Il fallait des tournesols.' },
+    { pub: TOUS, niv: 2, section: 'Nature', titre: 'Un hibou dans la grange',
+      texte: 'Un agriculteur a découvert un hibou endormi dans sa grange.',
+      ok: '🦉', ko: ['🦅', '🦜'], expl: 'Il fallait un hibou.' },
+    { pub: TOUS, niv: 2, section: 'Zoo', titre: 'La tortue centenaire',
+      texte: 'Le zoo fête les cent ans de sa tortue géante.',
+      ok: '🐢🎂', ko: ['🐌🎂', '🦎🎂'], expl: 'Il fallait une tortue.' },
+
+    { pub: ['enfant', 'apprenant'], niv: 1, section: 'Repas', titre: 'Pizza pour tous',
+      texte: 'Le restaurant offre une part de pizza à chaque enfant.',
+      ok: '🍕👧👦', ko: ['🍔👧👦', '🌭👧👦'], expl: 'Il fallait de la pizza.' },
+    { pub: ['enfant', 'apprenant'], niv: 1, section: 'Animaux', titre: 'Le chien de Léon',
+      texte: 'Léon promène son chien tous les matins dans le parc.',
+      ok: '🐕🌳', ko: ['🐈🌳', '🐇🌳'], expl: 'Il fallait un chien.' },
+    { pub: ['enfant', 'apprenant'], niv: 2, section: 'Ville', titre: 'Le marché aux fleurs',
+      texte: 'Au marché, on trouve des roses, des tulipes et des tournesols.',
+      ok: '🌹🌷🌻', ko: ['🌹🌷🌵', '🍎🌷🌻'], expl: 'Il fallait une rose, une tulipe et un tournesol.' },
+    { pub: ['apprenant'], niv: 1, section: 'Petit-déjeuner', titre: 'Le petit-déjeuner',
+      texte: 'Le matin, beaucoup de Français boivent un café et mangent un croissant.',
+      ok: '☕🥐', ko: ['🍵🥐', '☕🥞'], expl: 'Il fallait un café et un croissant.' },
+    { pub: ['apprenant'], niv: 2, section: 'Transports', titre: 'En avion vers Montréal',
+      texte: "Nadia prend l'avion pour aller à Montréal.",
+      ok: '✈️', ko: ['🚢', '🚆'], expl: "Nadia prend l'avion." },
+
+    { pub: ['adulte', 'apprenant'], niv: 1, section: 'Météo', titre: 'Record de chaleur',
+      texte: 'Le thermomètre a dépassé 40 °C à Toulouse.',
+      ok: '🌡️☀️', ko: ['🌡️❄️', '🌡️🌧️'], expl: 'Le texte parle de chaleur.' },
+    { pub: ['adulte'], niv: 1, section: 'Économie', titre: "L'essence repart à la hausse",
+      texte: "Le prix de l'essence augmente à nouveau cette semaine.",
+      ok: '⛽📈', ko: ['⛽📉'], expl: 'Le prix augmente : la courbe doit monter.' },
+    { pub: ['adulte'], niv: 2, section: 'Économie', titre: 'Les ventes de vélos reculent',
+      texte: 'Les ventes de vélos électriques baissent cette année.',
+      ok: '🚲📉', ko: ['🚲📈'], expl: 'Les ventes baissent : la courbe doit descendre.' },
+    { pub: ['adulte'], niv: 2, section: 'Santé', titre: 'Nous dormons moins',
+      texte: "Une étude montre que nous dormons moins qu'il y a vingt ans.",
+      ok: '😴🛏️📉', ko: ['😴🛏️📈'], expl: 'Le sommeil diminue : la courbe doit descendre.' },
+  ];
+
+  // Objets à compter : le texte annonce un nombre, la photo en montre parfois un autre.
+  CQ.OBJETS_A_COMPTER = [
+    { e: '🍎', titre: 'Belle récolte', phrase: (p, n) => `${p} a cueilli ${n} pommes dans le verger.` },
+    { e: '🦆', titre: "Au bord de l'étang", phrase: (p, n) => `${n} canards nagent sur l'étang du parc.` },
+    { e: '🚗', titre: 'Embouteillage', phrase: (p, n) => `${n} voitures attendent au feu rouge.` },
+    { e: '⭐', titre: 'Étoiles filantes', phrase: (p, n) => `Cette nuit, ${p} a vu ${n} étoiles filantes.` },
+    { e: '📕', titre: 'Lecture', phrase: (p, n) => `${p} a emprunté ${n} livres à la bibliothèque.` },
+    { e: '🐟', titre: 'Partie de pêche', phrase: (p, n) => `${p} a pêché ${n} poissons avec son grand-père.` },
+    { e: '🦋', titre: 'Papillons au jardin', phrase: (p, n) => `${n} papillons se sont posés sur les fleurs.` },
+    { e: '🎁', titre: 'Veille de Noël', phrase: (p, n) => `${n} cadeaux attendent sous le sapin.` },
+    { e: '🥚', titre: 'À la ferme', phrase: (p, n) => `La poule a pondu ${n} œufs cette semaine.` },
+    { e: '🍅', titre: 'Le potager', phrase: (p, n) => `${p} a récolté ${n} tomates bien rouges.` },
+    { e: '🐌', titre: "Après l'averse", phrase: (p, n) => `Après la pluie, ${n} escargots sont sortis.` },
+    { e: '⛵', titre: 'Au port', phrase: (p, n) => `${n} voiliers sont amarrés au port.` },
+    { e: '🍄', titre: 'Promenade en forêt', phrase: (p, n) => `${p} a trouvé ${n} champignons dans la forêt.` },
+    { e: '🎈', titre: 'Joyeux anniversaire', phrase: (p, n) => `Pour son anniversaire, ${p} a reçu ${n} ballons.` },
+  ];
+
+  CQ.PRENOMS = ['Léa', 'Hugo', 'Inès', 'Malik', 'Chloé', 'Nathan', 'Aïcha', 'Lucas', 'Zoé',
+    'Yanis', 'Emma', 'Sacha', 'Jade', 'Adam', 'Lina', 'Noah', 'Mei', 'Tiago'];
+})();
+</script>
+<script>
+/* Coquilles — générateurs d'articles à calculs et à compter.
+   Chaque générateur renvoie un article dont le résultat est un jeton :
+   la bonne valeur d'abord, puis des erreurs plausibles (souvent les erreurs classiques). */
+(function () {
+  'use strict';
+  const CQ = window.CQ;
+  const G = (CQ.GENERATEURS = []);
+  const L = CQ.enLettres;
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const decimal = (x) => String(Math.round(x * 100) / 100).replace('.', ',');
+  const heureMin = (t) => CQ.heure(Math.floor(t / 60), t % 60);
+  const eurosCts = (c) => CQ.euros(c / 100);
+
+  // Fabrique le jeton d'une valeur : erreur classique d'abord, puis des voisines.
+  function nombre(r, juste, opts) {
+    const fmt = opts.fmt || String;
+    const vus = new Set([fmt(juste)]);
+    const fautes = [];
+    const ajouter = (v) => {
+      if (!(v > 0) || fautes.length >= 2) return;
+      const f = fmt(v);
+      if (vus.has(f)) return;
+      vus.add(f);
+      fautes.push(f);
+    };
+    (opts.classiques || []).forEach(ajouter);
+    r.melanger(opts.voisins || [juste + 1, juste - 1, juste + 2]).forEach(ajouter);
+    if (fautes.length === 0) fautes.push(fmt(juste + 1));
+    return `{${fmt(juste)}|${fautes.join('|')}#${opts.code || 'calc'}:${opts.detail}}`;
+  }
+
+  const gen = (def) => G.push(Object.assign({ rub: 'calc' }, def));
+
+  // ---------- Enfants ----------
+  gen({ pub: ['enfant'], niv: 1, fn(r) {
+    const p = r.choix(CQ.PRENOMS), a = r.entier(3, 12), b = r.entier(2, 8), s = a + b;
+    return { section: 'Récréation', titre: 'Partie de billes',
+      texte: `${p} a ${a} billes. Son copain lui en donne ${b}. Maintenant, ${p} a ${nombre(r, s, { detail: `${a} + ${b} = ${s}`, voisins: [s - 1, s + 1, s + 2, s - 2] })} billes.` };
+  } });
+
+  gen({ pub: ['enfant'], niv: 1, fn(r) {
+    const a = r.entier(9, 20), b = r.entier(2, a - 4), d = a - b;
+    return { section: 'Cuisine', titre: 'Le goûter',
+      texte: `Il y avait ${a} crêpes sur la table. Les enfants en ont mangé ${b} : il en reste ${nombre(r, d, { detail: `${a} − ${b} = ${d}`, classiques: [a + b], voisins: [d - 1, d + 1] })}.` };
+  } });
+
+  gen({ pub: ['enfant'], niv: 2, fn(r) {
+    const a = r.entier(23, 58), b = r.entier(14, 39), s = a + b;
+    return { section: 'École', titre: 'Collecte de bouchons',
+      texte: `La classe de CM1 a ramassé ${a} bouchons et la classe de CM2 en a ramassé ${b}. Cela fait ${nombre(r, s, { detail: `${a} + ${b} = ${s}`, classiques: [s - 10], voisins: [s + 10, s - 1, s + 1] })} bouchons pour l'association.` };
+  } });
+
+  gen({ pub: ['enfant'], niv: 2, fn(r) {
+    const p = r.choix(CQ.PRENOMS), prix = r.entier(2, 5), k = r.entier(2, 5), s = prix * k;
+    return { section: 'Commerces', titre: 'À la papeterie',
+      texte: `Un cahier coûte ${prix} €. ${p} en achète ${k} et paie ${nombre(r, s, { detail: `${k} × ${prix} = ${s}`, classiques: [prix + k], voisins: [s + prix, s - prix, s + 1] })} €.` };
+  } });
+
+  gen({ pub: ['enfant'], niv: 2, fn(r) {
+    const h = r.entier(13, 17), d = r.entier(1, 3), fin = h + d;
+    return { section: 'Cinéma', titre: 'Séance de cinéma',
+      texte: `Le film commence à ${h} h et dure ${d === 1 ? 'une heure' : d + ' heures'}. Il finit à ${nombre(r, fin, { detail: `${h} h + ${d} h = ${fin} h`, fmt: (x) => x + ' h', voisins: [fin + 1, fin - 1] })}.` };
+  } });
+
+  gen({ pub: ['enfant'], niv: 3, fn(r) {
+    const p = r.choix(CQ.PRENOMS), k = r.entier(3, 9), m = r.entier(4, 9), s = k * m;
+    return { section: 'École', titre: 'Le rangement de la classe',
+      texte: `${p} range ${k} boîtes de ${m} crayons. Cela fait ${nombre(r, s, { detail: `${k} × ${m} = ${s}`, voisins: [s + m, s - m, s + 1, s - 1] })} crayons en tout.` };
+  } });
+
+  gen({ pub: ['enfant'], niv: 3, fn(r) {
+    const p = r.choix(CQ.PRENOMS), prix = r.entier(6, 17), rendu = 20 - prix;
+    return { section: 'Commerces', titre: 'À la librairie',
+      texte: `${p} achète un livre à ${prix} € et paie avec un billet de 20 €. La libraire lui rend ${nombre(r, rendu, { detail: `20 − ${prix} = ${rendu}`, voisins: [rendu + 1, rendu - 1, rendu + 2] })} €.` };
+  } });
+
+  gen({ pub: ['enfant'], niv: 3, fn(r) {
+    const debut = 10 * 60 + r.choix([0, 5, 10, 15, 20, 25, 30]), d = r.choix([15, 20, 25, 30]), fin = debut + d;
+    return { section: 'École', titre: 'La récréation',
+      texte: `La récréation commence à ${heureMin(debut)} et dure ${d} minutes. Elle se termine à ${nombre(r, fin, { detail: `${heureMin(debut)} + ${d} minutes = ${heureMin(fin)}`, fmt: heureMin, voisins: [fin + 5, fin - 5, fin + 10] })}.` };
+  } });
+
+  // ---------- Dates impossibles (tous publics) ----------
+  const MOIS_30 = ['avril', 'juin', 'septembre', 'novembre'];
+  const PHRASES_DATE = {
+    enfant: [
+      { section: 'École', titre: "Le spectacle de fin d'année", phrase: 'Le spectacle de danse aura lieu le @. Les parents sont invités.' },
+      { section: 'École', titre: 'Sortie au zoo', phrase: 'La sortie au zoo est prévue le @. Pensez à prendre un pique-nique !' },
+    ],
+    adulte: [
+      { section: 'Agenda', titre: 'Réunion publique', phrase: 'La réunion publique sur le nouveau quartier est fixée au @, à 19 h.' },
+      { section: 'Agenda', titre: "Le salon de l'habitat", phrase: "Le salon de l'habitat ouvrira ses portes le @ au parc des expositions." },
+      { section: 'Pratique', titre: 'Rappel aux contribuables', phrase: 'Les déclarations papier doivent être déposées avant le @ à minuit.' },
+    ],
+    apprenant: [
+      { section: 'Invitations', titre: "Fête d'anniversaire", phrase: "Mon anniversaire est le @ : venez à la fête !" },
+      { section: 'Agenda', titre: 'Cours de français', phrase: 'Les cours de français reprennent le @.' },
+    ],
+  };
+  ['enfant', 'adulte', 'apprenant'].forEach((pub) => {
+    gen({ pub: [pub], niv: pub === 'adulte' ? 1 : 3, fn(r) {
+      const fevrier = r.chance(0.25);
+      const mois = fevrier ? 'février' : r.choix(MOIS_30);
+      const max = fevrier ? 28 : 30;
+      const jour = r.entier(max - 9, max);
+      const detail = fevrier ? "Février n'a que 28 jours (29 les années bissextiles)." : `${cap(mois)} n'a que 30 jours.`;
+      const modele = r.choix(PHRASES_DATE[pub]);
+      const jeton = `{${jour} ${mois}|${fevrier ? r.choix([30, 31]) : 31} ${mois}#date:${detail}}`;
+      return { section: modele.section, titre: modele.titre, texte: modele.phrase.replace('@', jeton) };
+    } });
+  });
+
+  // ---------- Adultes ----------
+  gen({ pub: ['adulte'], niv: 1, fn(r) {
+    const prix = r.entier(40, 389) * 10, billet = prix < 2000 ? r.choix([2000, 5000]) : 5000, rendu = billet - prix;
+    return { section: 'Consommation', titre: 'Rendre la monnaie',
+      texte: `Au marché, une cliente paie ${eurosCts(prix)} € avec un billet de ${billet / 100} €. Le marchand lui rend ${nombre(r, rendu, { detail: `${billet / 100} − ${eurosCts(prix)} = ${eurosCts(rendu)} €`, fmt: eurosCts, voisins: [rendu + 100, rendu - 100, rendu + 50, rendu - 50, rendu + 1000] })} €.` };
+  } });
+
+  gen({ pub: ['adulte'], niv: 1, fn(r) {
+    const depart = 6 * 60 + r.entier(0, 156) * 5, d = r.entier(10, 34) * 5, arrivee = depart + d;
+    return { section: 'Transports', titre: 'Horaires du TER',
+      texte: `Parti à ${heureMin(depart)}, le TER est arrivé à ${heureMin(arrivee)}, après ${nombre(r, d, { detail: `De ${heureMin(depart)} à ${heureMin(arrivee)}, il s'écoule ${CQ.duree(d)}.`, fmt: CQ.duree, voisins: [d + 10, d - 10, d + 20, d - 20] })} de trajet.` };
+  } });
+
+  gen({ pub: ['adulte'], niv: 1, fn(r) {
+    const total = r.entier(80, 240), f = r.entier(Math.round(total * 0.3), Math.round(total * 0.7)), h = total - f;
+    return { section: 'Associations', titre: 'Le club de randonnée',
+      texte: `Le club de randonnée compte ${total} adhérents : ${f} femmes et ${nombre(r, h, { detail: `${total} − ${f} = ${h}`, voisins: [h + 10, h - 10, h + 1, h - 1] })} hommes.` };
+  } });
+
+  const ARTICLES_SOLDES = ['Une veste', 'Une lampe', 'Une valise', 'Une montre', 'Une cafetière'];
+  gen({ pub: ['adulte'], niv: 2, fn(r) {
+    const prix = r.choix([40, 60, 80, 100, 120, 150, 200]), pct = r.choix([10, 20, 25, 30, 40, 50]);
+    const remise = prix * pct, solde = prix * 100 - remise; // en centimes
+    return { section: 'Consommation', titre: 'Soldes : faites le calcul',
+      texte: `${r.choix(ARTICLES_SOLDES)} à ${prix} € est soldée à −${pct} %. Elle ne coûte plus que ${nombre(r, solde, { detail: `${pct} % de ${prix} € = ${eurosCts(remise)} € ; ${prix} − ${eurosCts(remise)} = ${eurosCts(solde)} €.`, fmt: eurosCts, classiques: [prix * 100 - pct * 100], voisins: [solde + 500, solde - 500, remise] })} €.` };
+  } });
+
+  gen({ pub: ['adulte'], niv: 2, fn(r) {
+    const k = r.choix([4, 6, 8, 12]), u = r.entier(5, 18) * 5, lot = u * k; // centimes
+    return { section: 'Consommation', titre: 'Le vrai prix des yaourts',
+      texte: `Le lot de ${k} yaourts est vendu ${eurosCts(lot)} €, soit ${nombre(r, u, { detail: `${eurosCts(lot)} € ÷ ${k} = ${eurosCts(u)} €`, fmt: eurosCts, voisins: [u + 10, u - 10, u + 5, u - 5] })} € le yaourt.` };
+  } });
+
+  const PRODUITS_KILO = [
+    { nom: 'Le paquet de @ g de café', kilos: [12, 14, 16, 20] },
+    { nom: 'La barquette de @ g de fraises', kilos: [6, 8, 10, 12] },
+    { nom: 'Le sachet de @ g de pâtes', kilos: [2, 4] },
+    { nom: 'Le morceau de @ g de comté', kilos: [16, 20, 24] },
+  ];
+  gen({ pub: ['adulte'], niv: 2, fn(r) {
+    const produit = r.choix(PRODUITS_KILO), kilo = r.choix(produit.kilos), g = r.choix([250, 500, 750]);
+    const prix = (kilo * g) / 10; // centimes
+    const calcul = g === 750 ? `${eurosCts(prix)} € ÷ 3 × 4 = ${kilo} €` : `${eurosCts(prix)} € × ${1000 / g} = ${kilo} €`;
+    const classiques = g === 250 ? [kilo / 2] : g === 500 ? [kilo * 2] : [];
+    return { section: 'Consommation', titre: 'Le prix au kilo',
+      texte: `${produit.nom.replace('@', g)} coûte ${eurosCts(prix)} €, soit ${nombre(r, kilo, { detail: calcul, fmt: CQ.euros, classiques, voisins: [kilo + 2, kilo - 2, kilo + 1] })} € le kilo.` };
+  } });
+
+  gen({ pub: ['adulte'], niv: 2, fn(r) {
+    const n = r.choix([200, 300, 400, 500, 800, 1200]), pct = r.choix([10, 15, 20, 25, 30, 40, 60, 75]), res = (n * pct) / 100;
+    return { section: 'Vie locale', titre: 'Le référendum local',
+      texte: `Sur ${CQ.milliers(n)} votants, ${pct} % ont voté pour le projet, soit ${nombre(r, res, { detail: `${pct} % de ${CQ.milliers(n)} = ${CQ.milliers(n)} × ${pct} ÷ 100 = ${CQ.milliers(res)}`, fmt: CQ.milliers, voisins: [res + n / 20, res - n / 20, res + 10] })} personnes.` };
+  } });
+
+  gen({ pub: ['adulte'], niv: 2, fn(r) {
+    const parPers = r.choix([50, 60, 75, 100, 125]), a = r.choix([2, 4]), b = r.choix([3, 5, 6, 8].filter((x) => x !== a));
+    const q = parPers * a, res = parPers * b;
+    return { section: 'Cuisine', titre: 'Règle de trois en cuisine',
+      texte: `Pour ${a} personnes, il faut ${q} g de farine. Pour ${b} personnes, il en faut donc ${nombre(r, res, { detail: `${q} g ÷ ${a} × ${b} = ${res} g`, classiques: [q + (b - a) * 10], voisins: [res + parPers, res - parPers] })} g.` };
+  } });
+
+  gen({ pub: ['adulte'], niv: 3, fn(r) {
+    const v = r.choix([16, 18, 20, 22, 24, 26, 28, 30]), t = r.choix([90, 120, 150, 180]), dist = (v * t) / 60;
+    const h = t / 60;
+    const fauxDecimal = t % 60 ? Math.round(dist / (Math.floor(h) + (t % 60) / 100)) : 0;
+    return { section: 'Sports', titre: 'Sortie vélo du dimanche',
+      texte: `Le cycliste a parcouru ${dist} km en ${CQ.duree(t)}, soit une moyenne de ${nombre(r, v, { detail: `${CQ.duree(t)} = ${decimal(h)} h ; ${dist} ÷ ${decimal(h)} = ${v} km/h.`, classiques: [fauxDecimal], voisins: [v + 2, v - 2] })} km/h.` };
+  } });
+
+  gen({ pub: ['adulte'], niv: 3, fn(r) {
+    const ht = r.entier(3, 24) * 50, ttc = (ht * 12) / 10;
+    return { section: 'Pratique', titre: 'Le devis du plombier',
+      texte: `Un artisan facture ${CQ.milliers(ht)} € HT. Avec une TVA de 20 %, le client paiera ${nombre(r, ttc, { detail: `${CQ.milliers(ht)} × 1,2 = ${CQ.milliers(ttc)} €`, fmt: CQ.milliers, classiques: [ht + 20], voisins: [ttc + ht / 10, ttc - ht / 10] })} € TTC.` };
+  } });
+
+  gen({ pub: ['adulte'], niv: 3, fn(r) {
+    const loyer = r.choix([500, 600, 700, 800, 900, 1000, 1200]), res = Math.round(loyer * 1.21);
+    return { section: 'Logement', titre: 'Deux hausses de loyer',
+      texte: `Un loyer de ${CQ.milliers(loyer)} € augmente de 10 % en janvier, puis encore de 10 % en juillet. Il passe donc à ${nombre(r, res, { detail: `${CQ.milliers(loyer)} × 1,1 × 1,1 = ${CQ.milliers(res)} € : deux hausses de 10 % font +21 %, pas +20 %.`, fmt: CQ.milliers, classiques: [(loyer * 12) / 10], voisins: [res + 10] })} €.` };
+  } });
+
+  gen({ pub: ['adulte'], niv: 3, fn(r) {
+    const cours = r.choix([40, 60, 80, 100, 120, 200]), res = cours * 0.75;
+    return { section: 'Bourse', titre: 'Les montagnes russes',
+      texte: `Une action cotée ${cours} € perd 50 % lundi, puis regagne 50 % mardi. Elle vaut désormais ${nombre(r, res, { detail: `${cours} × 0,5 = ${cours / 2} € ; ${cours / 2} × 1,5 = ${res} €. Une hausse de 50 % ne rattrape pas une baisse de 50 %.`, classiques: [cours], voisins: [res + 10] })} €.` };
+  } });
+
+  // ---------- Apprenants : nombres en lettres ----------
+  const enLettres = { fmt: L };
+  gen({ pub: ['apprenant'], niv: 1, fn(r) {
+    const a = r.entier(3, 6), b = r.entier(2, 4), s = a + b;
+    return { section: 'Restaurant', titre: 'Un déjeuner rapide',
+      texte: `Un sandwich coûte ${L(a)} euros et une boisson ${L(b)} euros. Je paie ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, voisins: [s + 1, s - 1, s + 2] }, enLettres))} euros en tout.` };
+  } });
+
+  gen({ pub: ['apprenant'], niv: 1, fn(r) {
+    const a = r.entier(6, 12), b = r.entier(2, 6), s = a + b;
+    return { section: 'Famille', titre: 'Ma grande sœur',
+      texte: `J'ai ${L(a)} ans. Ma sœur a ${L(b)} ans de plus que moi : elle a ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, voisins: [s + 1, s - 1, s + 2] }, enLettres))} ans.` };
+  } });
+
+  gen({ pub: ['apprenant'], niv: 2, fn(r) {
+    const a = r.entier(18, 40), b = r.entier(5, 19), s = a + b;
+    return { section: 'Famille', titre: 'Mon grand frère',
+      texte: `J'ai ${L(a)} ans. Mon frère a ${L(b)} ans de plus que moi : il a ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, voisins: [s + 1, s - 1, s + 10, s - 10] }, enLettres))} ans.` };
+  } });
+
+  gen({ pub: ['apprenant'], niv: 2, fn(r) {
+    const a = r.entier(12, 35), b = r.entier(10, 34), s = a + b;
+    return { section: 'Commerces', titre: 'La boulangerie du quartier',
+      texte: `La boulangerie a vendu ${L(a)} baguettes le matin et ${L(b)} l'après-midi : ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, voisins: [s + 1, s - 1, s + 10, s - 10] }, enLettres))} baguettes au total.` };
+  } });
+
+  gen({ pub: ['apprenant'], niv: 2, fn(r) {
+    const depart = r.entier(6, 12), d = r.entier(2, 5), arrivee = depart + d;
+    return { section: 'Transports', titre: 'Le voyage en train',
+      texte: `Le train part à ${L(depart)} heures et arrive à ${L(arrivee)} heures : le voyage dure ${nombre(r, d, Object.assign({ detail: `${arrivee} − ${depart} = ${d} (${L(d)})`, voisins: [d + 1, d - 1] }, enLettres))} heures.` };
+  } });
+
+  gen({ pub: ['apprenant'], niv: 3, fn(r) {
+    const nuit = r.entier(35, 49), s = nuit * 2;
+    return { section: 'Voyages', titre: "Une chambre d'hôtel",
+      texte: `Une nuit à l'hôtel coûte ${L(nuit)} euros. Pour deux nuits, je paie ${nombre(r, s, Object.assign({ detail: `2 × ${nuit} = ${s} (${L(s)})`, classiques: [s + 20, s - 20], voisins: [s + 1, s - 1, s + 10] }, enLettres))} euros.` };
+  } });
+
+  gen({ pub: ['apprenant'], niv: 3, fn(r) {
+    let a, b;
+    do { a = r.entier(35, 50); b = r.entier(30, 49); } while (a + b < 70 || a + b > 99);
+    const s = a + b;
+    return { section: 'Commerces', titre: 'Un samedi à la boulangerie',
+      texte: `Samedi, la boulangerie a vendu ${L(a)} baguettes le matin et ${L(b)} l'après-midi : ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, classiques: [s + 20, s - 20], voisins: [s + 1, s - 1, s + 10] }, enLettres))} baguettes au total.` };
+  } });
+
+  // ---------- Images à compter ----------
+  G.push({ pub: ['enfant', 'apprenant'], niv: 1, rub: 'image', fn(r, niveau) {
+    const objet = r.choix(CQ.OBJETS_A_COMPTER), p = r.choix(CQ.PRENOMS);
+    const [min, max] = niveau === 1 ? [2, 5] : niveau === 2 ? [3, 7] : [4, 8];
+    const n = r.entier(min, max);
+    return { section: 'Photo du jour', titre: objet.titre,
+      texte: cap(objet.phrase(p, L(n))),
+      ok: objet.e.repeat(n), ko: [objet.e.repeat(n + 1), objet.e.repeat(n - 1)],
+      expl: `Le texte dit « ${L(n)} » : il en fallait ${n}.` };
+  } });
+})();
+</script>
+<script>
+/* Coquilles — fabrication des éditions : analyse des textes à jetons,
+   choix des articles et des coquilles, révision ciblée des points faibles. */
+(function () {
+  'use strict';
+  const CQ = window.CQ;
+  const NBSP = ' ', FINE = ' ';
+
+  // Ponctuation qui se colle au mot précédent, ou au mot suivant.
+  const APRES = /^[.,;:!?…)»%€]+$/;
+  const AVANT = /^[«(]+$/;
+  const UNITE = /^(h|min|km|km\/h|kg|g|cm|m|°C|€|%|HT|TTC)[.,;:!?)]*$/;
+  const MINUTES = /^\d{2}[.,;:!?)]*$/;
+  const MILLIERS = /^\d{3}([.,;:!?)].*)?$/;
+
+  function espaceAvant(p) {
+    const c = p.charAt(0);
+    if (c === ';' || c === '!' || c === '?') return FINE;
+    if (c === ':' || c === '»' || c === '%' || c === '€') return NBSP;
+    return '';
+  }
+  const texteDe = (el) => (el.type === 'jeton' ? el.correct : el.texte);
+  const finitParChiffre = (el) => el && /\d$/.test(texteDe(el) + el.post);
+
+  // Ajoute un texte libre (sans jeton) à la liste des éléments.
+  function pousserTexte(etat, txt) {
+    const els = etat.elements;
+    const morceaux = txt.split(/([ \t\n]+)/);
+    let espace = etat.debut ? true : false;
+    for (const m of morceaux) {
+      if (m === '') continue;
+      if (/^[ \t\n]+$/.test(m)) { espace = true; continue; }
+      const prec = els[els.length - 1];
+      if (prec && !espace && !etat.attente) {
+        prec.post += m; // collé sans espace, ex. « {à|a}. »
+      } else if (prec && !etat.attente && APRES.test(m)) {
+        prec.post += espaceAvant(m) + m;
+      } else if (prec && !etat.attente && UNITE.test(m) && finitParChiffre(prec)) {
+        prec.post += NBSP + m; // 12 %, 8 h, 40 °C
+      } else if (prec && !etat.attente && prec.type === 'mot' && MINUTES.test(m) && /\sh$/.test(prec.texte + prec.post)) {
+        prec.post += NBSP + m; // 9 h 40
+      } else if (prec && !etat.attente && prec.type === 'mot' && MILLIERS.test(m) && /^\d{1,3}$/.test(prec.texte) && !prec.post) {
+        prec.texte += FINE + m; // 10 000
+      } else if (AVANT.test(m)) {
+        etat.attente += m + (m === '«' ? NBSP : '');
+      } else {
+        els.push({ type: 'mot', texte: m, pre: etat.attente, post: '' });
+        etat.attente = '';
+      }
+      espace = false;
+    }
+    etat.finEspace = espace;
+    etat.debut = false;
+  }
+
+  function lireJeton(corps, avertir) {
+    let code = null, detail = null;
+    const diese = corps.indexOf('#');
+    if (diese >= 0) {
+      const meta = corps.slice(diese + 1);
+      corps = corps.slice(0, diese);
+      const deux = meta.indexOf(':');
+      if (deux >= 0) { code = meta.slice(0, deux); detail = meta.slice(deux + 1); } else code = meta;
+    }
+    const options = corps.split('|');
+    const correct = options[0], fautes = options.slice(1);
+    if (!fautes.length) avertir(`jeton sans faute : {${corps}}`);
+    if (!code) code = CQ.detecterRegle(correct, fautes[0] || '');
+    if (!code) { avertir(`règle introuvable pour {${corps}}`); code = 'usage'; }
+    if (!CQ.REGLES[code]) avertir(`règle inconnue « ${code} » pour {${corps}}`);
+    return { type: 'jeton', correct, fautes, code, detail, pre: '', post: '' };
+  }
+
+  // « Le chat {a|à} faim. » → [mot, mot, jeton, mot]
+  CQ.analyser = function (source, avertir) {
+    avertir = avertir || function () {};
+    const etat = { elements: [], attente: '', debut: true, finEspace: true };
+    const re = /\{([^}]+)\}/g;
+    let dernier = 0, m;
+    while ((m = re.exec(source))) {
+      pousserTexte(etat, source.slice(dernier, m.index));
+      const prec = etat.elements[etat.elements.length - 1];
+      if (prec && !etat.finEspace && !etat.attente) avertir(`jeton collé au mot précédent dans « ${source.slice(Math.max(0, m.index - 12), m.index + 12)} »`);
+      const jeton = lireJeton(m[1], avertir);
+      jeton.pre = etat.attente;
+      etat.attente = '';
+      etat.elements.push(jeton);
+      etat.finEspace = false;
+      etat.debut = false;
+      dernier = re.lastIndex;
+    }
+    pousserTexte(etat, source.slice(dernier));
+    return etat.elements;
+  };
+
+  CQ.rubriqueDe = (code) => (CQ.REGLES[code] ? CQ.REGLES[code].rub : 'gram');
+
+  // Poids d'un code selon les erreurs passées : on revoit plus souvent ce qu'on rate.
+  function faiblesse(stats, code) {
+    const s = stats && stats[code];
+    if (!s) return 1;
+    return 1 + (3 * (s.rate + s.zele)) / (s.vu + s.zele + 3);
+  }
+
+  function combienDeCoquilles(r, niveau) {
+    const x = r();
+    if (niveau === 1) return x < 0.15 ? 0 : 1;
+    if (niveau === 2) return x < 0.15 ? 0 : x < 0.8 ? 1 : 2;
+    return x < 0.15 ? 0 : x < 0.65 ? 1 : 2;
+  }
+
+  // Transforme une fiche (brève, image, article généré) en article prêt à jouer.
+  CQ.composer = function (fiche, opts) {
+    const r = opts.hasard;
+    const titre = CQ.analyser(fiche.titre);
+    const texte = CQ.analyser(fiche.texte);
+    const jetons = titre.concat(texte).filter((e) => e.type === 'jeton');
+    jetons.forEach((j) => { j.coquille = false; j.affiche = j.correct; });
+
+    let image = null;
+    if (fiche.ok) {
+      image = { type: 'image', code: 'image', ok: fiche.ok, ko: fiche.ko, expl: fiche.expl, coquille: false, affiche: fiche.ok };
+      if (opts.rubriques.image && r.chance(0.78)) {
+        image.coquille = true;
+        image.affiche = r.choix(fiche.ko);
+      }
+    } else {
+      const eligibles = jetons.filter((j) => opts.rubriques[CQ.rubriqueDe(j.code)]);
+      let n = Math.min(eligibles.length, fiche.calc ? (r.chance(0.8) ? 1 : 0) : combienDeCoquilles(r, opts.niveau));
+      const restants = eligibles.slice();
+      while (n-- > 0 && restants.length) {
+        const i = r.pondere(restants.map((j) => faiblesse(opts.stats, j.code)));
+        const j = restants.splice(i, 1)[0];
+        j.coquille = true;
+        j.affiche = r.choix(j.fautes);
+      }
+    }
+    return { section: fiche.section, titre, texte, image };
+  };
+
+  // Mélange sans remise, pondéré : le niveau choisi et les points faibles d'abord.
+  function paquet(fiches, r, poids) {
+    let restant = [];
+    return function tirer() {
+      if (!restant.length) restant = fiches.slice();
+      const i = r.pondere(restant.map(poids));
+      return restant.splice(i, 1)[0];
+    };
+  }
+
+  const MELANGE = {
+    enfant: { breve: 5, calc: 2, image: 3 },
+    adulte: { breve: 6, calc: 3, image: 1.5 },
+    apprenant: { breve: 5, calc: 2, image: 3 },
+  };
+
+  // Crée la pioche d'une partie. opts : public, niveau, rubriques, hasard, stats.
+  CQ.creerPioche = function (opts) {
+    const r = opts.hasard, pub = opts.public, niveau = opts.niveau, rub = opts.rubriques;
+    const auNiveau = (f) => (f.niv === niveau ? 3 : 1);
+
+    const breves = CQ.BREVES.filter((b) => b.pub === pub && b.niv <= niveau &&
+      CQ.analyser(b.titre + ' ' + b.texte).some((e) => e.type === 'jeton' && rub[CQ.rubriqueDe(e.code)]));
+    const poidsBreve = (b) => {
+      const codes = CQ.analyser(b.texte).filter((e) => e.type === 'jeton').map((e) => e.code);
+      const pire = Math.max(1, ...codes.map((c) => faiblesse(opts.stats, c)));
+      return auNiveau(b) * pire;
+    };
+    const images = CQ.IMAGES.filter((i) => i.pub.includes(pub) && i.niv <= niveau);
+    const gensCalc = CQ.GENERATEURS.filter((g) => g.rub === 'calc' && g.pub.includes(pub) && g.niv <= niveau);
+    const gensImage = CQ.GENERATEURS.filter((g) => g.rub === 'image' && g.pub.includes(pub) && g.niv <= niveau);
+
+    const sources = [];
+    const melange = MELANGE[pub];
+    if ((rub.ortho || rub.gram) && breves.length) {
+      const tirer = paquet(breves, r, poidsBreve);
+      sources.push({ poids: melange.breve, tirer });
+    }
+    if (rub.calc && gensCalc.length) {
+      const tirer = paquet(gensCalc, r, auNiveau);
+      sources.push({ poids: melange.calc, tirer: () => Object.assign(tirer().fn(r, niveau), { calc: true }) });
+    }
+    if (rub.image && (images.length || gensImage.length)) {
+      const tirerImage = images.length ? paquet(images, r, auNiveau) : null;
+      const tirerGen = gensImage.length ? paquet(gensImage, r, auNiveau) : null;
+      sources.push({ poids: melange.image, tirer: () => (tirerGen && (!tirerImage || r.chance(0.35)) ? tirerGen().fn(r, niveau) : tirerImage()) });
+    }
+    if (!sources.length) throw new Error('Aucune rubrique disponible pour ce lecteur.');
+
+    let derniere = -1;
+    return {
+      suivant() {
+        // Évite trois articles de suite de la même source quand c'est possible.
+        let i = r.pondere(sources.map((s) => s.poids));
+        if (i === derniere && sources.length > 1 && r.chance(0.5)) i = r.pondere(sources.map((s, k) => (k === i ? 0 : s.poids)));
+        derniere = i;
+        return CQ.composer(sources[i].tirer(), { hasard: r, niveau, rubriques: rub, stats: opts.stats });
+      },
+    };
+  };
+
+  // Numéro d'édition : le n°1 est paru le 14 octobre 2026.
+  CQ.cleDuJour = function (d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  };
+  CQ.numeroEdition = function (d) {
+    d = d || new Date();
+    const jour = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+    return Math.floor((jour - Date.UTC(2026, 9, 14)) / 86400000) + 1;
+  };
+})();
+</script>
+<script>
+/* Coquilles — petits sons synthétisés (aucun fichier audio à charger). */
+(function () {
+  'use strict';
+  const CQ = window.CQ;
+
+  CQ.Son = {
+    actif: CQ.stock.lire('son', true),
+    ctx: null,
+
+    // À appeler depuis un geste de l'utilisateur : les navigateurs l'exigent.
+    reveiller() {
+      if (!this.ctx) {
+        try {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = Ctx ? new Ctx() : null;
+        } catch (e) {
+          this.ctx = null;
+        }
+      }
+      if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+    },
+
+    basculer() {
+      this.actif = !this.actif;
+      CQ.stock.ecrire('son', this.actif);
+      return this.actif;
+    },
+
+    note(freq, debut, duree, type, volume, glisse) {
+      const c = this.ctx, t = c.currentTime + debut;
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t);
+      if (glisse) o.frequency.exponentialRampToValueAtTime(glisse, t + duree);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(volume, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+      o.connect(g);
+      g.connect(c.destination);
+      o.start(t);
+      o.stop(t + duree + 0.02);
+    },
+
+    jouer(nom, serie) {
+      if (!this.actif || !this.ctx) return;
+      try {
+        if (nom === 'trouve') {
+          // La note monte avec la série : on entend qu'on est en forme.
+          const base = 523 * Math.pow(1.0595, Math.min(serie || 1, 12) - 1);
+          this.note(base, 0, 0.09, 'triangle', 0.12);
+          this.note(base * 1.5, 0.06, 0.14, 'triangle', 0.1);
+        } else if (nom === 'zele') {
+          this.note(190, 0, 0.16, 'square', 0.035, 120);
+        } else if (nom === 'rate') {
+          this.note(220, 0, 0.38, 'sawtooth', 0.05, 70);
+        } else if (nom === 'imprime') {
+          this.note(1500, 0, 0.03, 'square', 0.012);
+        } else if (nom === 'tampon') {
+          this.note(110, 0, 0.12, 'sine', 0.25, 50);
+        } else if (nom === 'fin') {
+          [523, 659, 784].forEach((f, i) => this.note(f, i * 0.12, 0.2, 'triangle', 0.1));
+        }
+      } catch (e) { /* son indisponible : le jeu continue */ }
+    },
+  };
+
+  CQ.vibrer = function (motif) {
+    try {
+      if (CQ.Son.actif && navigator.vibrate) navigator.vibrate(motif);
+    } catch (e) { /* vibration refusée */ }
+  };
+})();
+</script>
+<script>
+/* Coquilles — la partie : les épreuves montent vers la rotative,
+   le joueur touche les coquilles avant l'impression. */
+(function () {
+  'use strict';
+  const CQ = window.CQ;
+  const $ = (id) => document.getElementById(id);
+
+  const TRAVERSEE = { tranquille: 46, normale: 32, rapide: 22 }; // secondes pour traverser l'écran
+  const ECART = 22;          // px entre deux épreuves
+  const TURBO = 9;           // accélération après un « bon à tirer »
+  const ACCELERATION = 0.03; // +3 % de vitesse par article imprimé…
+  const ACCELERATION_MAX = 1.7; // … jusqu'à +70 %
+  const PTS = { trouve: 100, serie: 20, zele: 40, propre: 25 };
+  CQ.REPUTATION = 5;
+
+  const typo = CQ.typo;
+
+  function explication(e) {
+    if (e.type === 'image') return e.expl;
+    if (e.detail) return typo(e.detail);
+    const r = CQ.REGLES[e.code];
+    return r ? typo(r.expl) : '';
+  }
+
+  // Lance une partie. opts : mode, public, niveau, vitesse, rubriques, pioche ou file.
+  CQ.lancerPartie = function (opts, quandFinie) {
+    const plateau = $('plateau'), rail = $('rail'), marbre = $('marbre'), rotative = $('rotative');
+    const etat = {
+      cartes: [], servis: 0, imprimes: 0,
+      score: 0, serie: 0, meilleureSerie: 0, reputation: CQ.REPUTATION,
+      trouvees: 0, ratees: 0, zeles: 0,
+      resultats: [], pieges: new Map(),
+      enCours: true, enPause: false, turbo: null, dernier: 0, raf: 0, H: 0, vitesse: 0,
+    };
+    const stats = CQ.stock.lire('stats', {});
+
+    function noter(code, quoi) {
+      const s = stats[code] || (stats[code] = { vu: 0, trouve: 0, rate: 0, zele: 0 });
+      s[quoi]++;
+    }
+
+    function retenir(e, quoi) {
+      const cle = e.code + (e.code === 'calc' || e.code === 'date' ? ':' + e.detail : '');
+      if (etat.pieges.has(cle)) return;
+      const regle = CQ.REGLES[e.code] || CQ.REGLES.usage;
+      etat.pieges.set(cle, {
+        quoi,
+        nom: regle.nom,
+        exemple: e.type === 'image' ? '' : quoi === 'zele' ? `« ${typo(e.correct)} » était juste` : `« ${typo(e.affiche)} » → « ${typo(e.correct)} »`,
+        expl: e.type === 'image' ? e.expl : e.detail ? typo(e.detail) + (e.code === 'usage' || e.code === 'calc' || e.code === 'date' ? '' : ' ' + typo(regle.expl)) : typo(regle.expl),
+      });
+    }
+
+    // ---------- Affichage ----------
+    function dire(type, titre, detail) {
+      marbre.dataset.etat = type;
+      $('marbre-titre').textContent = typo(titre);
+      $('marbre-detail').textContent = typo(detail || '');
+      marbre.classList.remove('neuf');
+      void marbre.offsetWidth;
+      marbre.classList.add('neuf');
+    }
+
+    function majTableau() {
+      $('hud-score').textContent = CQ.milliers(etat.score);
+      const serie = $('hud-serie');
+      serie.textContent = '×' + etat.serie;
+      serie.classList.toggle('chaud', etat.serie >= 3);
+      const pastilles = $('hud-reputation');
+      if (pastilles.children.length !== CQ.REPUTATION) {
+        pastilles.innerHTML = '';
+        for (let i = 0; i < CQ.REPUTATION; i++) pastilles.appendChild(document.createElement('i'));
+      }
+      Array.from(pastilles.children).forEach((p, i) => p.classList.toggle('perdue', i >= etat.reputation));
+      pastilles.setAttribute('aria-label', `${etat.reputation} sur ${CQ.REPUTATION}`);
+      $('hud-tirage').textContent = String(etat.imprimes).padStart(3, '0');
+    }
+
+    function flotter(texte, ev, negatif) {
+      const r = plateau.getBoundingClientRect();
+      const d = document.createElement('div');
+      d.className = 'points' + (negatif ? ' negatif' : '');
+      d.textContent = texte;
+      d.style.left = ev.clientX - r.left + 'px';
+      d.style.top = ev.clientY - r.top + 'px';
+      plateau.appendChild(d);
+      setTimeout(() => d.remove(), 850);
+    }
+
+    function eclair(type) {
+      rotative.classList.remove('flash-ok', 'flash-rate');
+      void rotative.offsetWidth;
+      rotative.classList.add('flash-' + type);
+      setTimeout(() => rotative.classList.remove('flash-' + type), 260);
+    }
+
+    // ---------- Épreuves ----------
+    function remplir(parent, elements, items) {
+      elements.forEach((e, k) => {
+        if (k > 0) parent.appendChild(document.createTextNode(' '));
+        if (e.pre) parent.appendChild(document.createTextNode(typo(e.pre)));
+        const s = document.createElement('span');
+        s.className = 'm';
+        s.dataset.i = items.length;
+        s.textContent = e.type === 'jeton' ? typo(e.affiche).replace(/ /g, ' ') : typo(e.texte);
+        parent.appendChild(s);
+        items.push({ el: s, data: e, etat: null });
+        if (e.post) parent.appendChild(document.createTextNode(typo(e.post)));
+      });
+    }
+
+    function construire(article) {
+      const el = document.createElement('article');
+      el.className = 'epreuve';
+      const items = [];
+
+      const tete = document.createElement('div');
+      tete.className = 'tete';
+      const section = document.createElement('span');
+      section.className = 'section';
+      section.textContent = article.section;
+      const bat = document.createElement('button');
+      bat.type = 'button';
+      bat.className = 'bat';
+      bat.textContent = 'Bon à tirer';
+      tete.append(section, bat);
+
+      const titre = document.createElement('h2');
+      titre.className = 'titre';
+      remplir(titre, article.titre, items);
+      el.append(tete, titre);
+
+      if (article.image) {
+        const photo = document.createElement('figure');
+        photo.className = 'photo';
+        photo.dataset.i = items.length;
+        photo.setAttribute('role', 'img');
+        photo.setAttribute('aria-label', "Photo de l'article");
+        photo.textContent = article.image.affiche;
+        items.push({ el: photo, data: article.image, etat: null });
+        el.append(photo);
+      }
+
+      const corps = document.createElement('p');
+      corps.className = 'corps';
+      remplir(corps, article.texte, items);
+      el.append(corps);
+
+      const coquilles = items.filter((it) => it.data.coquille).length;
+      return { el, items, coquilles, restantes: coquilles, zele: false, y: 0, h: 0 };
+    }
+
+    function placer(c) {
+      c.el.style.transform = 'translate3d(0,' + c.y.toFixed(1) + 'px,0)';
+    }
+
+    function marquerPremiere() {
+      etat.cartes.forEach((c, i) => c.el.classList.toggle('premiere', i === 0));
+    }
+
+    function ajouterCarte(y) {
+      let article;
+      if (opts.file) {
+        if (etat.servis >= opts.file.length) return false;
+        article = opts.file[etat.servis];
+      } else {
+        article = opts.pioche.suivant();
+      }
+      etat.servis++;
+      const c = construire(article);
+      c.y = y;
+      rail.appendChild(c.el);
+      c.h = c.el.offsetHeight;
+      placer(c);
+      etat.cartes.push(c);
+      marquerPremiere();
+      return true;
+    }
+
+    // ---------- Gestes ----------
+    function toucher(c, it, ev) {
+      if (it.etat) return;
+      const e = it.data;
+      if (e.coquille) {
+        it.etat = 'corrige';
+        c.restantes--;
+        etat.serie++;
+        etat.meilleureSerie = Math.max(etat.meilleureSerie, etat.serie);
+        const pts = PTS.trouve + PTS.serie * (etat.serie - 1);
+        etat.score += pts;
+        etat.trouvees++;
+        if (e.type === 'image') {
+          it.el.textContent = e.ok;
+        } else {
+          it.el.dataset.correction = typo(e.correct);
+        }
+        it.el.classList.add('corrige');
+        flotter('+' + pts, ev);
+        dire('ok', e.type === 'image' ? 'Bien vu : la photo ne correspondait pas.' : `Bien vu : « ${typo(e.affiche)} » → « ${typo(e.correct)} »`, explication(e));
+        noter(e.code, 'trouve');
+        CQ.Son.jouer('trouve', etat.serie);
+      } else {
+        it.etat = 'zele';
+        it.el.classList.add('zele');
+        c.zele = true;
+        etat.serie = 0;
+        etat.score = Math.max(0, etat.score - PTS.zele);
+        etat.zeles++;
+        flotter('−' + PTS.zele, ev, true);
+        if (e.type === 'jeton') {
+          dire('zele', `Faute de zèle : « ${typo(e.correct)} » était juste.`, explication(e));
+          noter(e.code, 'zele');
+          retenir(e, 'zele');
+        } else if (e.type === 'image') {
+          dire('zele', 'Faute de zèle : la photo était juste.', e.expl);
+        } else {
+          dire('zele', `Faute de zèle : « ${typo(e.texte)} » était juste.`, "Ne touche que les vraies coquilles : chaque erreur coûte 40 points et ta série.");
+        }
+        CQ.Son.jouer('zele');
+        CQ.vibrer(40);
+      }
+      majTableau();
+      c.h = c.el.offsetHeight;
+    }
+
+    function bonATirer(c) {
+      if (c !== etat.cartes[0] || c.tamponnee) return;
+      c.tamponnee = true;
+      c.el.classList.add('tamponnee');
+      etat.turbo = c;
+      if (c.restantes === 0) c.bonus = 20 + Math.round(80 * Math.min(1, Math.max(0, (c.y + c.h) / etat.H)));
+      CQ.Son.jouer('tampon');
+    }
+
+    function carteDe(el) {
+      const article = el && el.closest('.epreuve');
+      return etat.cartes.find((c) => c.el === article);
+    }
+
+    function surPointeur(ev) {
+      if (!etat.enCours || etat.enPause) return;
+      const cible = ev.target.closest('.m, .photo');
+      if (!cible) return;
+      const c = carteDe(cible);
+      if (!c || c.tamponnee) return;
+      ev.preventDefault();
+      toucher(c, c.items[+cible.dataset.i], ev);
+    }
+
+    function surClic(ev) {
+      if (!etat.enCours || etat.enPause) return;
+      const bat = ev.target.closest('.bat');
+      if (bat) bonATirer(carteDe(bat));
+    }
+
+    // ---------- Impression ----------
+    function imprimer(c) {
+      c.el.remove();
+      etat.imprimes++;
+      if (etat.turbo === c) etat.turbo = null;
+      c.items.forEach((it) => { if (it.data.coquille) noter(it.data.code, 'vu'); });
+      const restantes = c.items.filter((it) => it.data.coquille && it.etat !== 'corrige');
+      if (restantes.length) {
+        etat.reputation--;
+        etat.ratees += restantes.length;
+        etat.serie = 0;
+        etat.resultats.push('rate');
+        restantes.forEach((it) => { noter(it.data.code, 'rate'); retenir(it.data, 'rate'); });
+        const e = restantes[0].data;
+        dire('rate', e.type === 'image' ? 'Coquille imprimée : la photo ne correspondait pas.' : `Coquille imprimée : « ${typo(e.affiche)} » au lieu de « ${typo(e.correct)} »`, explication(e));
+        eclair('rate');
+        CQ.Son.jouer('rate');
+        CQ.vibrer([30, 50, 30]);
+      } else {
+        etat.score += PTS.propre + (c.bonus || 0);
+        etat.resultats.push(c.zele ? 'zele' : 'parfait');
+        eclair('ok');
+        CQ.Son.jouer('imprime');
+        if (c.bonus) dire('ok', `Bon à tirer : +${c.bonus + PTS.propre} points.`, "L'article est parti propre, en avance sur la rotative.");
+      }
+      majTableau();
+      marquerPremiere();
+      if (etat.reputation <= 0) finir('reputation');
+    }
+
+    // ---------- Boucle ----------
+    function avancer(dt) {
+      const acceleration = Math.min(ACCELERATION_MAX, 1 + ACCELERATION * etat.imprimes);
+      const v = etat.vitesse * acceleration * (etat.turbo ? TURBO : 1);
+      let prec = null;
+      for (const c of etat.cartes) {
+        c.y -= v * dt;
+        if (prec && c.y < prec.y + prec.h + ECART) c.y = prec.y + prec.h + ECART;
+        placer(c);
+        prec = c;
+      }
+      while (etat.enCours && etat.cartes.length && etat.cartes[0].y + etat.cartes[0].h <= 0) imprimer(etat.cartes.shift());
+      if (!etat.enCours) return;
+      const der = etat.cartes[etat.cartes.length - 1];
+      if (!der || der.y + der.h + ECART <= etat.H) {
+        const servie = ajouterCarte(der ? der.y + der.h + ECART : etat.H);
+        if (!servie && !etat.cartes.length) finir('bouclage');
+      }
+    }
+
+    function boucle(t) {
+      if (!etat.enCours) return;
+      const dt = etat.dernier ? Math.min(0.05, (t - etat.dernier) / 1000) : 0;
+      etat.dernier = t;
+      if (!etat.enPause) avancer(dt);
+      etat.raf = requestAnimationFrame(boucle);
+    }
+
+    function mesurer() {
+      etat.H = plateau.clientHeight;
+      etat.vitesse = etat.H / TRAVERSEE[opts.vitesse || 'normale'];
+      etat.cartes.forEach((c) => { c.h = c.el.offsetHeight; });
+    }
+
+    function surVisibilite() {
+      if (document.hidden && etat.enCours && !etat.enPause) controle.pause();
+    }
+
+    function finir(raison) {
+      if (!etat.enCours) return;
+      etat.enCours = false;
+      cancelAnimationFrame(etat.raf);
+      rotative.classList.add('arret');
+      rail.removeEventListener('pointerdown', surPointeur);
+      rail.removeEventListener('click', surClic);
+      window.removeEventListener('resize', mesurer);
+      document.removeEventListener('visibilitychange', surVisibilite);
+      CQ.stock.ecrire('stats', stats);
+      CQ.Son.jouer('fin');
+      quandFinie({
+        raison,
+        score: etat.score,
+        trouvees: etat.trouvees,
+        ratees: etat.ratees,
+        zeles: etat.zeles,
+        meilleureSerie: etat.meilleureSerie,
+        resultats: etat.resultats,
+        pieges: Array.from(etat.pieges.values()),
+      });
+    }
+
+    const controle = {
+      pause() {
+        if (!etat.enCours) return;
+        etat.enPause = true;
+        rotative.classList.add('arret');
+        $('voile-pause').hidden = false;
+        $('btn-reprendre').focus();
+      },
+      reprendre() {
+        if (!etat.enCours) return;
+        $('voile-pause').hidden = true;
+        etat.enPause = false;
+        etat.dernier = 0;
+        rotative.classList.remove('arret');
+      },
+      abandonner() {
+        $('voile-pause').hidden = true;
+        finir('abandon');
+      },
+    };
+
+    // ---------- Démarrage ----------
+    rail.innerHTML = '';
+    plateau.querySelectorAll('.points').forEach((p) => p.remove());
+    rotative.classList.remove('arret', 'flash-ok', 'flash-rate');
+    marbre.dataset.etat = '';
+    $('marbre-titre').textContent = typo("Touche les coquilles avant qu'elles partent à l'impression.");
+    $('marbre-detail').textContent = typo('Faute, erreur de calcul ou photo qui ne colle pas au texte : touche-la. Attention aux fautes de zèle.');
+    majTableau();
+    mesurer();
+    rail.addEventListener('pointerdown', surPointeur);
+    rail.addEventListener('click', surClic);
+    window.addEventListener('resize', mesurer);
+    document.addEventListener('visibilitychange', surVisibilite);
+    ajouterCarte(Math.round(etat.H * 0.3));
+    etat.raf = requestAnimationFrame(boucle);
+    return controle;
+  };
+})();
+</script>
+<script>
+/* Coquilles — la une (réglages), le bilan, le partage. */
+(function () {
+  'use strict';
+  const CQ = window.CQ;
+  const $ = (id) => document.getElementById(id);
+
+  const NIVEAUX = {
+    enfant: ['CE2', 'CM1', 'CM2'],
+    adulte: ['Courant', 'Exigeant', 'Expert'],
+    apprenant: ['A1', 'A2', 'B1'],
+  };
+  const LECTEURS = { enfant: 'Enfant', adulte: 'Adulte', apprenant: 'Apprenant' };
+  const TOUTES = { ortho: true, gram: true, calc: true, image: true };
+  const ARTICLES_DU_JOUR = 10;
+  const CASES = { parfait: '🟦', zele: '🟨', rate: '🟥' };
+
+  const DEFAUT = { public: 'adulte', niveau: 1, vitesse: 'normale', rubriques: TOUTES };
+  let reglages = Object.assign({}, DEFAUT, CQ.stock.lire('reglages', {}));
+  reglages.rubriques = Object.assign({}, TOUTES, reglages.rubriques);
+
+  let partie = null;
+  let derniere = null; // dernière partie lancée, pour « Rejouer »
+  let apresAide = null;
+
+  const etoiles = (n) => '★'.repeat(n);
+  const cleJour = () => `jour:${CQ.cleDuJour()}:${reglages.public}:${reglages.niveau}`;
+  const cleRecord = () => `record:${reglages.public}:${reglages.niveau}`;
+
+  function afficher(ecran) {
+    ['ecran-une', 'ecran-jeu', 'ecran-bilan'].forEach((id) => { $(id).hidden = id !== ecran; });
+  }
+
+  // ---------- La une ----------
+  function majUne() {
+    const auj = new Date();
+    $('date-edition').textContent = auj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    $('num-edition').textContent = CQ.numeroEdition(auj);
+
+    $('pub-' + reglages.public).checked = true;
+    $('niv-' + reglages.niveau).checked = true;
+    $('vit-' + reglages.vitesse).checked = true;
+    Object.keys(TOUTES).forEach((r) => { $('rub-' + r).checked = !!reglages.rubriques[r]; });
+    NIVEAUX[reglages.public].forEach((nom, i) => { $(`niv-${i + 1}-nom`).textContent = nom; });
+
+    const jour = CQ.stock.lire(cleJour(), null);
+    $('etat-jour').textContent = jour
+      ? `Déjà jouée : ${CQ.milliers(jour.score)} points. Rejouer ne change pas ce score.`
+      : `${ARTICLES_DU_JOUR} articles, la même pour tous les lecteurs`;
+    const record = CQ.stock.lire(cleRecord(), 0);
+    $('etat-libre').textContent = record
+      ? `Record ${LECTEURS[reglages.public].toLowerCase()} ${etoiles(reglages.niveau)} : ${CQ.milliers(record)} points`
+      : "Sans fin, jusqu'à la dernière plainte des lecteurs";
+    majBoutonSon();
+    CQ.typographier($('ecran-une'));
+  }
+
+  function lireReglages() {
+    const f = $('reglages');
+    reglages.public = f.querySelector('input[name=public]:checked').value;
+    reglages.niveau = +f.querySelector('input[name=niveau]:checked').value;
+    reglages.vitesse = f.querySelector('input[name=vitesse]:checked').value;
+    const rub = {};
+    f.querySelectorAll('input[name=rubrique]').forEach((c) => { rub[c.value] = c.checked; });
+    reglages.rubriques = rub;
+    CQ.stock.ecrire('reglages', reglages);
+  }
+
+  function majBoutonSon() {
+    const b = $('btn-son');
+    b.textContent = CQ.Son.actif ? 'Son activé' : 'Son coupé';
+    b.setAttribute('aria-pressed', String(CQ.Son.actif));
+  }
+
+  // ---------- Lancement ----------
+  function preparer(mode) {
+    const base = { mode, public: reglages.public, niveau: reglages.niveau, vitesse: reglages.vitesse };
+    if (mode === 'jour') {
+      const r = CQ.hasard(CQ.empreinte(`${CQ.cleDuJour()}|${reglages.public}|${reglages.niveau}`));
+      const pioche = CQ.creerPioche({ public: reglages.public, niveau: reglages.niveau, rubriques: TOUTES, hasard: r, stats: null });
+      return Object.assign(base, { file: Array.from({ length: ARTICLES_DU_JOUR }, () => pioche.suivant()) });
+    }
+    const r = CQ.hasard(Date.now() ^ (Math.random() * 1e9));
+    const pioche = CQ.creerPioche({ public: reglages.public, niveau: reglages.niveau, rubriques: reglages.rubriques, hasard: r, stats: CQ.stock.lire('stats', {}) });
+    return Object.assign(base, { pioche });
+  }
+
+  function lancer(mode) {
+    CQ.Son.reveiller();
+    if (!CQ.stock.lire('aideVue', false)) {
+      apresAide = () => lancer(mode);
+      ouvrirAide();
+      return;
+    }
+    derniere = mode;
+    const opts = preparer(mode);
+    afficher('ecran-jeu');
+    partie = CQ.lancerPartie(opts, (resume) => {
+      partie = null;
+      montrerBilan(opts, resume);
+    });
+  }
+
+  // ---------- Bilan ----------
+  function montrerBilan(opts, res) {
+    const jour = opts.mode === 'jour';
+    const numero = CQ.numeroEdition();
+    const lecteur = `${LECTEURS[opts.public]} ${etoiles(opts.niveau)}`;
+    const total = res.trouvees + res.ratees;
+
+    $('bilan-surtitre').textContent = jour ? `Édition n°${numero} · ${lecteur}` : `Partie libre · ${lecteur}`;
+    $('bilan-titre').textContent = {
+      bouclage: res.ratees === 0 ? 'Édition parfaite' : 'Édition bouclée',
+      reputation: 'Le rédacteur en chef a arrêté les rotatives',
+      abandon: 'Partie arrêtée',
+    }[res.raison];
+    $('bilan-score').textContent = CQ.milliers(res.score);
+
+    let mention = '';
+    if (jour) {
+      const deja = CQ.stock.lire(cleJour(), null);
+      if (!deja) CQ.stock.ecrire(cleJour(), { score: res.score, resultats: res.resultats, trouvees: res.trouvees, total });
+      else mention = `Score retenu pour aujourd'hui : ${CQ.milliers(deja.score)} points`;
+    } else {
+      const record = CQ.stock.lire(cleRecord(), 0);
+      if (res.score > record) {
+        CQ.stock.ecrire(cleRecord(), res.score);
+        mention = record ? `Nouveau record ! L'ancien : ${CQ.milliers(record)} points` : 'Premier record enregistré';
+      } else {
+        mention = `Record : ${CQ.milliers(record)} points`;
+      }
+    }
+    $('bilan-record').textContent = mention;
+
+    const grille = $('bilan-grille');
+    grille.innerHTML = '';
+    res.resultats.forEach((r) => {
+      const c = document.createElement('i');
+      c.className = 'case ' + r;
+      grille.appendChild(c);
+    });
+    grille.setAttribute('aria-label', `${res.resultats.filter((r) => r === 'parfait').length} articles sans faute sur ${res.resultats.length}`);
+
+    $('b-trouvees').textContent = `${res.trouvees}/${total}`;
+    $('b-ratees').textContent = res.ratees;
+    $('b-zeles').textContent = res.zeles;
+    $('b-serie').textContent = res.meilleureSerie;
+
+    const liste = $('bilan-pieges');
+    liste.innerHTML = '';
+    // Les coquilles ratées d'abord, puis les fautes de zèle.
+    const pieges = res.pieges.slice().sort((a, b) => (a.quoi === 'rate' ? 0 : 1) - (b.quoi === 'rate' ? 0 : 1));
+    pieges.slice(0, 8).forEach((p) => {
+      const li = document.createElement('li');
+      const nom = document.createElement('b');
+      nom.textContent = p.nom + (p.quoi === 'zele' ? ' (tu as cru voir une faute)' : '');
+      li.appendChild(nom);
+      if (p.exemple) {
+        const ex = document.createElement('span');
+        ex.className = 'exemple';
+        ex.textContent = p.exemple;
+        li.appendChild(ex);
+      }
+      const expl = document.createElement('p');
+      expl.textContent = p.expl;
+      li.appendChild(expl);
+      liste.appendChild(li);
+    });
+    $('pieges-titre').textContent = res.pieges.length ? 'À retenir' : 'Aucun piège ne t’a eu cette fois.';
+
+    const texte = [
+      jour ? `Coquilles n°${numero} · ${lecteur}` : `Coquilles · partie libre · ${lecteur}`,
+      res.resultats.slice(0, 30).map((r) => CASES[r]).join(''),
+      `${CQ.milliers(res.score)} points · ${res.trouvees}/${total} coquilles trouvées`,
+    ].join('\n');
+    const zone = $('texte-partage');
+    zone.value = texte;
+    zone.hidden = true;
+    $('btn-partager').firstChild.textContent = 'Copier le résultat';
+    $('rejouer-detail').textContent = jour ? "Rejouer l'édition du jour (hors classement)" : 'Nouvelle partie libre';
+
+    CQ.typographier($('ecran-bilan'));
+    afficher('ecran-bilan');
+    $('ecran-bilan').scrollTop = 0;
+  }
+
+  function partager() {
+    const zone = $('texte-partage');
+    const bouton = $('btn-partager');
+    const montrer = () => {
+      zone.hidden = false;
+      zone.focus();
+      zone.select();
+      bouton.firstChild.textContent = 'Sélectionne le texte ci-dessus';
+    };
+    try {
+      navigator.clipboard.writeText(zone.value).then(() => { bouton.firstChild.textContent = 'Résultat copié'; }, montrer);
+    } catch (e) {
+      montrer();
+    }
+  }
+
+  // ---------- Aide ----------
+  function ouvrirAide() {
+    $('voile-aide').hidden = false;
+    $('btn-aide-ok').focus();
+  }
+  function fermerAide() {
+    $('voile-aide').hidden = true;
+    CQ.stock.ecrire('aideVue', true);
+    const suite = apresAide;
+    apresAide = null;
+    if (suite) suite();
+  }
+
+  // ---------- Branchements ----------
+  function demarrer() {
+    document.documentElement.lang = 'fr';
+    CQ.typographier(document.body);
+    majUne();
+    $('reglages').addEventListener('change', (ev) => {
+      // Il faut au moins une rubrique cochée.
+      if (ev.target.name === 'rubrique' && !$('reglages').querySelector('input[name=rubrique]:checked')) ev.target.checked = true;
+      lireReglages();
+      majUne();
+    });
+    $('btn-jour').addEventListener('click', () => lancer('jour'));
+    $('btn-libre').addEventListener('click', () => lancer('libre'));
+    $('btn-aide').addEventListener('click', ouvrirAide);
+    $('btn-aide-ok').addEventListener('click', fermerAide);
+    $('btn-son').addEventListener('click', () => { CQ.Son.basculer(); CQ.Son.reveiller(); majBoutonSon(); });
+    $('btn-pause').addEventListener('click', () => partie && partie.pause());
+    $('btn-reprendre').addEventListener('click', () => partie && partie.reprendre());
+    $('btn-abandonner').addEventListener('click', () => partie && partie.abandonner());
+    $('btn-partager').addEventListener('click', partager);
+    $('btn-rejouer').addEventListener('click', () => lancer(derniere || 'libre'));
+    $('btn-une').addEventListener('click', () => { majUne(); afficher('ecran-une'); });
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Escape') return;
+      if (!$('voile-aide').hidden) fermerAide();
+      else if (partie && $('voile-pause').hidden) partie.pause();
+      else if (partie) partie.reprendre();
+    });
+  }
+
+  // Dans la visionneuse Claude, une republication garde la page ouverte : on redémarre proprement.
+  const hot = window.claude && window.claude.hot;
+  if (hot && typeof hot.snapshot === 'function') {
+    try { hot.snapshot(() => ({ reglages })); } catch (e) { /* visionneuse ancienne */ }
+  }
+  if (hot && typeof hot.ready === 'function') hot.ready(demarrer);
+  else demarrer();
+})();
+</script>
+</body>
+</html>
