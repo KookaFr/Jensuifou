@@ -72,6 +72,11 @@
     return String(n);
   };
 
+  // Au féminin : un → une (vingt et une baguettes, quatre-vingt-une pages).
+  CQ.enLettresF = function (n) {
+    return CQ.enLettres(n).replace(/(^|[ -])un$/, '$1une');
+  };
+
   // 6.5 → « 6,50 » ; 12 → « 12 ».
   CQ.euros = function (x) {
     const arrondi = Math.round(x * 100) / 100;

@@ -19,6 +19,7 @@ les voix ou une première version des contenus, toujours relue).
 - Vraies illustrations à la place des emoji (dessins générés puis retouchés).
 - Installation sur l'écran d'accueil et mode hors ligne (PWA).
 - Plus de brèves par niveau, et des coquilles de bon sens (« il neige à 35 °C »).
+- Légendes de photos, renvois « suite en page 6 », chiffres qui changent au sein d'un même article.
 - Mode classe : un enseignant choisit les règles travaillées et voit les erreurs du groupe.
 - Interface traduite pour les débutants en français (anglais, espagnol, arabe…).
 - Carnet de progrès : règles maîtrisées, règles à revoir.

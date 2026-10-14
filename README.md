@@ -8,12 +8,21 @@ Les pistes de jeux étudiées sont dans [IDEES.md](IDEES.md).
 ## Coquilles
 
 Premier prototype jouable, pensé pour le téléphone. Les articles d'un journal
-montent vers la rotative ; on touche les **coquilles** avant l'impression :
+montent vers la rotative ; on touche les **coquilles** avant l'impression, soit
+tout ce qu'un secrétaire de rédaction vérifie avant le bouclage :
 
-- fautes d'orthographe et de grammaire (a/à, accords, participes, faux amis…) ;
-- erreurs de calcul (monnaie rendue, soldes, prix au kilo, TVA, horaires…) ;
-- dates impossibles (31 avril, 30 février) ;
-- photos qui ne correspondent pas au texte (le texte fait foi).
+| Rubrique | Ce qu'on vérifie |
+|---|---|
+| Orthographe | mots d'usage, m devant m-b-p, anglicismes (connection, language), vingt/cent |
+| Grammaire | a/à, et/est, accords, participes passés, futur ou conditionnel, genre des noms (FLE) |
+| Typographie | lettres inversées, oubliées ou doublées, mot répété (« le le »), majuscules des noms propres, accents sur les majuscules |
+| Calcul | monnaie rendue, soldes, prix au kilo, TVA, horaires, dates impossibles (31 avril) |
+| Faits | informations fausses (histoire, géographie, sciences, numéros d'urgence, droits du consommateur), titre qui contredit l'article, nom qui change en cours d'article, âge incohérent avec l'année de naissance, jour de la semaine faux par rapport à la date du journal |
+| Images | photo qui ne correspond pas au texte (le texte fait foi) |
+| Pages | numéro de page de chaque article (les pages se suivent), sommaire dans le désordre ou renvoyant au-delà du numéro |
+
+Les coquilles de typographie et les numéros de page se posent automatiquement sur
+n'importe quel article : le contenu n'a pas besoin de les prévoir.
 
 Toucher un mot juste est une **faute de zèle**. Après chaque coquille, la règle
 s'affiche en bas de l'écran, et le bilan liste les pièges de la partie. En partie
@@ -37,7 +46,7 @@ résultat à partager) et la **partie libre** (sans fin, rubriques au choix).
 
 ### Ajouter du contenu
 
-Les brèves sont dans `coquilles/js/contenu/`. Chaque mot piégé s'écrit entre accolades :
+Les brèves sont dans `coquilles/js/contenu/` (les informations à vérifier dans `faits.js`). Chaque mot piégé s'écrit entre accolades :
 
 ```
 {forme correcte|faute 1|faute 2#règle:explication propre à ce mot}

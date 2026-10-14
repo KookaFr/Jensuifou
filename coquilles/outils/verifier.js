@@ -10,7 +10,7 @@ const vm = require('vm');
 const racine = path.join(__dirname, '..');
 const FICHIERS = [
   'js/util.js', 'js/regles.js',
-  'js/contenu/breves-enfant.js', 'js/contenu/breves-adulte.js', 'js/contenu/breves-apprenant.js',
+  'js/contenu/breves-enfant.js', 'js/contenu/breves-adulte.js', 'js/contenu/breves-apprenant.js', 'js/contenu/faits.js',
   'js/contenu/images.js', 'js/contenu/generateurs.js', 'js/edition.js',
 ];
 
@@ -37,7 +37,8 @@ function verifierElements(elements, ou) {
 
 function rendu(article) {
   const txt = (els) => els.map((e) => e.pre + (e.type === 'jeton' ? (e.coquille ? `[${e.affiche}→${e.correct}]` : e.correct) : e.texte) + e.post).join(' ');
-  let s = `[${article.section}] ${txt(article.titre)}\n  ${txt(article.texte)}`;
+  const folio = article.folio ? (article.folio.coquille ? `p.[${article.folio.affiche}→${article.folio.correct}] ` : `p.${article.folio.correct} `) : '';
+  let s = `${folio}[${article.section}] ${txt(article.titre)}\n  ${txt(article.texte)}`;
   if (article.image) s += `\n  photo : ${article.image.affiche}${article.image.coquille ? ` (fausse, il fallait ${article.image.ok})` : ''}`;
   return s;
 }
@@ -78,10 +79,9 @@ CQ.GENERATEURS.forEach((g, k) => {
 
 // 4. Pioches pour chaque public, niveau et combinaison de rubriques
 const PUBLICS = ['enfant', 'adulte', 'apprenant'];
-const COMBINAISONS = [
-  { ortho: true, gram: true, calc: true, image: true },
-  { ortho: true }, { gram: true }, { calc: true }, { image: true },
-];
+const TOUTES = { ortho: true, gram: true, typo: true, calc: true, faits: true, image: true, page: true };
+const COMBINAISONS = [TOUTES].concat(Object.keys(TOUTES).map((k) => ({ [k]: true })));
+const parRegle = {};
 const bilan = {};
 for (const pub of PUBLICS) {
   for (const niveau of [1, 2, 3]) {
@@ -93,10 +93,21 @@ for (const pub of PUBLICS) {
         if (Object.keys(rub).length === 4) erreur(`pioche ${pub}/${niveau} : ${e.message}`);
         continue;
       }
-      let coquilles = 0, vides = 0;
+      let coquilles = 0, vides = 0, folioFaux = false;
       for (let n = 0; n < 60; n++) {
         const a = pioche.suivant();
-        const c = a.titre.concat(a.texte).filter((e) => e.coquille).length + (a.image && a.image.coquille ? 1 : 0);
+        const ou = `pioche ${pub}/${niveau}/${Object.keys(rub).join('+')}`;
+        const jetons = a.titre.concat(a.texte, a.folio ? [a.folio] : []).filter((e) => e.type === 'jeton');
+        for (const j of jetons) {
+          if (j.coquille && j.affiche === j.correct) erreur(`${ou} : coquille identique à la forme correcte « ${j.correct} »`);
+          if (j.coquille && !rub[CQ.rubriqueDe(j.code)]) erreur(`${ou} : coquille « ${j.code} » hors des rubriques choisies`);
+          if (j.coquille) parRegle[j.code] = (parRegle[j.code] || 0) + 1;
+          if (!CQ.REGLES[j.code]) erreur(`${ou} : règle inconnue « ${j.code} »`);
+        }
+        if (a.folio && a.folio.correct !== String(n + 2)) erreur(`${ou} : la page ${n + 2} porte le numéro ${a.folio.correct}`);
+        if (a.folio && a.folio.coquille && folioFaux) erreur(`${ou} : deux numéros de page faux de suite (page ${n + 2})`);
+        folioFaux = a.folio && a.folio.coquille;
+        const c = jetons.filter((e) => e.coquille).length + (a.image && a.image.coquille ? 1 : 0);
         coquilles += c;
         if (!c) vides++;
       }
@@ -107,6 +118,7 @@ for (const pub of PUBLICS) {
 
 console.log('\nBrèves :', CQ.BREVES.length, '· images :', CQ.IMAGES.length, '· générateurs :', CQ.GENERATEURS.length);
 for (const [k, v] of Object.entries(bilan)) console.log(`  ${k.padEnd(16)} ${v}`);
+console.log('Coquilles tirées par règle :', Object.entries(parRegle).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', '));
 
 if (process.argv.includes('--exemples')) {
   for (const pub of PUBLICS) {

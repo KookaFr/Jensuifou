@@ -108,6 +108,81 @@
     return x < 0.15 ? 0 : x < 0.65 ? 1 : 2;
   }
 
+  // ---------- Coquilles d'imprimerie, posées sur n'importe quel mot ----------
+  const LETTRES = /^[a-zàâäçéèêëîïôöùûüÿœæ]+$/;
+  const PONCT_FIN = /^(.*?)([.,;:!?…)»]*)$/;
+  const NOM_PROPRE = /^[A-ZÀÂÇÉÈÊÎÔÛ][a-zàâäçéèêëîïôöùûüÿœ'’-]+$/;
+  const PETITS_MOTS = ['le', 'la', 'les', 'de', 'des', 'du', 'un', 'une', 'et', 'en', 'au', 'aux', 'il', 'elle', 'on', 'sur', 'pour', 'dans', 'avec', 'par'];
+  // Mots dont la minuscule est admise ou trop discutable pour en faire une coquille.
+  const MAJUSCULE_LIBRE = ['Soleil', 'Lune', 'Terre', 'Marché', 'Exposition', 'Révolution', 'T-rex', 'Le', 'La', 'Les'];
+  const SANS_ACCENT = { 'É': 'E', 'È': 'E', 'Ê': 'E', 'À': 'A', 'Â': 'A', 'Î': 'I', 'Ô': 'O', 'Ç': 'C' };
+  const POIDS_TYPO = { lettres: 3, doublon: 2, majuscule: 1.5, accentmaj: 1.2 };
+
+  function debutDePhrase(liste, k) {
+    if (k === 0) return true;
+    if (liste[k].pre.includes('«')) return true;
+    const prec = liste[k - 1];
+    return /[.!?…]$/.test(texteDe(prec) + prec.post);
+  }
+
+  // Inverse deux lettres voisines, en oublie une ou en double une.
+  function abimer(r, mot) {
+    const n = mot.length, essais = { inverse: [], oubli: [], double: [] };
+    for (let i = 1; i < n - 2; i++) if (mot[i] !== mot[i + 1]) essais.inverse.push(mot.slice(0, i) + mot[i + 1] + mot[i] + mot.slice(i + 2));
+    if (n >= 7) for (let i = 1; i < n - 1; i++) essais.oubli.push(mot.slice(0, i) + mot.slice(i + 1));
+    for (let i = 1; i < n - 1; i++) {
+      if (/[bcdfglmnprst]/.test(mot[i]) && mot[i] !== mot[i - 1] && mot[i] !== mot[i + 1]) essais.double.push(mot.slice(0, i + 1) + mot.slice(i));
+    }
+    const sortes = ['inverse', 'oubli', 'double'].filter((s) => essais[s].length);
+    if (!sortes.length) return null;
+    const sorte = sortes[r.pondere(sortes.map((s) => (s === 'inverse' ? 3 : 1)))];
+    return r.choix(essais[sorte]);
+  }
+
+  function poserTypo(r, titre, texte) {
+    const candidats = { lettres: [], doublon: [], majuscule: [], accentmaj: [] };
+    [titre, texte].forEach((liste) => liste.forEach((e, k) => {
+      if (e.type !== 'mot') return;
+      const [, coeur, ponct] = e.texte.match(PONCT_FIN);
+      if (!coeur) return;
+      const ref = { e, coeur, ponct };
+      if (LETTRES.test(coeur) && coeur.length >= 6) candidats.lettres.push(ref);
+      if (liste === texte && PETITS_MOTS.includes(coeur) && !ponct && !e.post && !e.pre) candidats.doublon.push(ref);
+      if (NOM_PROPRE.test(coeur) && !debutDePhrase(liste, k) && !MAJUSCULE_LIBRE.includes(coeur)) candidats.majuscule.push(ref);
+      if (SANS_ACCENT[coeur[0]]) candidats.accentmaj.push(ref);
+    }));
+    const sortes = Object.keys(candidats).filter((s) => candidats[s].length);
+    if (!sortes.length) return false;
+    const sorte = sortes[r.pondere(sortes.map((s) => POIDS_TYPO[s]))];
+    const { e, coeur, ponct } = r.choix(candidats[sorte]);
+    let faute = null, detail = null;
+    if (sorte === 'lettres') faute = abimer(r, coeur);
+    if (sorte === 'doublon') { faute = coeur + ' ' + coeur; detail = `« ${coeur} » est imprimé deux fois de suite.`; }
+    if (sorte === 'majuscule') { faute = coeur[0].toLowerCase() + coeur.slice(1); detail = `« ${coeur} » est un nom propre : il prend une majuscule.`; }
+    if (sorte === 'accentmaj') faute = SANS_ACCENT[coeur[0]] + coeur.slice(1);
+    if (!faute || faute === coeur) return false;
+    delete e.texte;
+    Object.assign(e, { type: 'jeton', correct: coeur, fautes: [faute], code: sorte, detail, coquille: true, affiche: faute, espace: sorte === 'doublon', post: ponct + e.post });
+    return true;
+  }
+
+  // Numéro de page (folio) d'un article.
+  function folio(r, n, actif) {
+    const fautes = [n + 1, n - 1];
+    const inverse = +String(n).split('').reverse().join('');
+    if (n >= 10 && inverse !== n && n % 10) fautes.push(inverse);
+    const f = {
+      type: 'jeton', code: 'folio', correct: String(n), fautes: fautes.filter((x) => x >= 1).map(String),
+      detail: n === 2 ? 'La une est la page 1 : le premier article est en page 2.' : `Après la page ${n - 1} vient la page ${n}.`,
+      coquille: false, affiche: String(n), pre: '', post: '',
+    };
+    if (actif && r.chance(0.12)) {
+      f.coquille = true;
+      f.affiche = r.choix(f.fautes);
+    }
+    return f;
+  }
+
   // Transforme une fiche (brève, image, article généré) en article prêt à jouer.
   CQ.composer = function (fiche, opts) {
     const r = opts.hasard;
@@ -124,17 +199,25 @@
         image.affiche = r.choix(fiche.ko);
       }
     } else {
-      const eligibles = jetons.filter((j) => opts.rubriques[CQ.rubriqueDe(j.code)]);
-      let n = Math.min(eligibles.length, fiche.calc ? (r.chance(0.8) ? 1 : 0) : combienDeCoquilles(r, opts.niveau));
-      const restants = eligibles.slice();
-      while (n-- > 0 && restants.length) {
-        const i = r.pondere(restants.map((j) => faiblesse(opts.stats, j.code)));
-        const j = restants.splice(i, 1)[0];
-        j.coquille = true;
-        j.affiche = r.choix(j.fautes);
+      // Les candidats : les jetons des rubriques choisies, plus une coquille d'imprimerie possible.
+      const candidats = jetons.filter((j) => opts.rubriques[CQ.rubriqueDe(j.code)]).map((j) => ({ j, poids: faiblesse(opts.stats, j.code) }));
+      if (opts.rubriques.typo) candidats.push({ typo: true, poids: (fiche.genere ? 0.35 : 0.8) * faiblesse(opts.stats, 'lettres') });
+      let n = Math.min(candidats.length, fiche.genere ? (r.chance(0.8) ? 1 : 0) : combienDeCoquilles(r, opts.niveau));
+      while (n-- > 0 && candidats.length) {
+        const choisi = candidats.splice(r.pondere(candidats.map((c) => c.poids)), 1)[0];
+        if (choisi.typo) {
+          poserTypo(r, titre, texte);
+        } else {
+          choisi.j.coquille = true;
+          choisi.j.affiche = r.choix(choisi.j.fautes);
+        }
       }
     }
-    return { section: fiche.section, titre, texte, image };
+    if (fiche.ok && opts.rubriques.typo && r.chance(0.15)) poserTypo(r, titre, texte);
+    return {
+      section: fiche.section, titre, texte, image,
+      folio: opts.folio ? folio(r, opts.folio, opts.rubriques.page && !opts.folioPrecedentFaux) : null,
+    };
   };
 
   // Mélange sans remise, pondéré : le niveau choisi et les points faibles d'abord.
@@ -148,9 +231,9 @@
   }
 
   const MELANGE = {
-    enfant: { breve: 5, calc: 2, image: 3 },
-    adulte: { breve: 6, calc: 3, image: 1.5 },
-    apprenant: { breve: 5, calc: 2, image: 3 },
+    enfant: { breve: 5, calc: 2, image: 3, faits: 1, page: 0.6 },
+    adulte: { breve: 6, calc: 3, image: 1.5, faits: 1.5, page: 0.8 },
+    apprenant: { breve: 5, calc: 2, image: 3, faits: 1.2, page: 0.6 },
   };
 
   // Crée la pioche d'une partie. opts : public, niveau, rubriques, hasard, stats.
@@ -158,27 +241,31 @@
     const r = opts.hasard, pub = opts.public, niveau = opts.niveau, rub = opts.rubriques;
     const auNiveau = (f) => (f.niv === niveau ? 3 : 1);
 
-    const breves = CQ.BREVES.filter((b) => b.pub === pub && b.niv <= niveau &&
-      CQ.analyser(b.titre + ' ' + b.texte).some((e) => e.type === 'jeton' && rub[CQ.rubriqueDe(e.code)]));
+    // Avec la typographie ou les pages, toute brève peut porter une coquille.
+    const porteuses = rub.typo || rub.page;
+    const breves = CQ.BREVES.filter((b) => b.pub === pub && b.niv <= niveau && (porteuses ||
+      CQ.analyser(b.titre + ' ' + b.texte).some((e) => e.type === 'jeton' && rub[CQ.rubriqueDe(e.code)])));
     const poidsBreve = (b) => {
       const codes = CQ.analyser(b.texte).filter((e) => e.type === 'jeton').map((e) => e.code);
       const pire = Math.max(1, ...codes.map((c) => faiblesse(opts.stats, c)));
       return auNiveau(b) * pire;
     };
     const images = CQ.IMAGES.filter((i) => i.pub.includes(pub) && i.niv <= niveau);
-    const gensCalc = CQ.GENERATEURS.filter((g) => g.rub === 'calc' && g.pub.includes(pub) && g.niv <= niveau);
-    const gensImage = CQ.GENERATEURS.filter((g) => g.rub === 'image' && g.pub.includes(pub) && g.niv <= niveau);
+    const generateurs = (cle) => CQ.GENERATEURS.filter((g) => g.rub === cle && g.pub.includes(pub) && g.niv <= niveau);
+    const gensImage = generateurs('image');
 
     const sources = [];
     const melange = MELANGE[pub];
-    if ((rub.ortho || rub.gram) && breves.length) {
+    if (breves.length) {
       const tirer = paquet(breves, r, poidsBreve);
       sources.push({ poids: melange.breve, tirer });
     }
-    if (rub.calc && gensCalc.length) {
-      const tirer = paquet(gensCalc, r, auNiveau);
-      sources.push({ poids: melange.calc, tirer: () => Object.assign(tirer().fn(r, niveau), { calc: true }) });
-    }
+    ['calc', 'faits', 'page'].forEach((cle) => {
+      const gens = generateurs(cle);
+      if (!rub[cle] || !gens.length) return;
+      const tirer = paquet(gens, r, auNiveau);
+      sources.push({ poids: melange[cle], tirer: () => Object.assign(tirer().fn(r, niveau), { genere: true }) });
+    });
     if (rub.image && (images.length || gensImage.length)) {
       const tirerImage = images.length ? paquet(images, r, auNiveau) : null;
       const tirerGen = gensImage.length ? paquet(gensImage, r, auNiveau) : null;
@@ -187,13 +274,18 @@
     if (!sources.length) throw new Error('Aucune rubrique disponible pour ce lecteur.');
 
     let derniere = -1;
+    let page = 1; // la une est la page 1
+    let folioPrecedentFaux = false;
     return {
       suivant() {
-        // Évite trois articles de suite de la même source quand c'est possible.
+        // Évite deux articles de suite de la même source, une fois sur deux.
         let i = r.pondere(sources.map((s) => s.poids));
         if (i === derniere && sources.length > 1 && r.chance(0.5)) i = r.pondere(sources.map((s, k) => (k === i ? 0 : s.poids)));
         derniere = i;
-        return CQ.composer(sources[i].tirer(), { hasard: r, niveau, rubriques: rub, stats: opts.stats });
+        page++;
+        const article = CQ.composer(sources[i].tirer(), { hasard: r, niveau, rubriques: rub, stats: opts.stats, folio: page, folioPrecedentFaux });
+        folioPrecedentFaux = article.folio.coquille;
+        return article;
       },
     };
   };

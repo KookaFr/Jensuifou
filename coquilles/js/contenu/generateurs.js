@@ -6,6 +6,7 @@
   const CQ = window.CQ;
   const G = (CQ.GENERATEURS = []);
   const L = CQ.enLettres;
+  const LF = CQ.enLettresF; // au féminin : vingt et une baguettes
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   const decimal = (x) => String(Math.round(x * 100) / 100).replace('.', ',');
   const heureMin = (t) => CQ.heure(Math.floor(t / 60), t % 60);
@@ -90,7 +91,7 @@
     adulte: [
       { section: 'Agenda', titre: 'Réunion publique', phrase: 'La réunion publique sur le nouveau quartier est fixée au @, à 19 h.' },
       { section: 'Agenda', titre: "Le salon de l'habitat", phrase: "Le salon de l'habitat ouvrira ses portes le @ au parc des expositions." },
-      { section: 'Pratique', titre: 'Rappel aux contribuables', phrase: 'Les déclarations papier doivent être déposées avant le @ à minuit.' },
+      { section: 'Concours', titre: 'Concours photo', phrase: 'Les photos du concours doivent être déposées à la mairie avant le @ à midi.' },
     ],
     apprenant: [
       { section: 'Invitations', titre: "Fête d'anniversaire", phrase: "Mon anniversaire est le @ : venez à la fête !" },
@@ -220,7 +221,7 @@
   gen({ pub: ['apprenant'], niv: 2, fn(r) {
     const a = r.entier(12, 35), b = r.entier(10, 34), s = a + b;
     return { section: 'Commerces', titre: 'La boulangerie du quartier',
-      texte: `La boulangerie a vendu ${L(a)} baguettes le matin et ${L(b)} l'après-midi : ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, voisins: [s + 1, s - 1, s + 10, s - 10] }, enLettres))} baguettes au total.` };
+      texte: `La boulangerie a vendu ${LF(a)} baguettes le matin et ${LF(b)} l'après-midi : ${nombre(r, s, { fmt: LF, detail: `${a} + ${b} = ${s} (${LF(s)})`, voisins: [s + 1, s - 1, s + 10, s - 10] })} baguettes au total.` };
   } });
 
   gen({ pub: ['apprenant'], niv: 2, fn(r) {
@@ -240,8 +241,84 @@
     do { a = r.entier(35, 50); b = r.entier(30, 49); } while (a + b < 70 || a + b > 99);
     const s = a + b;
     return { section: 'Commerces', titre: 'Un samedi à la boulangerie',
-      texte: `Samedi, la boulangerie a vendu ${L(a)} baguettes le matin et ${L(b)} l'après-midi : ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, classiques: [s + 20, s - 20], voisins: [s + 1, s - 1, s + 10] }, enLettres))} baguettes au total.` };
+      texte: `Samedi, la boulangerie a vendu ${LF(a)} baguettes le matin et ${LF(b)} l'après-midi : ${nombre(r, s, { fmt: LF, detail: `${a} + ${b} = ${s} (${LF(s)})`, classiques: [s + 20, s - 20], voisins: [s + 1, s - 1, s + 10] })} baguettes au total.` };
   } });
+
+  // ---------- Mise en page : le sommaire ----------
+  const RUBRIQUES_SOMMAIRE = ['Vie locale', 'Économie', 'Culture', 'Sports', 'Météo', 'Jeux', 'Petites annonces', 'Programme télé', 'Courrier des lecteurs'];
+  gen({ pub: ['enfant', 'adulte', 'apprenant'], niv: 1, rub: 'page', fn(r) {
+    const total = r.choix([12, 16, 20, 24]);
+    const sections = r.melanger(RUBRIQUES_SOMMAIRE).slice(0, 4);
+    const pages = r.melanger(Array.from({ length: total - 2 }, (_, i) => i + 2)).slice(0, 4).sort((a, b) => a - b);
+    const k = r.entier(1, 3);
+    let faux, detail;
+    if (k < 3 && pages[k - 1] > 2 && r.chance(0.5)) {
+      faux = Math.max(2, pages[k - 1] - r.entier(1, 3));
+      detail = `Le sommaire suit l'ordre des pages : après ${sections[k - 1]} en page ${pages[k - 1]}, la rubrique suivante ne peut pas être en page ${faux}.`;
+    } else {
+      faux = total + r.entier(2, 9);
+      detail = `Ce numéro n'a que ${total} pages : la page ${faux} n'existe pas.`;
+    }
+    const ligne = (i) => `${sections[i]}, page ${i === k ? `{${pages[i]}|${faux}#sommaire:${detail}}` : pages[i]}.`;
+    return { section: 'Sommaire', titre: 'Dans ce numéro',
+      texte: `Ce numéro compte ${total} pages. ` + [0, 1, 2, 3].map(ligne).join(' ') };
+  } });
+
+  // ---------- Faits : âge et année de naissance ----------
+  const ANNEE = new Date().getFullYear();
+  const AINES = { f: ['Jeanne', 'Marcelle', 'Yvette', 'Simone', 'Odette', 'Paulette'], m: ['Marcel', 'René', 'Lucien', 'André', 'Robert', 'Gaston'] };
+  const NOMS = ['Martin', 'Dubois', 'Lefèvre', 'Moreau', 'Girard', 'Fontaine', 'Mercier'];
+  gen({ pub: ['adulte'], niv: 2, rub: 'faits', fn(r) {
+    const f = r.chance(0.5), age = r.entier(70, 104), annee = ANNEE - age;
+    return { section: 'Carnet', titre: f ? 'Une doyenne en pleine forme' : 'Un doyen en pleine forme',
+      texte: `${f ? 'Née' : 'Né'} en ${annee}, ${r.choix(f ? AINES.f : AINES.m)} ${r.choix(NOMS)} fête aujourd'hui ses ${nombre(r, age, { code: 'age', detail: `${ANNEE} − ${annee} = ${age}`, voisins: [age + 10, age - 10, age + 1, age - 1] })} ans. ${f ? 'Elle' : 'Il'} vit toujours dans sa maison du centre-bourg.` };
+  } });
+  gen({ pub: ['enfant'], niv: 3, rub: 'faits', fn(r) {
+    const age = r.entier(60, 85), annee = ANNEE - age;
+    return { section: 'Famille', titre: "L'anniversaire de mamie",
+      texte: `Mamie Louise est née en ${annee}. Cette année, elle fête ses ${nombre(r, age, { code: 'age', detail: `${ANNEE} − ${annee} = ${age}`, voisins: [age + 10, age - 10, age + 1] })} ans : toute la famille sera là !` };
+  } });
+  gen({ pub: ['apprenant'], niv: 3, rub: 'faits', fn(r) {
+    const age = r.entier(70, 95), annee = ANNEE - age;
+    return { section: 'Famille', titre: 'Ma grand-mère',
+      texte: `Ma grand-mère est née en ${annee}. Cette année, elle a ${nombre(r, age, Object.assign({ code: 'age', detail: `${ANNEE} − ${annee} = ${age} (${L(age)})`, classiques: [age + 20, age - 20], voisins: [age + 1, age - 1] }, enLettres))} ans.` };
+  } });
+
+  // ---------- Faits : le jour de la semaine, par rapport à la date du journal ----------
+  const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+  const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  const dateLongue = (d, jour) => `${JOURS[jour === undefined ? d.getDay() : jour]} ${d.getDate() === 1 ? '1er' : d.getDate()} ${MOIS[d.getMonth()]}`;
+  const ECARTS_JOUR = [
+    { n: 1, mot: 'demain', temps: 'futur' }, { n: 2, mot: 'après-demain', temps: 'futur' },
+    { n: 7, mot: 'dans une semaine', temps: 'futur' }, { n: -1, mot: 'hier', temps: 'passe' },
+  ];
+  const PHRASES_JOUR = {
+    enfant: {
+      futur: [{ titre: 'Sortie à la piscine', phrase: 'La sortie à la piscine aura lieu @.' }, { titre: 'Le goûter de la classe', phrase: 'Le goûter de la classe est prévu @.' }],
+      passe: [{ titre: 'Visite au musée', phrase: 'La classe a visité le musée @.' }],
+    },
+    adulte: {
+      futur: [{ titre: 'Conseil municipal', phrase: 'Le conseil municipal se réunira @, à 18 h 30.' }, { titre: 'Encombrants', phrase: 'La collecte des encombrants passera @.' }, { titre: 'Vide-grenier', phrase: 'Les inscriptions au vide-grenier fermeront @.' }],
+      passe: [{ titre: 'Marché nocturne', phrase: "Le marché nocturne s'est tenu @, sous la pluie." }],
+    },
+    apprenant: {
+      futur: [{ titre: 'Cours de français', phrase: 'Mon cours de français aura lieu @.' }, { titre: 'Musée fermé', phrase: 'Le musée sera fermé @.' }],
+      passe: [{ titre: 'Au cinéma', phrase: 'Je suis allé au cinéma @.' }],
+    },
+  };
+  ['enfant', 'adulte', 'apprenant'].forEach((pub) => {
+    gen({ pub: [pub], niv: pub === 'enfant' ? 2 : 1, rub: 'faits', fn(r) {
+      const auj = new Date();
+      const ecart = r.choix(ECARTS_JOUR);
+      const d = new Date(auj.getFullYear(), auj.getMonth(), auj.getDate() + ecart.n);
+      const juste = dateLongue(d);
+      const fautes = [1, -1].map((x) => dateLongue(d, (d.getDay() + x + 7) % 7));
+      const modele = r.choix(PHRASES_JOUR[pub][ecart.temps]);
+      const detail = `Nous sommes ${dateLongue(auj)} : ${ecart.mot}, c'est ${juste}.`;
+      return { section: 'Agenda', titre: modele.titre,
+        texte: modele.phrase.replace('@', `${ecart.mot}, {${juste}|${r.melanger(fautes).join('|')}#jour:${detail}}`) };
+    } });
+  });
 
   // ---------- Images à compter ----------
   G.push({ pub: ['enfant', 'apprenant'], niv: 1, rub: 'image', fn(r, niveau) {

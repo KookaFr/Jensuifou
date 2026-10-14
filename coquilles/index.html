@@ -62,8 +62,11 @@
         <div class="choix">
           <input type="checkbox" name="rubrique" id="rub-ortho" value="ortho"><label for="rub-ortho">Orthographe</label>
           <input type="checkbox" name="rubrique" id="rub-gram" value="gram"><label for="rub-gram">Grammaire</label>
+          <input type="checkbox" name="rubrique" id="rub-typo" value="typo"><label for="rub-typo">Typographie</label>
           <input type="checkbox" name="rubrique" id="rub-calc" value="calc"><label for="rub-calc">Calcul</label>
+          <input type="checkbox" name="rubrique" id="rub-faits" value="faits"><label for="rub-faits">Faits</label>
           <input type="checkbox" name="rubrique" id="rub-image" value="image"><label for="rub-image">Images</label>
+          <input type="checkbox" name="rubrique" id="rub-page" value="page"><label for="rub-page">Pages</label>
         </div>
       </fieldset>
     </form>
@@ -88,12 +91,13 @@
       <button type="button" class="btn-pause" id="btn-pause" aria-label="Mettre en pause"><span></span><span></span></button>
     </div>
     <div class="rotative" id="rotative">
-      <span class="tirage">Tirage <b id="hud-tirage">000</b></span>
+      <span class="date-rotative" id="hud-date">Édition du jour</span>
+      <span class="tirage">Dernière page <b id="hud-tirage">1</b></span>
     </div>
     <div class="plateau" id="plateau"><div class="rail" id="rail"></div></div>
     <div class="marbre" id="marbre" aria-live="polite">
       <p class="marbre-titre" id="marbre-titre">Touche les coquilles avant qu'elles partent à l'impression.</p>
-      <p class="marbre-detail" id="marbre-detail">Faute, erreur de calcul ou photo qui ne colle pas au texte : touche-la.</p>
+      <p class="marbre-detail" id="marbre-detail">Faute, lettres inversées, calcul faux, information fausse, photo ou numéro de page qui ne colle pas : touche-la.</p>
     </div>
   </section>
 
@@ -139,8 +143,9 @@
     <div class="carte-voile" role="dialog" aria-modal="true" aria-labelledby="aide-titre">
       <h2 id="aide-titre">Comment jouer</h2>
       <ol class="regles-jeu">
-        <li>Les articles montent vers la rotative. <b>Touche chaque coquille</b> avant qu'elle soit imprimée : faute d'orthographe, de grammaire, erreur de calcul, date impossible.</li>
+        <li>Les articles montent vers la rotative. <b>Touche chaque coquille</b> avant qu'elle soit imprimée : faute d'orthographe ou de grammaire, lettres inversées, mot répété, erreur de calcul, information fausse.</li>
         <li>Le texte a toujours raison. Si <b>la photo</b> ne correspond pas au texte, touche la photo.</li>
+        <li>Vérifie aussi <b>le numéro de page</b> en haut de chaque article : les pages se suivent. La rotative affiche la date du journal et la dernière page imprimée.</li>
         <li>Toucher un mot juste est une <b>faute de zèle</b> : tu perds 40 points et ta série.</li>
         <li>Chaque article imprimé avec une coquille te coûte <b>un point de réputation</b>. À zéro, le rédacteur en chef arrête les rotatives.</li>
         <li><b>Bon à tirer</b> envoie le prochain article à l'impression. S'il est propre, tu gagnes un bonus d'avance.</li>
@@ -158,6 +163,7 @@
 <script src="js/contenu/breves-enfant.js"></script>
 <script src="js/contenu/breves-adulte.js"></script>
 <script src="js/contenu/breves-apprenant.js"></script>
+<script src="js/contenu/faits.js"></script>
 <script src="js/contenu/images.js"></script>
 <script src="js/contenu/generateurs.js"></script>
 <script src="js/edition.js"></script>

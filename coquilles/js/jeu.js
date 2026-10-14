@@ -14,6 +14,10 @@
   CQ.REPUTATION = 5;
 
   const typo = CQ.typo;
+  // Codes dont le détail suffit : inutile d'y ajouter la règle générale.
+  const SEUL_DETAIL = ['usage', 'calc', 'date', 'fait', 'age', 'jour', 'sommaire', 'titre', 'coherence', 'majuscule', 'doublon', 'folio'];
+
+  const libelle = (e, v) => (e.code === 'folio' ? 'page ' + v : `« ${typo(v)} »`);
 
   function explication(e) {
     if (e.type === 'image') return e.expl;
@@ -40,14 +44,14 @@
     }
 
     function retenir(e, quoi) {
-      const cle = e.code + (e.code === 'calc' || e.code === 'date' ? ':' + e.detail : '');
+      const cle = e.code + (e.detail ? ':' + e.detail : '');
       if (etat.pieges.has(cle)) return;
       const regle = CQ.REGLES[e.code] || CQ.REGLES.usage;
       etat.pieges.set(cle, {
         quoi,
         nom: regle.nom,
-        exemple: e.type === 'image' ? '' : quoi === 'zele' ? `« ${typo(e.correct)} » était juste` : `« ${typo(e.affiche)} » → « ${typo(e.correct)} »`,
-        expl: e.type === 'image' ? e.expl : e.detail ? typo(e.detail) + (e.code === 'usage' || e.code === 'calc' || e.code === 'date' ? '' : ' ' + typo(regle.expl)) : typo(regle.expl),
+        exemple: e.type === 'image' ? '' : quoi === 'zele' ? `${libelle(e, e.correct)} était juste` : `${libelle(e, e.affiche)} → ${libelle(e, e.correct)}`,
+        expl: e.type === 'image' ? e.expl : e.detail ? typo(e.detail) + (SEUL_DETAIL.includes(e.code) ? '' : ' ' + typo(regle.expl)) : typo(regle.expl),
       });
     }
 
@@ -73,7 +77,7 @@
       }
       Array.from(pastilles.children).forEach((p, i) => p.classList.toggle('perdue', i >= etat.reputation));
       pastilles.setAttribute('aria-label', `${etat.reputation} sur ${CQ.REPUTATION}`);
-      $('hud-tirage').textContent = String(etat.imprimes).padStart(3, '0');
+      $('hud-tirage').textContent = 1 + etat.imprimes; // la une, page 1, est déjà imprimée
     }
 
     function flotter(texte, ev, negatif) {
@@ -102,7 +106,7 @@
         const s = document.createElement('span');
         s.className = 'm';
         s.dataset.i = items.length;
-        s.textContent = e.type === 'jeton' ? typo(e.affiche).replace(/ /g, ' ') : typo(e.texte);
+        s.textContent = e.type !== 'jeton' ? typo(e.texte) : e.espace ? typo(e.affiche) : typo(e.affiche).replace(/ /g, '\u00A0');
         parent.appendChild(s);
         items.push({ el: s, data: e, etat: null });
         if (e.post) parent.appendChild(document.createTextNode(typo(e.post)));
@@ -116,14 +120,25 @@
 
       const tete = document.createElement('div');
       tete.className = 'tete';
+      const gauche = document.createElement('div');
+      gauche.className = 'tete-gauche';
+      if (article.folio) {
+        const folio = document.createElement('span');
+        folio.className = 'm folio';
+        folio.dataset.i = items.length;
+        folio.textContent = 'p.\u00A0' + article.folio.affiche;
+        items.push({ el: folio, data: article.folio, etat: null });
+        gauche.append(folio);
+      }
       const section = document.createElement('span');
       section.className = 'section';
       section.textContent = article.section;
+      gauche.append(section);
       const bat = document.createElement('button');
       bat.type = 'button';
       bat.className = 'bat';
       bat.textContent = 'Bon à tirer';
-      tete.append(section, bat);
+      tete.append(gauche, bat);
 
       const titre = document.createElement('h2');
       titre.className = 'titre';
@@ -196,7 +211,7 @@
         }
         it.el.classList.add('corrige');
         flotter('+' + pts, ev);
-        dire('ok', e.type === 'image' ? 'Bien vu : la photo ne correspondait pas.' : `Bien vu : « ${typo(e.affiche)} » → « ${typo(e.correct)} »`, explication(e));
+        dire('ok', e.type === 'image' ? 'Bien vu : la photo ne correspondait pas.' : `Bien vu : ${libelle(e, e.affiche)} → ${libelle(e, e.correct)}`, explication(e));
         noter(e.code, 'trouve');
         CQ.Son.jouer('trouve', etat.serie);
       } else {
@@ -208,7 +223,7 @@
         etat.zeles++;
         flotter('−' + PTS.zele, ev, true);
         if (e.type === 'jeton') {
-          dire('zele', `Faute de zèle : « ${typo(e.correct)} » était juste.`, explication(e));
+          dire('zele', `Faute de zèle : ${libelle(e, e.correct)} était juste.`, explication(e));
           noter(e.code, 'zele');
           retenir(e, 'zele');
         } else if (e.type === 'image') {
@@ -267,7 +282,7 @@
         etat.resultats.push('rate');
         restantes.forEach((it) => { noter(it.data.code, 'rate'); retenir(it.data, 'rate'); });
         const e = restantes[0].data;
-        dire('rate', e.type === 'image' ? 'Coquille imprimée : la photo ne correspondait pas.' : `Coquille imprimée : « ${typo(e.affiche)} » au lieu de « ${typo(e.correct)} »`, explication(e));
+        dire('rate', e.type === 'image' ? 'Coquille imprimée : la photo ne correspondait pas.' : `Coquille imprimée : ${libelle(e, e.affiche)} au lieu de ${libelle(e, e.correct)}`, explication(e));
         eclair('rate');
         CQ.Son.jouer('rate');
         CQ.vibrer([30, 50, 30]);
@@ -371,7 +386,8 @@
     rotative.classList.remove('arret', 'flash-ok', 'flash-rate');
     marbre.dataset.etat = '';
     $('marbre-titre').textContent = typo("Touche les coquilles avant qu'elles partent à l'impression.");
-    $('marbre-detail').textContent = typo('Faute, erreur de calcul ou photo qui ne colle pas au texte : touche-la. Attention aux fautes de zèle.');
+    $('marbre-detail').textContent = typo('Faute, lettres inversées, calcul faux, information fausse, photo ou numéro de page qui ne colle pas : touche-la.');
+    $('hud-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     majTableau();
     mesurer();
     rail.addEventListener('pointerdown', surPointeur);

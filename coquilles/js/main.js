@@ -10,7 +10,7 @@
     apprenant: ['A1', 'A2', 'B1'],
   };
   const LECTEURS = { enfant: 'Enfant', adulte: 'Adulte', apprenant: 'Apprenant' };
-  const TOUTES = { ortho: true, gram: true, calc: true, image: true };
+  const TOUTES = { ortho: true, gram: true, typo: true, calc: true, faits: true, image: true, page: true };
   const ARTICLES_DU_JOUR = 10;
   const CASES = { parfait: '🟦', zele: '🟨', rate: '🟥' };
 

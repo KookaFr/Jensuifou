@@ -271,6 +271,18 @@ legend {
 }
 .rotative.arret { animation-play-state: paused; }
 @keyframes cylindre { to { background-position: 0 -7px, 0 0; } }
+.date-rotative, .tirage {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 2px 6px;
+  background: rgba(7, 9, 13, 0.85);
+  font: 500 0.62rem/1.3 var(--f-compteur);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gris);
+}
+.date-rotative { left: var(--gouttiere-g); color: var(--clair); }
 .tirage {
   position: absolute;
   right: var(--gouttiere-d);
@@ -310,6 +322,16 @@ legend {
   will-change: transform;
 }
 .tete { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 30px; }
+.tete-gauche { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.folio {
+  padding: 6px 8px 6px 0;
+  border-right: 1px solid var(--papier-ombre);
+  font: 600 0.72rem/1.2 var(--f-compteur);
+  letter-spacing: 0.06em;
+  color: var(--encre);
+  white-space: nowrap;
+}
+.folio.corrige::after { font-size: 1.7em; bottom: 1.2em; }
 .section {
   font: 600 0.66rem/1.2 var(--f-compteur);
   letter-spacing: 0.14em;
@@ -591,8 +613,11 @@ legend {
         <div class="choix">
           <input type="checkbox" name="rubrique" id="rub-ortho" value="ortho"><label for="rub-ortho">Orthographe</label>
           <input type="checkbox" name="rubrique" id="rub-gram" value="gram"><label for="rub-gram">Grammaire</label>
+          <input type="checkbox" name="rubrique" id="rub-typo" value="typo"><label for="rub-typo">Typographie</label>
           <input type="checkbox" name="rubrique" id="rub-calc" value="calc"><label for="rub-calc">Calcul</label>
+          <input type="checkbox" name="rubrique" id="rub-faits" value="faits"><label for="rub-faits">Faits</label>
           <input type="checkbox" name="rubrique" id="rub-image" value="image"><label for="rub-image">Images</label>
+          <input type="checkbox" name="rubrique" id="rub-page" value="page"><label for="rub-page">Pages</label>
         </div>
       </fieldset>
     </form>
@@ -617,12 +642,13 @@ legend {
       <button type="button" class="btn-pause" id="btn-pause" aria-label="Mettre en pause"><span></span><span></span></button>
     </div>
     <div class="rotative" id="rotative">
-      <span class="tirage">Tirage <b id="hud-tirage">000</b></span>
+      <span class="date-rotative" id="hud-date">Édition du jour</span>
+      <span class="tirage">Dernière page <b id="hud-tirage">1</b></span>
     </div>
     <div class="plateau" id="plateau"><div class="rail" id="rail"></div></div>
     <div class="marbre" id="marbre" aria-live="polite">
       <p class="marbre-titre" id="marbre-titre">Touche les coquilles avant qu'elles partent à l'impression.</p>
-      <p class="marbre-detail" id="marbre-detail">Faute, erreur de calcul ou photo qui ne colle pas au texte : touche-la.</p>
+      <p class="marbre-detail" id="marbre-detail">Faute, lettres inversées, calcul faux, information fausse, photo ou numéro de page qui ne colle pas : touche-la.</p>
     </div>
   </section>
 
@@ -668,8 +694,9 @@ legend {
     <div class="carte-voile" role="dialog" aria-modal="true" aria-labelledby="aide-titre">
       <h2 id="aide-titre">Comment jouer</h2>
       <ol class="regles-jeu">
-        <li>Les articles montent vers la rotative. <b>Touche chaque coquille</b> avant qu'elle soit imprimée : faute d'orthographe, de grammaire, erreur de calcul, date impossible.</li>
+        <li>Les articles montent vers la rotative. <b>Touche chaque coquille</b> avant qu'elle soit imprimée : faute d'orthographe ou de grammaire, lettres inversées, mot répété, erreur de calcul, information fausse.</li>
         <li>Le texte a toujours raison. Si <b>la photo</b> ne correspond pas au texte, touche la photo.</li>
+        <li>Vérifie aussi <b>le numéro de page</b> en haut de chaque article : les pages se suivent. La rotative affiche la date du journal et la dernière page imprimée.</li>
         <li>Toucher un mot juste est une <b>faute de zèle</b> : tu perds 40 points et ta série.</li>
         <li>Chaque article imprimé avec une coquille te coûte <b>un point de réputation</b>. À zéro, le rédacteur en chef arrête les rotatives.</li>
         <li><b>Bon à tirer</b> envoie le prochain article à l'impression. S'il est propre, tu gagnes un bonus d'avance.</li>
@@ -757,6 +784,11 @@ legend {
     return String(n);
   };
 
+  // Au féminin : un → une (vingt et une baguettes, quatre-vingt-une pages).
+  CQ.enLettresF = function (n) {
+    return CQ.enLettres(n).replace(/(^|[ -])un$/, '$1une');
+  };
+
   // 6.5 → « 6,50 » ; 12 → « 12 ».
   CQ.euros = function (x) {
     const arrondi = Math.round(x * 100) / 100;
@@ -825,7 +857,7 @@ legend {
 </script>
 <script>
 /* Coquilles — règles expliquées après chaque coquille trouvée, ratée ou imaginée.
-   Chaque règle appartient à une rubrique : ortho, gram, calc ou image. */
+   Chaque règle appartient à une rubrique : ortho, gram, typo, calc, faits, image ou page. */
 (function () {
   'use strict';
   const CQ = window.CQ;
@@ -833,8 +865,11 @@ legend {
   CQ.RUBRIQUES = {
     ortho: 'Orthographe',
     gram: 'Grammaire',
+    typo: 'Typographie',
     calc: 'Calcul',
+    faits: 'Faits',
     image: 'Images',
+    page: 'Pages',
   };
 
   CQ.REGLES = {
@@ -894,6 +929,23 @@ legend {
 
     // Images
     image: { nom: 'Image', rub: 'image', expl: "La photo ne correspond pas au texte." },
+
+    // Typographie : les coquilles d'imprimerie au sens propre
+    lettres: { nom: "Coquille d'imprimerie", rub: 'typo', expl: "Des lettres ont été inversées, oubliées ou doublées en composant le texte. On relit lentement, mot par mot." },
+    doublon: { nom: 'Mot répété', rub: 'typo', expl: "Le même mot est imprimé deux fois de suite. L'œil saute facilement ce genre de répétition, surtout en fin de ligne." },
+    majuscule: { nom: 'Majuscule', rub: 'typo', expl: "Les noms propres (personnes, villes, pays, rues) et les noms d'habitants (les Français) prennent une majuscule. La langue et l'adjectif n'en prennent pas : le français, un vin français." },
+    accentmaj: { nom: 'Accent sur la majuscule', rub: 'typo', expl: "En français, les majuscules gardent leurs accents : État, Élise, À bientôt." },
+
+    // Vérification des faits
+    fait: { nom: 'Vérification des faits', rub: 'faits', expl: "L'information est fausse. Avant de publier, on vérifie chaque fait." },
+    titre: { nom: 'Titre trompeur', rub: 'faits', expl: "Le titre doit dire la même chose que l'article." },
+    coherence: { nom: "Cohérence de l'article", rub: 'faits', expl: "Un même nom doit s'écrire pareil d'un bout à l'autre de l'article, titre compris." },
+    age: { nom: 'Âge et année de naissance', rub: 'faits', expl: "L'âge doit correspondre à l'année de naissance." },
+    jour: { nom: 'Jour de la semaine', rub: 'faits', expl: "Le jour de la semaine doit correspondre à la date. La date du journal est affichée sur la rotative." },
+
+    // Mise en page
+    folio: { nom: 'Numéro de page', rub: 'page', expl: "Les pages se suivent : après la page 4 vient la page 5. La dernière page imprimée est indiquée sur la rotative." },
+    sommaire: { nom: 'Sommaire', rub: 'page', expl: "Le sommaire suit l'ordre des pages et ne peut pas renvoyer au-delà de la dernière page du numéro." },
   };
 
   // Familles de mots qui se confondent : la règle se devine toute seule.
@@ -934,8 +986,8 @@ legend {
     { niv: 1, section: 'École', titre: 'La kermesse',
       texte: "Samedi, la kermesse {a|à} lieu dans la cour de l'école. Les parents {et|est} les enfants tiendront les stands {à|a} partir de dix heures." },
     { niv: 1, section: 'Nature', titre: 'Un hérisson au jardin',
-      texte: "Tom {a|à} trouvé un hérisson sous un tas de feuilles. Il {est|et} tout petit {et|est} il dort beaucoup. Tom lui donne {à|a} boire." },
-    { niv: 1, section: 'Sports', titre: 'Victoire au football',
+      texte: "Tom {a|à} trouvé un hérisson sous un tas de feuilles. Il {est|et} tout petit {et|est} il dort beaucoup. {Tom|Tim#coherence:L'article parle de Tom depuis le début : le prénom doit rester le même.} lui donne {à|a} boire." },
+    { niv: 1, section: 'Sports', titre: '{Victoire|Défaite#titre:Les joueurs ont gagné trois buts à zéro : c\'est une victoire.} au football',
       texte: "Les {joueurs|joueur#pluriel} de Saint-Malo ont gagné leur match trois {buts|but#pluriel} à zéro. Le gardien {a|à} arrêté un penalty {à|a} la dernière minute." },
     { niv: 1, section: 'Météo', titre: 'Grand soleil demain',
       texte: "Demain, il fera beau {et|est} chaud sur toute la région. Pensez {à|a} boire de l'eau {et|est} {à|a} porter un chapeau." },
@@ -967,7 +1019,7 @@ legend {
       texte: "Mardi, la Lune va {passer|passé#inf} devant le Soleil. Pour {regarder|regardé#inf} l'éclipse, il faut des lunettes spéciales. Sans elles, {on|ont} risque de s'abîmer les yeux." },
     { niv: 2, section: 'Sports', titre: 'Le tournoi de judo',
       texte: "Samedi, nous {commençons|commencons#ge} le tournoi à neuf heures. Les judokas ont {mangé|manger#inf} des pâtes la veille pour avoir de l'énergie. Qui va {gagner|gagné#inf} ?" },
-    { niv: 2, section: 'Ville', titre: 'La piscine rouvre',
+    { niv: 2, section: 'Ville', titre: 'La piscine {rouvre|ferme#titre:L\'article dit que la piscine a rouvert.}',
       texte: "Après des travaux, la piscine {a|à} enfin rouvert. Les {enfants|enfant#pluriel} {peuvent|peut#verbe} de nouveau nager le mercredi. Le grand bassin {est|et} chauffé." },
     { niv: 2, section: 'École', titre: "Le potager de l'école",
       texte: "Les élèves {ont|on} planté des tomates {et|est} des radis. Chaque matin, ils {arrosent|arrose#verbe} le potager. {Où|Ou} mettre les citrouilles ? Au fond du jardin !" },
@@ -1015,19 +1067,19 @@ legend {
 
   ajouter('adulte', [
     // Niveau 1 : homophones courants, infinitif, -ez
-    { niv: 1, section: 'Économie', titre: 'Le prix du café grimpe',
+    { niv: 1, section: 'Économie', titre: 'Le prix du café {grimpe|baisse#titre:L\'article dit que le prix a augmenté de 12 %.}',
       texte: "Le prix du café {a|à} augmenté de 12 % en un an. Les torréfacteurs {sont|son} inquiets {et|est} certains envisagent de {changer|changé#inf} de fournisseurs." },
     { niv: 1, section: 'Vie locale', titre: 'Travaux rue Pasteur',
-      texte: "Les travaux de la rue Pasteur {ont|on} pris du retard. La circulation sera {coupée|coupé|couper#ppe:La circulation sera coupée : le participe s'accorde avec « la circulation ».} jusqu'à vendredi. Les riverains {peuvent|peut#verbe} se garer place du Marché." },
+      texte: "Les travaux de la rue {Pasteur|Pascal#coherence:Le titre parle de la rue Pasteur.} {ont|on} pris du retard. La circulation sera {coupée|coupé|couper#ppe:La circulation sera coupée : le participe s'accorde avec « la circulation ».} jusqu'à vendredi. Les riverains {peuvent|peut#verbe} se garer place du Marché." },
     { niv: 1, section: 'Santé', titre: 'Grippe : pensez au vaccin',
       texte: "La campagne de vaccination contre la grippe {a|à} commencé. Les pharmaciens {sont|son} prêts {à|a} vacciner sans rendez-vous." },
     { niv: 1, section: 'Culture', titre: 'Le jazz fait le plein',
       texte: "Le festival {a|à} attiré plus de 10 000 spectateurs. Les concerts {se|ce} sont {déroulés|déroulé#ppe:« Se dérouler » se conjugue avec être : accord avec « les concerts ».} sous un soleil radieux {et|est} l'ambiance était excellente." },
     { niv: 1, section: 'Numérique', titre: 'La fibre arrive aux Lilas',
-      texte: "Le quartier des Lilas {est|et} enfin raccordé à la fibre. La {connexion|connection#usage:« connection » est anglais ; en français, on écrit « connexion ».} sera dix fois plus rapide. Les habitants {peuvent|peut#verbe} dès maintenant {souscrire|souscrit#inf} un abonnement." },
-    { niv: 1, section: 'Société', titre: 'Le covoiturage progresse',
+      texte: "Le quartier des {Lilas|Tilleuls#coherence:Le titre parle du quartier des Lilas.} {est|et} enfin raccordé à la fibre. La {connexion|connection#usage:« connection » est anglais ; en français, on écrit « connexion ».} sera dix fois plus rapide. Les habitants {peuvent|peut#verbe} dès maintenant {souscrire|souscrit#inf} un abonnement." },
+    { niv: 1, section: 'Société', titre: 'Le covoiturage {progresse|recule#titre:L\'article dit que de plus en plus de salariés le choisissent.}',
       texte: "De plus en plus de salariés {ont|on} choisi le covoiturage pour {aller|allé#inf} au travail. {On|Ont} estime que cela divise par deux le coût des trajets." },
-    { niv: 1, section: 'Sports', titre: 'Marathon : record battu',
+    { niv: 1, section: 'Sports', titre: 'Marathon : record {battu|manqué#titre:L\'article dit que le vainqueur a battu le record.}',
       texte: "Le marathon de la ville {s'est|c'est} couru dimanche. Le vainqueur {a|à} battu le record de l'épreuve de deux minutes. Les {coureurs|coureur#pluriel} ont été {encouragés|encouragé|encourager#ppe:Avec être, accord avec le sujet : les coureurs ont été encouragés.} tout au long du parcours." },
     { niv: 1, section: 'Pratique', titre: 'Arnaques par SMS : prudence',
       texte: "Des SMS frauduleux circulent en ce moment. Ils invitent {à|a} régler une amende {ou|où} des frais de livraison. Ne cliquez jamais sur le lien {et|est} ne {communiquez|communiquer#ez} pas vos coordonnées bancaires." },
@@ -1043,7 +1095,7 @@ legend {
       texte: "Le budget {a|à} été adopté hier soir. {Apparemment|Apparament#usage:apparemment : deux p, deux m.}, l'opposition n'était pas au complet. Le maire {leur|leurs} a promis un nouveau débat en janvier." },
     { niv: 2, section: 'Entreprise', titre: 'Une réunion interminable',
       texte: "{Quelle|Qu'elle} réunion ! Les participants pensaient {qu'elle|quelle} durerait une heure ; elle {s'est|c'est} achevée à 22 heures." },
-    { niv: 2, section: 'Économie', titre: 'Le chômage recule',
+    { niv: 2, section: 'Économie', titre: 'Le chômage {recule|grimpe#titre:L\'article annonce un recul du chômage.}',
       texte: "Selon les derniers chiffres, le chômage {a|à} reculé de 0,3 point. {Quant|Quand} aux embauches, elles {ont|on} progressé dans le bâtiment." },
     { niv: 2, section: 'Pratique', titre: 'Déménager sans stress',
       texte: "Avant de déménager, pensez à {prévenir|prévenu#inf} votre assurance et votre banque de votre nouvelle {adresse|addresse#usage:Un seul d en français : adresse (deux en anglais : address).}. Un conseil : si j'étais vous, je {ferais|ferai#futcond:Avec « si j'étais vous », on emploie le conditionnel : je ferais.} suivre mon courrier." },
@@ -1054,7 +1106,7 @@ legend {
     { niv: 2, section: 'Transports', titre: 'Grève jeudi dans les transports',
       texte: "Une grève est prévue jeudi. La direction {prévoit|prévois#verbe} un bus sur deux et les usagers {seront|serons#verbe} informés en temps réel. « Je {prendrai|prendrais#futcond:Une décision certaine (« c'est décidé ») s'écrit au futur : je prendrai.} mon vélo, c'est décidé », confie une habitante." },
     { niv: 2, section: 'Culture', titre: 'Le Rex fête ses {quatre-vingts|quatre-vingt#vingt} ans',
-      texte: "Le cinéma Le Rex fête ses {quatre-vingts|quatre-vingt#vingt} ans. Pour l'occasion, {deux cents|deux cent#vingt} places seront offertes. La salle a été {rénovée|rénové#ppe} l'an dernier." },
+      texte: "Le cinéma Le {Rex|Rio#coherence:Le titre parle du cinéma Le Rex.} fête ses {quatre-vingts|quatre-vingt#vingt} ans. Pour l'occasion, {deux cents|deux cent#vingt} places seront offertes. La salle a été {rénovée|rénové#ppe} l'an dernier." },
     { niv: 2, section: 'Environnement', titre: 'Les retraités nettoient les berges',
       texte: "Une vingtaine de retraités {se|ce} sont réunis pour nettoyer les berges du fleuve. Ils {comptent|compte#verbe} renouveler l'opération chaque mois. Les déchets {ramassés|ramassé#accord} rempliraient un camion." },
     { niv: 2, section: 'Mobilité', titre: 'Des pistes cyclables plus {confortables|comfortables#usage:« comfortable » est anglais ; en français : confortable.}',
@@ -1071,7 +1123,7 @@ legend {
       texte: "Le club féminin a vécu une saison {exceptionnelle|exceptionelle#usage:exceptionnelle : deux n.}. Les joueuses se sont {succédé|succédées#ppr:« Se succéder » : on succède à quelqu'un, « se » n'est pas COD, le participe reste invariable.} au poste de capitaine, et toutes se sont {imposées|imposé#ppr:« S'imposer » : « se » est COD et placé avant, accord au féminin pluriel.} comme des leaders." },
     { niv: 3, section: 'Patrimoine', titre: 'Le {dilemme|dilemne#usage:dilemme : deux m, pas de n.} de la mairie',
       texte: "La rénovation de l'église pose un {dilemme|dilemne#usage:dilemme : deux m, pas de n.} à la municipalité : les travaux coûteraient {davantage|d'avantage#usage:« davantage » (= plus) s'écrit en un seul mot.} que prévu. Les élus sont {censés|sensés#usage:« censé » = supposé ; « sensé » = raisonnable.} trancher avant l'été." },
-    { niv: 3, section: 'Logement', titre: "Les loyers s'envolent",
+    { niv: 3, section: 'Logement', titre: "Les loyers {s'envolent|baissent#titre:L'article dit que les loyers ont grimpé de 8 %.}",
       texte: "Les loyers ont grimpé de 8 % en deux ans. Beaucoup de familles sont {prêtes|près|prête#pres:« prêtes à » = disposées à, accordé avec « familles ».} à quitter le centre-ville, alors que {quelque|quelques#quelque} 2 000 logements restent vacants." },
     { niv: 3, section: 'Vie locale', titre: 'Fusion des communes',
       texte: "Les deux communes ont {fusionné|fusionnées#ppa:Avec avoir et sans COD, le participe reste invariable : elles ont fusionné.} le 1er janvier. Si le projet {avait|aurait#si} échoué, la dette serait devenue trop lourde. Les habitants, {quel|quels|qu'elle} que soit leur avis, gardent leur code postal." },
@@ -1099,14 +1151,14 @@ legend {
   ajouter('apprenant', [
     // Niveau 1 : genre, être/avoir, à/en/au, au/du, élision
     { niv: 1, section: 'Ville', titre: 'Bienvenue à Lyon',
-      texte: "Marco habite {à|en|au#prep:Devant une ville, on dit « à » : à Lyon.} Lyon depuis un an. Il travaille dans {un|une#genre:« restaurant » est masculin : un restaurant.} restaurant italien. Le soir, il prend {le|la#genre:« métro » est masculin : le métro.} métro pour rentrer." },
+      texte: "Marco habite {à|en|au#prep:Devant une ville, on dit « à » : à Lyon.} {Lyon|Lille#coherence:Le titre parle de Lyon.} depuis un an. Il travaille dans {un|une#genre:« restaurant » est masculin : un restaurant.} restaurant italien. Le soir, il prend {le|la#genre:« métro » est masculin : le métro.} métro pour rentrer." },
     { niv: 1, section: 'Vacances', titre: 'La famille Martin en vacances',
       texte: "La famille Martin part {en|au|à#prep:« Espagne » est un pays féminin : en Espagne.} Espagne cet été. Les enfants {sont|ont#etav:On dit « être content ».} très contents. Ils vont {au|à le#contr} bord de la mer tous les jours." },
     { niv: 1, section: 'Courses', titre: 'Au marché',
       texte: "Sofia achète {une|un#genre:« baguette » est féminin : une baguette.} baguette {et|est} {du|de le#contr} fromage. Elle {a|est#etav:On dit « avoir faim ».} faim !" },
     { niv: 1, section: 'Travail', titre: 'Le nouveau collègue',
       texte: "Kenji vient {du|de le#contr} Japon. Il {a|est#etav:On dit « avoir trente ans ».} trente ans et il parle trois langues. {L'équipe|La équipe#elision} est contente de travailler avec lui." },
-    { niv: 1, section: 'Météo', titre: 'Beau temps sur Nice',
+    { niv: 1, section: 'Météo', titre: '{Beau temps|Pluie#titre:L\'article dit qu\'il fait beau.} sur Nice',
       texte: "Aujourd'hui, il {fait|est#faire} beau à Nice, mais le matin il {fait|est#faire} froid. Prenez {un|une#genre:« pull » est masculin : un pull.} pull !" },
     { niv: 1, section: 'Ville', titre: 'Une nouvelle boulangerie',
       texte: "{Une|Un#genre:« boulangerie » est féminin : une boulangerie.} nouvelle boulangerie ouvre rue Victor-Hugo. Le pain est très bon et {les|le#pluriel:Au pluriel, l'article est « les » : les croissants.} croissants aussi. Elle {est|et} ouverte tous les jours." },
@@ -1123,7 +1175,7 @@ legend {
     { niv: 2, section: 'Voyages', titre: 'Un été à Rome',
       texte: "L'été dernier, nous {sommes|avons#aux:« aller » se conjugue avec être : nous sommes allés.} allés à Rome. Nous {avons|sommes#aux:« visiter » se conjugue avec avoir.} visité le Colisée et nous avons mangé des glaces {délicieuses|délicieux#accord:« glaces » est féminin pluriel : délicieuses.}." },
     { niv: 2, section: 'Voyages', titre: 'Le retour de Clara',
-      texte: "Clara {est|a#aux:« revenir » se conjugue avec être.} revenue du Canada hier soir. Elle est {arrivée|arrivé#ppe:Clara est une femme : elle est arrivée.} à l'aéroport à minuit. Ses parents l'attendaient." },
+      texte: "{Clara|Carla#coherence:Le titre parle du retour de Clara.} {est|a#aux:« revenir » se conjugue avec être.} revenue du Canada hier soir. Elle est {arrivée|arrivé#ppe:Clara est une femme : elle est arrivée.} à l'aéroport à minuit. Ses parents l'attendaient." },
     { niv: 2, section: 'Restaurant', titre: 'Au restaurant',
       texte: "Je ne bois pas {de|du#partitif} vin, je préfère {l'eau|la eau#elision}. Mon ami prend {de la|du#genre:« soupe » est féminin : de la soupe.} soupe et une salade {verte|vert#accord}." },
     { niv: 2, section: 'Fêtes', titre: 'Le marché de Noël',
@@ -1145,13 +1197,104 @@ legend {
     { niv: 3, section: 'Voyages', titre: 'Marseille, coup de cœur',
       texte: "Tu connais Marseille ? {J'y|J'en#yen} suis allé l'année dernière. Les calanques ? Je {les|leur#pron} ai trouvées magnifiques. Il faut absolument {y|en#yen} aller !" },
     { niv: 3, section: 'Travail', titre: 'Le stage de Youssef',
-      texte: "Youssef a fait un stage dans une entreprise {où|ou} il a beaucoup appris. Ses collègues {l'ont|l'a#verbe} bien aidé. Il espère {qu'on|qu'ont#on} lui proposera un contrat." },
+      texte: "{Youssef|Yassine#coherence:Le titre parle du stage de Youssef.} a fait un stage dans une entreprise {où|ou} il a beaucoup appris. Ses collègues {l'ont|l'a#verbe} bien aidé. Il espère {qu'on|qu'ont#on} lui proposera un contrat." },
     { niv: 3, section: 'Cuisine', titre: 'La recette des crêpes',
       texte: "Pour faire des crêpes, il faut {de la|du#genre:« farine » est féminin : de la farine.} farine, des œufs et {du|de la#genre:« lait » est masculin : du lait.} lait. Pour des crêpes salées, on ne met pas {de|du#partitif} sucre." },
     { niv: 3, section: 'Transports', titre: 'À la gare',
       texte: "Le train pour Bordeaux part {du|de la#genre:« quai » est masculin : du quai.} quai numéro 3. Les voyageurs {doivent|doit#verbe} se présenter dix minutes avant le départ. Le bar {se trouve|se trouvent#verbe} dans la voiture 4." },
     { niv: 3, section: 'Culture', titre: 'La fête de la musique',
       texte: "Le 21 juin, on {joue|jouent#verbe:« on » se conjugue comme « il » : on joue.} de la musique dans toutes les rues. Les groupes {que|qui#rel} nous avons {vus|vu#ppa:Le COD « que » (les groupes) est placé avant : vus.} étaient excellents." },
+  ]);
+})();
+</script>
+<script>
+/* Coquilles — brèves à vérifier : informations fausses glissées dans le texte.
+   Les faits retenus sont stables et vérifiables ; le détail donne la bonne réponse. */
+(function () {
+  'use strict';
+  const CQ = window.CQ;
+  const B = (CQ.BREVES = CQ.BREVES || []);
+  const ajouter = (pub, liste) => liste.forEach((b) => B.push(Object.assign({ pub }, b)));
+
+  ajouter('enfant', [
+    { niv: 1, section: 'Sciences', titre: 'Le tour du Soleil',
+      texte: "La Terre fait le tour du Soleil en {un an|un jour|un mois#fait:La Terre tourne autour du Soleil en un an. En un jour, elle fait un tour sur elle-même.}." },
+    { niv: 1, section: 'Nature', titre: 'Huit pattes',
+      texte: "Contrairement aux insectes, qui ont six pattes, l'araignée en a {huit|six|dix#fait:L'araignée a huit pattes : ce n'est pas un insecte.}." },
+    { niv: 1, section: 'Géographie', titre: 'La capitale',
+      texte: "{Paris|Lyon|Marseille#fait:La capitale de la France est Paris.} est la capitale de la France. C'est aussi la plus grande ville du pays." },
+    { niv: 1, section: 'Calendrier', titre: 'Une année bien remplie',
+      texte: "Une semaine compte {sept|six|huit#fait:Une semaine compte sept jours.} jours et une année compte {douze|dix|onze#fait:Une année compte douze mois.} mois." },
+    { niv: 1, section: 'Animaux', titre: 'À la ferme',
+      texte: "Dans le pré, la vache {meugle|aboie|miaule#fait:La vache meugle, le chien aboie, le chat miaule.} pour appeler son veau." },
+    { niv: 2, section: 'Sciences', titre: "Quand l'eau gèle",
+      texte: "Quand il fait très froid, l'eau se transforme en glace. Elle gèle à {0|10|100#fait:L'eau gèle à 0 °C et bout à 100 °C.} °C." },
+    { niv: 2, section: 'Nature', titre: 'La baleine',
+      texte: "La baleine vit dans la mer, mais elle respire de l'air : c'est un {mammifère|poisson#fait:La baleine est un mammifère : elle respire de l'air et allaite ses petits.}." },
+    { niv: 2, section: 'Géographie', titre: 'Le plus long fleuve',
+      texte: "La {Loire|Seine#fait:La Loire, longue d'environ 1 000 km, est le plus long fleuve de France. La Seine mesure environ 780 km.} est le plus long fleuve de France. Elle se jette dans l'océan Atlantique." },
+    { niv: 2, section: 'Nature', titre: 'Du cocon au papillon',
+      texte: "Avant de devenir un papillon, l'insecte est une {chenille|grenouille|abeille#fait:Le papillon commence sa vie en chenille, puis se transforme dans une chrysalide.}." },
+    { niv: 3, section: 'Histoire', titre: 'La fête du 14 juillet',
+      texte: "Le 14 juillet, on fête la prise de la Bastille, qui a eu lieu en {1789|1689|1889#fait:La Bastille a été prise le 14 juillet 1789.}." },
+    { niv: 3, section: 'Sciences', titre: 'Les planètes',
+      texte: "Il y a {huit|neuf|sept#fait:Depuis 2006, on compte huit planètes dans le système solaire : Pluton est une planète naine.} planètes dans le système solaire." },
+    { niv: 3, section: 'Géographie', titre: 'Le Mont-Blanc',
+      texte: "Le Mont-Blanc est le plus haut sommet {des Alpes|des Pyrénées#fait:Le Mont-Blanc se trouve dans les Alpes. Le plus haut sommet des Pyrénées est l'Aneto, en Espagne.}." },
+  ]);
+
+  ajouter('adulte', [
+    { niv: 1, section: 'Santé', titre: 'Urgences : les bons numéros',
+      texte: "En cas d'urgence médicale, composez le {15|17|18#fait:15 : SAMU (urgence médicale). 17 : police. 18 : pompiers. Le 112 fonctionne partout en Europe.}, ou le 112 depuis n'importe quel pays d'Europe." },
+    { niv: 1, section: 'Secours', titre: 'Un incendie ? Le 18',
+      texte: "Pour signaler un incendie, composez le {18|15|17#fait:18 : pompiers. 15 : SAMU. 17 : police.} : les pompiers sont joignables jour et nuit." },
+    { niv: 1, section: 'Pratique', titre: 'Achats en ligne : vos droits',
+      texte: "Pour un achat sur internet, vous disposez de {14|7|30#fait:Le délai légal de rétractation pour un achat à distance est de 14 jours.} jours pour changer d'avis, sans avoir à vous justifier." },
+    { niv: 1, section: 'Pratique', titre: "Passage à l'heure d'hiver",
+      texte: "Dans la nuit de samedi à dimanche, nous passons à l'heure d'hiver : à 3 h du matin, il sera {2 h|4 h#fait:À l'heure d'hiver, on recule d'une heure : à 3 h, il est 2 h.}." },
+    { niv: 2, section: 'Histoire', titre: 'La fin de la peine de mort',
+      texte: "La peine de mort a été abolie en France en {1981|1971|1991#fait:La loi abolissant la peine de mort, portée par Robert Badinter, date de 1981.}." },
+    { niv: 2, section: 'Histoire', titre: 'Le premier vote des femmes',
+      texte: "Les Françaises ont voté pour la première fois en {1945|1925|1965#fait:Le droit de vote des femmes date de 1944 ; elles ont voté pour la première fois en 1945.}." },
+    { niv: 2, section: 'Sciences', titre: 'La lumière du Soleil',
+      texte: "La lumière du Soleil met environ {huit minutes|huit secondes|huit heures#fait:La lumière du Soleil met environ 8 minutes et 20 secondes pour atteindre la Terre.} pour nous parvenir." },
+    { niv: 2, section: 'Institutions', titre: 'Le quinquennat',
+      texte: "Depuis 2002, le président de la République est élu pour {cinq|sept|quatre#fait:Le mandat présidentiel dure cinq ans depuis la réforme de 2000, appliquée à partir de 2002.} ans." },
+    { niv: 2, section: 'Économie', titre: "L'euro dans nos poches",
+      texte: "Les pièces et les billets en euros circulent en France depuis le 1er janvier {2002|1999|2005#fait:L'euro existe depuis 1999 pour les banques ; les pièces et les billets sont arrivés le 1er janvier 2002.}." },
+    { niv: 2, section: 'Langue', titre: 'Majuscule ou pas ?',
+      texte: "Les {Belges|belges#majuscule:Les habitants d'un pays prennent une majuscule : les Belges.} parlent {français|Français#majuscule:Les langues ne prennent pas de majuscule : parler français.}, néerlandais ou allemand." },
+    { niv: 3, section: 'Sciences', titre: 'Notre squelette',
+      texte: "Le squelette d'un adulte compte {206|306|106#fait:Le squelette adulte compte 206 os ; celui d'un bébé en a davantage, qui se soudent en grandissant.} os." },
+    { niv: 3, section: 'Géographie', titre: 'Le fleuve du Sud-Ouest',
+      texte: "La {Garonne|Loire|Seine#fait:La Garonne traverse Toulouse et Bordeaux. La Loire passe par Orléans et Nantes, la Seine par Paris et Rouen.} traverse Toulouse et Bordeaux, puis forme l'estuaire de la Gironde avec la Dordogne." },
+    { niv: 3, section: 'Patrimoine', titre: 'La tour Eiffel',
+      texte: "La tour Eiffel a été inaugurée en {1889|1789|1937#fait:La tour Eiffel a été construite pour l'Exposition universelle de 1889.}, pour l'Exposition universelle." },
+  ]);
+
+  ajouter('apprenant', [
+    { niv: 1, section: 'Culture', titre: 'La fête nationale',
+      texte: "En France, la fête nationale a lieu le {14 juillet|1er mai|25 décembre#fait:La fête nationale est le 14 juillet. Le 1er mai est la fête du Travail, le 25 décembre est Noël.}." },
+    { niv: 1, section: 'Culture', titre: 'Le drapeau français',
+      texte: "Le drapeau français est bleu, blanc et {rouge|vert|jaune#fait:Le drapeau français est bleu, blanc, rouge.}." },
+    { niv: 1, section: 'Calendrier', titre: 'Les jours de la semaine',
+      texte: "Après lundi, il y a {mardi|jeudi|dimanche#fait:Lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche.}, puis mercredi." },
+    { niv: 1, section: 'Calendrier', titre: 'Noël',
+      texte: "Noël est le 25 {décembre|novembre|janvier#fait:Noël est le 25 décembre.}. En France, c'est l'hiver." },
+    { niv: 1, section: 'Pratique', titre: 'Appeler les pompiers',
+      texte: "Pour appeler les pompiers, on compose le {18|15|17#fait:18 : pompiers. 15 : SAMU (médecin). 17 : police. 112 : urgences dans toute l'Europe.}." },
+    { niv: 2, section: 'Géographie', titre: 'Les voisins de la France',
+      texte: "La France a une frontière avec l'Espagne, l'Italie et {l'Allemagne|le Portugal#fait:La France n'a pas de frontière avec le Portugal : l'Espagne est entre les deux.}." },
+    { niv: 2, section: 'Géographie', titre: 'Une capitale',
+      texte: "Bruxelles est la capitale de la {Belgique|Suisse#fait:Bruxelles est la capitale de la Belgique ; Berne est celle de la Suisse.}." },
+    { niv: 2, section: "L'heure", titre: 'Midi et minuit',
+      texte: "Midi, c'est {douze heures|zéro heure#fait:Midi = 12 h. Minuit = 0 h.}. Minuit, c'est zéro heure." },
+    { niv: 2, section: 'Langue', titre: 'Majuscule ou pas ?',
+      texte: "Les {Français|français#majuscule:Les habitants prennent une majuscule : les Français.} parlent {français|Français#majuscule:La langue ne prend pas de majuscule : parler français.} et mangent du fromage {français|Français#majuscule:L'adjectif ne prend pas de majuscule : un fromage français.}." },
+    { niv: 3, section: 'Langue', titre: 'Le français dans le monde',
+      texte: "Le français est la langue officielle de la France, mais aussi du {Québec|Mexique#fait:Au Canada, le français est la langue officielle du Québec. Au Mexique, on parle espagnol.}." },
+    { niv: 3, section: 'Géographie', titre: 'Paris et son fleuve',
+      texte: "Paris est traversée par la {Seine|Loire|Garonne#fait:La Seine traverse Paris. La Loire passe à Orléans et Nantes, la Garonne à Toulouse et Bordeaux.}." },
   ]);
 })();
 </script>
@@ -1281,6 +1424,7 @@ legend {
   const CQ = window.CQ;
   const G = (CQ.GENERATEURS = []);
   const L = CQ.enLettres;
+  const LF = CQ.enLettresF; // au féminin : vingt et une baguettes
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   const decimal = (x) => String(Math.round(x * 100) / 100).replace('.', ',');
   const heureMin = (t) => CQ.heure(Math.floor(t / 60), t % 60);
@@ -1365,7 +1509,7 @@ legend {
     adulte: [
       { section: 'Agenda', titre: 'Réunion publique', phrase: 'La réunion publique sur le nouveau quartier est fixée au @, à 19 h.' },
       { section: 'Agenda', titre: "Le salon de l'habitat", phrase: "Le salon de l'habitat ouvrira ses portes le @ au parc des expositions." },
-      { section: 'Pratique', titre: 'Rappel aux contribuables', phrase: 'Les déclarations papier doivent être déposées avant le @ à minuit.' },
+      { section: 'Concours', titre: 'Concours photo', phrase: 'Les photos du concours doivent être déposées à la mairie avant le @ à midi.' },
     ],
     apprenant: [
       { section: 'Invitations', titre: "Fête d'anniversaire", phrase: "Mon anniversaire est le @ : venez à la fête !" },
@@ -1495,7 +1639,7 @@ legend {
   gen({ pub: ['apprenant'], niv: 2, fn(r) {
     const a = r.entier(12, 35), b = r.entier(10, 34), s = a + b;
     return { section: 'Commerces', titre: 'La boulangerie du quartier',
-      texte: `La boulangerie a vendu ${L(a)} baguettes le matin et ${L(b)} l'après-midi : ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, voisins: [s + 1, s - 1, s + 10, s - 10] }, enLettres))} baguettes au total.` };
+      texte: `La boulangerie a vendu ${LF(a)} baguettes le matin et ${LF(b)} l'après-midi : ${nombre(r, s, { fmt: LF, detail: `${a} + ${b} = ${s} (${LF(s)})`, voisins: [s + 1, s - 1, s + 10, s - 10] })} baguettes au total.` };
   } });
 
   gen({ pub: ['apprenant'], niv: 2, fn(r) {
@@ -1515,8 +1659,84 @@ legend {
     do { a = r.entier(35, 50); b = r.entier(30, 49); } while (a + b < 70 || a + b > 99);
     const s = a + b;
     return { section: 'Commerces', titre: 'Un samedi à la boulangerie',
-      texte: `Samedi, la boulangerie a vendu ${L(a)} baguettes le matin et ${L(b)} l'après-midi : ${nombre(r, s, Object.assign({ detail: `${a} + ${b} = ${s} (${L(s)})`, classiques: [s + 20, s - 20], voisins: [s + 1, s - 1, s + 10] }, enLettres))} baguettes au total.` };
+      texte: `Samedi, la boulangerie a vendu ${LF(a)} baguettes le matin et ${LF(b)} l'après-midi : ${nombre(r, s, { fmt: LF, detail: `${a} + ${b} = ${s} (${LF(s)})`, classiques: [s + 20, s - 20], voisins: [s + 1, s - 1, s + 10] })} baguettes au total.` };
   } });
+
+  // ---------- Mise en page : le sommaire ----------
+  const RUBRIQUES_SOMMAIRE = ['Vie locale', 'Économie', 'Culture', 'Sports', 'Météo', 'Jeux', 'Petites annonces', 'Programme télé', 'Courrier des lecteurs'];
+  gen({ pub: ['enfant', 'adulte', 'apprenant'], niv: 1, rub: 'page', fn(r) {
+    const total = r.choix([12, 16, 20, 24]);
+    const sections = r.melanger(RUBRIQUES_SOMMAIRE).slice(0, 4);
+    const pages = r.melanger(Array.from({ length: total - 2 }, (_, i) => i + 2)).slice(0, 4).sort((a, b) => a - b);
+    const k = r.entier(1, 3);
+    let faux, detail;
+    if (k < 3 && pages[k - 1] > 2 && r.chance(0.5)) {
+      faux = Math.max(2, pages[k - 1] - r.entier(1, 3));
+      detail = `Le sommaire suit l'ordre des pages : après ${sections[k - 1]} en page ${pages[k - 1]}, la rubrique suivante ne peut pas être en page ${faux}.`;
+    } else {
+      faux = total + r.entier(2, 9);
+      detail = `Ce numéro n'a que ${total} pages : la page ${faux} n'existe pas.`;
+    }
+    const ligne = (i) => `${sections[i]}, page ${i === k ? `{${pages[i]}|${faux}#sommaire:${detail}}` : pages[i]}.`;
+    return { section: 'Sommaire', titre: 'Dans ce numéro',
+      texte: `Ce numéro compte ${total} pages. ` + [0, 1, 2, 3].map(ligne).join(' ') };
+  } });
+
+  // ---------- Faits : âge et année de naissance ----------
+  const ANNEE = new Date().getFullYear();
+  const AINES = { f: ['Jeanne', 'Marcelle', 'Yvette', 'Simone', 'Odette', 'Paulette'], m: ['Marcel', 'René', 'Lucien', 'André', 'Robert', 'Gaston'] };
+  const NOMS = ['Martin', 'Dubois', 'Lefèvre', 'Moreau', 'Girard', 'Fontaine', 'Mercier'];
+  gen({ pub: ['adulte'], niv: 2, rub: 'faits', fn(r) {
+    const f = r.chance(0.5), age = r.entier(70, 104), annee = ANNEE - age;
+    return { section: 'Carnet', titre: f ? 'Une doyenne en pleine forme' : 'Un doyen en pleine forme',
+      texte: `${f ? 'Née' : 'Né'} en ${annee}, ${r.choix(f ? AINES.f : AINES.m)} ${r.choix(NOMS)} fête aujourd'hui ses ${nombre(r, age, { code: 'age', detail: `${ANNEE} − ${annee} = ${age}`, voisins: [age + 10, age - 10, age + 1, age - 1] })} ans. ${f ? 'Elle' : 'Il'} vit toujours dans sa maison du centre-bourg.` };
+  } });
+  gen({ pub: ['enfant'], niv: 3, rub: 'faits', fn(r) {
+    const age = r.entier(60, 85), annee = ANNEE - age;
+    return { section: 'Famille', titre: "L'anniversaire de mamie",
+      texte: `Mamie Louise est née en ${annee}. Cette année, elle fête ses ${nombre(r, age, { code: 'age', detail: `${ANNEE} − ${annee} = ${age}`, voisins: [age + 10, age - 10, age + 1] })} ans : toute la famille sera là !` };
+  } });
+  gen({ pub: ['apprenant'], niv: 3, rub: 'faits', fn(r) {
+    const age = r.entier(70, 95), annee = ANNEE - age;
+    return { section: 'Famille', titre: 'Ma grand-mère',
+      texte: `Ma grand-mère est née en ${annee}. Cette année, elle a ${nombre(r, age, Object.assign({ code: 'age', detail: `${ANNEE} − ${annee} = ${age} (${L(age)})`, classiques: [age + 20, age - 20], voisins: [age + 1, age - 1] }, enLettres))} ans.` };
+  } });
+
+  // ---------- Faits : le jour de la semaine, par rapport à la date du journal ----------
+  const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+  const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  const dateLongue = (d, jour) => `${JOURS[jour === undefined ? d.getDay() : jour]} ${d.getDate() === 1 ? '1er' : d.getDate()} ${MOIS[d.getMonth()]}`;
+  const ECARTS_JOUR = [
+    { n: 1, mot: 'demain', temps: 'futur' }, { n: 2, mot: 'après-demain', temps: 'futur' },
+    { n: 7, mot: 'dans une semaine', temps: 'futur' }, { n: -1, mot: 'hier', temps: 'passe' },
+  ];
+  const PHRASES_JOUR = {
+    enfant: {
+      futur: [{ titre: 'Sortie à la piscine', phrase: 'La sortie à la piscine aura lieu @.' }, { titre: 'Le goûter de la classe', phrase: 'Le goûter de la classe est prévu @.' }],
+      passe: [{ titre: 'Visite au musée', phrase: 'La classe a visité le musée @.' }],
+    },
+    adulte: {
+      futur: [{ titre: 'Conseil municipal', phrase: 'Le conseil municipal se réunira @, à 18 h 30.' }, { titre: 'Encombrants', phrase: 'La collecte des encombrants passera @.' }, { titre: 'Vide-grenier', phrase: 'Les inscriptions au vide-grenier fermeront @.' }],
+      passe: [{ titre: 'Marché nocturne', phrase: "Le marché nocturne s'est tenu @, sous la pluie." }],
+    },
+    apprenant: {
+      futur: [{ titre: 'Cours de français', phrase: 'Mon cours de français aura lieu @.' }, { titre: 'Musée fermé', phrase: 'Le musée sera fermé @.' }],
+      passe: [{ titre: 'Au cinéma', phrase: 'Je suis allé au cinéma @.' }],
+    },
+  };
+  ['enfant', 'adulte', 'apprenant'].forEach((pub) => {
+    gen({ pub: [pub], niv: pub === 'enfant' ? 2 : 1, rub: 'faits', fn(r) {
+      const auj = new Date();
+      const ecart = r.choix(ECARTS_JOUR);
+      const d = new Date(auj.getFullYear(), auj.getMonth(), auj.getDate() + ecart.n);
+      const juste = dateLongue(d);
+      const fautes = [1, -1].map((x) => dateLongue(d, (d.getDay() + x + 7) % 7));
+      const modele = r.choix(PHRASES_JOUR[pub][ecart.temps]);
+      const detail = `Nous sommes ${dateLongue(auj)} : ${ecart.mot}, c'est ${juste}.`;
+      return { section: 'Agenda', titre: modele.titre,
+        texte: modele.phrase.replace('@', `${ecart.mot}, {${juste}|${r.melanger(fautes).join('|')}#jour:${detail}}`) };
+    } });
+  });
 
   // ---------- Images à compter ----------
   G.push({ pub: ['enfant', 'apprenant'], niv: 1, rub: 'image', fn(r, niveau) {
@@ -1641,6 +1861,81 @@ legend {
     return x < 0.15 ? 0 : x < 0.65 ? 1 : 2;
   }
 
+  // ---------- Coquilles d'imprimerie, posées sur n'importe quel mot ----------
+  const LETTRES = /^[a-zàâäçéèêëîïôöùûüÿœæ]+$/;
+  const PONCT_FIN = /^(.*?)([.,;:!?…)»]*)$/;
+  const NOM_PROPRE = /^[A-ZÀÂÇÉÈÊÎÔÛ][a-zàâäçéèêëîïôöùûüÿœ'’-]+$/;
+  const PETITS_MOTS = ['le', 'la', 'les', 'de', 'des', 'du', 'un', 'une', 'et', 'en', 'au', 'aux', 'il', 'elle', 'on', 'sur', 'pour', 'dans', 'avec', 'par'];
+  // Mots dont la minuscule est admise ou trop discutable pour en faire une coquille.
+  const MAJUSCULE_LIBRE = ['Soleil', 'Lune', 'Terre', 'Marché', 'Exposition', 'Révolution', 'T-rex', 'Le', 'La', 'Les'];
+  const SANS_ACCENT = { 'É': 'E', 'È': 'E', 'Ê': 'E', 'À': 'A', 'Â': 'A', 'Î': 'I', 'Ô': 'O', 'Ç': 'C' };
+  const POIDS_TYPO = { lettres: 3, doublon: 2, majuscule: 1.5, accentmaj: 1.2 };
+
+  function debutDePhrase(liste, k) {
+    if (k === 0) return true;
+    if (liste[k].pre.includes('«')) return true;
+    const prec = liste[k - 1];
+    return /[.!?…]$/.test(texteDe(prec) + prec.post);
+  }
+
+  // Inverse deux lettres voisines, en oublie une ou en double une.
+  function abimer(r, mot) {
+    const n = mot.length, essais = { inverse: [], oubli: [], double: [] };
+    for (let i = 1; i < n - 2; i++) if (mot[i] !== mot[i + 1]) essais.inverse.push(mot.slice(0, i) + mot[i + 1] + mot[i] + mot.slice(i + 2));
+    if (n >= 7) for (let i = 1; i < n - 1; i++) essais.oubli.push(mot.slice(0, i) + mot.slice(i + 1));
+    for (let i = 1; i < n - 1; i++) {
+      if (/[bcdfglmnprst]/.test(mot[i]) && mot[i] !== mot[i - 1] && mot[i] !== mot[i + 1]) essais.double.push(mot.slice(0, i + 1) + mot.slice(i));
+    }
+    const sortes = ['inverse', 'oubli', 'double'].filter((s) => essais[s].length);
+    if (!sortes.length) return null;
+    const sorte = sortes[r.pondere(sortes.map((s) => (s === 'inverse' ? 3 : 1)))];
+    return r.choix(essais[sorte]);
+  }
+
+  function poserTypo(r, titre, texte) {
+    const candidats = { lettres: [], doublon: [], majuscule: [], accentmaj: [] };
+    [titre, texte].forEach((liste) => liste.forEach((e, k) => {
+      if (e.type !== 'mot') return;
+      const [, coeur, ponct] = e.texte.match(PONCT_FIN);
+      if (!coeur) return;
+      const ref = { e, coeur, ponct };
+      if (LETTRES.test(coeur) && coeur.length >= 6) candidats.lettres.push(ref);
+      if (liste === texte && PETITS_MOTS.includes(coeur) && !ponct && !e.post && !e.pre) candidats.doublon.push(ref);
+      if (NOM_PROPRE.test(coeur) && !debutDePhrase(liste, k) && !MAJUSCULE_LIBRE.includes(coeur)) candidats.majuscule.push(ref);
+      if (SANS_ACCENT[coeur[0]]) candidats.accentmaj.push(ref);
+    }));
+    const sortes = Object.keys(candidats).filter((s) => candidats[s].length);
+    if (!sortes.length) return false;
+    const sorte = sortes[r.pondere(sortes.map((s) => POIDS_TYPO[s]))];
+    const { e, coeur, ponct } = r.choix(candidats[sorte]);
+    let faute = null, detail = null;
+    if (sorte === 'lettres') faute = abimer(r, coeur);
+    if (sorte === 'doublon') { faute = coeur + ' ' + coeur; detail = `« ${coeur} » est imprimé deux fois de suite.`; }
+    if (sorte === 'majuscule') { faute = coeur[0].toLowerCase() + coeur.slice(1); detail = `« ${coeur} » est un nom propre : il prend une majuscule.`; }
+    if (sorte === 'accentmaj') faute = SANS_ACCENT[coeur[0]] + coeur.slice(1);
+    if (!faute || faute === coeur) return false;
+    delete e.texte;
+    Object.assign(e, { type: 'jeton', correct: coeur, fautes: [faute], code: sorte, detail, coquille: true, affiche: faute, espace: sorte === 'doublon', post: ponct + e.post });
+    return true;
+  }
+
+  // Numéro de page (folio) d'un article.
+  function folio(r, n, actif) {
+    const fautes = [n + 1, n - 1];
+    const inverse = +String(n).split('').reverse().join('');
+    if (n >= 10 && inverse !== n && n % 10) fautes.push(inverse);
+    const f = {
+      type: 'jeton', code: 'folio', correct: String(n), fautes: fautes.filter((x) => x >= 1).map(String),
+      detail: n === 2 ? 'La une est la page 1 : le premier article est en page 2.' : `Après la page ${n - 1} vient la page ${n}.`,
+      coquille: false, affiche: String(n), pre: '', post: '',
+    };
+    if (actif && r.chance(0.12)) {
+      f.coquille = true;
+      f.affiche = r.choix(f.fautes);
+    }
+    return f;
+  }
+
   // Transforme une fiche (brève, image, article généré) en article prêt à jouer.
   CQ.composer = function (fiche, opts) {
     const r = opts.hasard;
@@ -1657,17 +1952,25 @@ legend {
         image.affiche = r.choix(fiche.ko);
       }
     } else {
-      const eligibles = jetons.filter((j) => opts.rubriques[CQ.rubriqueDe(j.code)]);
-      let n = Math.min(eligibles.length, fiche.calc ? (r.chance(0.8) ? 1 : 0) : combienDeCoquilles(r, opts.niveau));
-      const restants = eligibles.slice();
-      while (n-- > 0 && restants.length) {
-        const i = r.pondere(restants.map((j) => faiblesse(opts.stats, j.code)));
-        const j = restants.splice(i, 1)[0];
-        j.coquille = true;
-        j.affiche = r.choix(j.fautes);
+      // Les candidats : les jetons des rubriques choisies, plus une coquille d'imprimerie possible.
+      const candidats = jetons.filter((j) => opts.rubriques[CQ.rubriqueDe(j.code)]).map((j) => ({ j, poids: faiblesse(opts.stats, j.code) }));
+      if (opts.rubriques.typo) candidats.push({ typo: true, poids: (fiche.genere ? 0.35 : 0.8) * faiblesse(opts.stats, 'lettres') });
+      let n = Math.min(candidats.length, fiche.genere ? (r.chance(0.8) ? 1 : 0) : combienDeCoquilles(r, opts.niveau));
+      while (n-- > 0 && candidats.length) {
+        const choisi = candidats.splice(r.pondere(candidats.map((c) => c.poids)), 1)[0];
+        if (choisi.typo) {
+          poserTypo(r, titre, texte);
+        } else {
+          choisi.j.coquille = true;
+          choisi.j.affiche = r.choix(choisi.j.fautes);
+        }
       }
     }
-    return { section: fiche.section, titre, texte, image };
+    if (fiche.ok && opts.rubriques.typo && r.chance(0.15)) poserTypo(r, titre, texte);
+    return {
+      section: fiche.section, titre, texte, image,
+      folio: opts.folio ? folio(r, opts.folio, opts.rubriques.page && !opts.folioPrecedentFaux) : null,
+    };
   };
 
   // Mélange sans remise, pondéré : le niveau choisi et les points faibles d'abord.
@@ -1681,9 +1984,9 @@ legend {
   }
 
   const MELANGE = {
-    enfant: { breve: 5, calc: 2, image: 3 },
-    adulte: { breve: 6, calc: 3, image: 1.5 },
-    apprenant: { breve: 5, calc: 2, image: 3 },
+    enfant: { breve: 5, calc: 2, image: 3, faits: 1, page: 0.6 },
+    adulte: { breve: 6, calc: 3, image: 1.5, faits: 1.5, page: 0.8 },
+    apprenant: { breve: 5, calc: 2, image: 3, faits: 1.2, page: 0.6 },
   };
 
   // Crée la pioche d'une partie. opts : public, niveau, rubriques, hasard, stats.
@@ -1691,27 +1994,31 @@ legend {
     const r = opts.hasard, pub = opts.public, niveau = opts.niveau, rub = opts.rubriques;
     const auNiveau = (f) => (f.niv === niveau ? 3 : 1);
 
-    const breves = CQ.BREVES.filter((b) => b.pub === pub && b.niv <= niveau &&
-      CQ.analyser(b.titre + ' ' + b.texte).some((e) => e.type === 'jeton' && rub[CQ.rubriqueDe(e.code)]));
+    // Avec la typographie ou les pages, toute brève peut porter une coquille.
+    const porteuses = rub.typo || rub.page;
+    const breves = CQ.BREVES.filter((b) => b.pub === pub && b.niv <= niveau && (porteuses ||
+      CQ.analyser(b.titre + ' ' + b.texte).some((e) => e.type === 'jeton' && rub[CQ.rubriqueDe(e.code)])));
     const poidsBreve = (b) => {
       const codes = CQ.analyser(b.texte).filter((e) => e.type === 'jeton').map((e) => e.code);
       const pire = Math.max(1, ...codes.map((c) => faiblesse(opts.stats, c)));
       return auNiveau(b) * pire;
     };
     const images = CQ.IMAGES.filter((i) => i.pub.includes(pub) && i.niv <= niveau);
-    const gensCalc = CQ.GENERATEURS.filter((g) => g.rub === 'calc' && g.pub.includes(pub) && g.niv <= niveau);
-    const gensImage = CQ.GENERATEURS.filter((g) => g.rub === 'image' && g.pub.includes(pub) && g.niv <= niveau);
+    const generateurs = (cle) => CQ.GENERATEURS.filter((g) => g.rub === cle && g.pub.includes(pub) && g.niv <= niveau);
+    const gensImage = generateurs('image');
 
     const sources = [];
     const melange = MELANGE[pub];
-    if ((rub.ortho || rub.gram) && breves.length) {
+    if (breves.length) {
       const tirer = paquet(breves, r, poidsBreve);
       sources.push({ poids: melange.breve, tirer });
     }
-    if (rub.calc && gensCalc.length) {
-      const tirer = paquet(gensCalc, r, auNiveau);
-      sources.push({ poids: melange.calc, tirer: () => Object.assign(tirer().fn(r, niveau), { calc: true }) });
-    }
+    ['calc', 'faits', 'page'].forEach((cle) => {
+      const gens = generateurs(cle);
+      if (!rub[cle] || !gens.length) return;
+      const tirer = paquet(gens, r, auNiveau);
+      sources.push({ poids: melange[cle], tirer: () => Object.assign(tirer().fn(r, niveau), { genere: true }) });
+    });
     if (rub.image && (images.length || gensImage.length)) {
       const tirerImage = images.length ? paquet(images, r, auNiveau) : null;
       const tirerGen = gensImage.length ? paquet(gensImage, r, auNiveau) : null;
@@ -1720,13 +2027,18 @@ legend {
     if (!sources.length) throw new Error('Aucune rubrique disponible pour ce lecteur.');
 
     let derniere = -1;
+    let page = 1; // la une est la page 1
+    let folioPrecedentFaux = false;
     return {
       suivant() {
-        // Évite trois articles de suite de la même source quand c'est possible.
+        // Évite deux articles de suite de la même source, une fois sur deux.
         let i = r.pondere(sources.map((s) => s.poids));
         if (i === derniere && sources.length > 1 && r.chance(0.5)) i = r.pondere(sources.map((s, k) => (k === i ? 0 : s.poids)));
         derniere = i;
-        return CQ.composer(sources[i].tirer(), { hasard: r, niveau, rubriques: rub, stats: opts.stats });
+        page++;
+        const article = CQ.composer(sources[i].tirer(), { hasard: r, niveau, rubriques: rub, stats: opts.stats, folio: page, folioPrecedentFaux });
+        folioPrecedentFaux = article.folio.coquille;
+        return article;
       },
     };
   };
@@ -1834,6 +2146,10 @@ legend {
   CQ.REPUTATION = 5;
 
   const typo = CQ.typo;
+  // Codes dont le détail suffit : inutile d'y ajouter la règle générale.
+  const SEUL_DETAIL = ['usage', 'calc', 'date', 'fait', 'age', 'jour', 'sommaire', 'titre', 'coherence', 'majuscule', 'doublon', 'folio'];
+
+  const libelle = (e, v) => (e.code === 'folio' ? 'page ' + v : `« ${typo(v)} »`);
 
   function explication(e) {
     if (e.type === 'image') return e.expl;
@@ -1860,14 +2176,14 @@ legend {
     }
 
     function retenir(e, quoi) {
-      const cle = e.code + (e.code === 'calc' || e.code === 'date' ? ':' + e.detail : '');
+      const cle = e.code + (e.detail ? ':' + e.detail : '');
       if (etat.pieges.has(cle)) return;
       const regle = CQ.REGLES[e.code] || CQ.REGLES.usage;
       etat.pieges.set(cle, {
         quoi,
         nom: regle.nom,
-        exemple: e.type === 'image' ? '' : quoi === 'zele' ? `« ${typo(e.correct)} » était juste` : `« ${typo(e.affiche)} » → « ${typo(e.correct)} »`,
-        expl: e.type === 'image' ? e.expl : e.detail ? typo(e.detail) + (e.code === 'usage' || e.code === 'calc' || e.code === 'date' ? '' : ' ' + typo(regle.expl)) : typo(regle.expl),
+        exemple: e.type === 'image' ? '' : quoi === 'zele' ? `${libelle(e, e.correct)} était juste` : `${libelle(e, e.affiche)} → ${libelle(e, e.correct)}`,
+        expl: e.type === 'image' ? e.expl : e.detail ? typo(e.detail) + (SEUL_DETAIL.includes(e.code) ? '' : ' ' + typo(regle.expl)) : typo(regle.expl),
       });
     }
 
@@ -1893,7 +2209,7 @@ legend {
       }
       Array.from(pastilles.children).forEach((p, i) => p.classList.toggle('perdue', i >= etat.reputation));
       pastilles.setAttribute('aria-label', `${etat.reputation} sur ${CQ.REPUTATION}`);
-      $('hud-tirage').textContent = String(etat.imprimes).padStart(3, '0');
+      $('hud-tirage').textContent = 1 + etat.imprimes; // la une, page 1, est déjà imprimée
     }
 
     function flotter(texte, ev, negatif) {
@@ -1922,7 +2238,7 @@ legend {
         const s = document.createElement('span');
         s.className = 'm';
         s.dataset.i = items.length;
-        s.textContent = e.type === 'jeton' ? typo(e.affiche).replace(/ /g, ' ') : typo(e.texte);
+        s.textContent = e.type !== 'jeton' ? typo(e.texte) : e.espace ? typo(e.affiche) : typo(e.affiche).replace(/ /g, '\u00A0');
         parent.appendChild(s);
         items.push({ el: s, data: e, etat: null });
         if (e.post) parent.appendChild(document.createTextNode(typo(e.post)));
@@ -1936,14 +2252,25 @@ legend {
 
       const tete = document.createElement('div');
       tete.className = 'tete';
+      const gauche = document.createElement('div');
+      gauche.className = 'tete-gauche';
+      if (article.folio) {
+        const folio = document.createElement('span');
+        folio.className = 'm folio';
+        folio.dataset.i = items.length;
+        folio.textContent = 'p.\u00A0' + article.folio.affiche;
+        items.push({ el: folio, data: article.folio, etat: null });
+        gauche.append(folio);
+      }
       const section = document.createElement('span');
       section.className = 'section';
       section.textContent = article.section;
+      gauche.append(section);
       const bat = document.createElement('button');
       bat.type = 'button';
       bat.className = 'bat';
       bat.textContent = 'Bon à tirer';
-      tete.append(section, bat);
+      tete.append(gauche, bat);
 
       const titre = document.createElement('h2');
       titre.className = 'titre';
@@ -2016,7 +2343,7 @@ legend {
         }
         it.el.classList.add('corrige');
         flotter('+' + pts, ev);
-        dire('ok', e.type === 'image' ? 'Bien vu : la photo ne correspondait pas.' : `Bien vu : « ${typo(e.affiche)} » → « ${typo(e.correct)} »`, explication(e));
+        dire('ok', e.type === 'image' ? 'Bien vu : la photo ne correspondait pas.' : `Bien vu : ${libelle(e, e.affiche)} → ${libelle(e, e.correct)}`, explication(e));
         noter(e.code, 'trouve');
         CQ.Son.jouer('trouve', etat.serie);
       } else {
@@ -2028,7 +2355,7 @@ legend {
         etat.zeles++;
         flotter('−' + PTS.zele, ev, true);
         if (e.type === 'jeton') {
-          dire('zele', `Faute de zèle : « ${typo(e.correct)} » était juste.`, explication(e));
+          dire('zele', `Faute de zèle : ${libelle(e, e.correct)} était juste.`, explication(e));
           noter(e.code, 'zele');
           retenir(e, 'zele');
         } else if (e.type === 'image') {
@@ -2087,7 +2414,7 @@ legend {
         etat.resultats.push('rate');
         restantes.forEach((it) => { noter(it.data.code, 'rate'); retenir(it.data, 'rate'); });
         const e = restantes[0].data;
-        dire('rate', e.type === 'image' ? 'Coquille imprimée : la photo ne correspondait pas.' : `Coquille imprimée : « ${typo(e.affiche)} » au lieu de « ${typo(e.correct)} »`, explication(e));
+        dire('rate', e.type === 'image' ? 'Coquille imprimée : la photo ne correspondait pas.' : `Coquille imprimée : ${libelle(e, e.affiche)} au lieu de ${libelle(e, e.correct)}`, explication(e));
         eclair('rate');
         CQ.Son.jouer('rate');
         CQ.vibrer([30, 50, 30]);
@@ -2191,7 +2518,8 @@ legend {
     rotative.classList.remove('arret', 'flash-ok', 'flash-rate');
     marbre.dataset.etat = '';
     $('marbre-titre').textContent = typo("Touche les coquilles avant qu'elles partent à l'impression.");
-    $('marbre-detail').textContent = typo('Faute, erreur de calcul ou photo qui ne colle pas au texte : touche-la. Attention aux fautes de zèle.');
+    $('marbre-detail').textContent = typo('Faute, lettres inversées, calcul faux, information fausse, photo ou numéro de page qui ne colle pas : touche-la.');
+    $('hud-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     majTableau();
     mesurer();
     rail.addEventListener('pointerdown', surPointeur);
@@ -2217,7 +2545,7 @@ legend {
     apprenant: ['A1', 'A2', 'B1'],
   };
   const LECTEURS = { enfant: 'Enfant', adulte: 'Adulte', apprenant: 'Apprenant' };
-  const TOUTES = { ortho: true, gram: true, calc: true, image: true };
+  const TOUTES = { ortho: true, gram: true, typo: true, calc: true, faits: true, image: true, page: true };
   const ARTICLES_DU_JOUR = 10;
   const CASES = { parfait: '🟦', zele: '🟨', rate: '🟥' };
 

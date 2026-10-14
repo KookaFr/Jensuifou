@@ -1,5 +1,5 @@
 /* Coquilles — règles expliquées après chaque coquille trouvée, ratée ou imaginée.
-   Chaque règle appartient à une rubrique : ortho, gram, calc ou image. */
+   Chaque règle appartient à une rubrique : ortho, gram, typo, calc, faits, image ou page. */
 (function () {
   'use strict';
   const CQ = window.CQ;
@@ -7,8 +7,11 @@
   CQ.RUBRIQUES = {
     ortho: 'Orthographe',
     gram: 'Grammaire',
+    typo: 'Typographie',
     calc: 'Calcul',
+    faits: 'Faits',
     image: 'Images',
+    page: 'Pages',
   };
 
   CQ.REGLES = {
@@ -68,6 +71,23 @@
 
     // Images
     image: { nom: 'Image', rub: 'image', expl: "La photo ne correspond pas au texte." },
+
+    // Typographie : les coquilles d'imprimerie au sens propre
+    lettres: { nom: "Coquille d'imprimerie", rub: 'typo', expl: "Des lettres ont été inversées, oubliées ou doublées en composant le texte. On relit lentement, mot par mot." },
+    doublon: { nom: 'Mot répété', rub: 'typo', expl: "Le même mot est imprimé deux fois de suite. L'œil saute facilement ce genre de répétition, surtout en fin de ligne." },
+    majuscule: { nom: 'Majuscule', rub: 'typo', expl: "Les noms propres (personnes, villes, pays, rues) et les noms d'habitants (les Français) prennent une majuscule. La langue et l'adjectif n'en prennent pas : le français, un vin français." },
+    accentmaj: { nom: 'Accent sur la majuscule', rub: 'typo', expl: "En français, les majuscules gardent leurs accents : État, Élise, À bientôt." },
+
+    // Vérification des faits
+    fait: { nom: 'Vérification des faits', rub: 'faits', expl: "L'information est fausse. Avant de publier, on vérifie chaque fait." },
+    titre: { nom: 'Titre trompeur', rub: 'faits', expl: "Le titre doit dire la même chose que l'article." },
+    coherence: { nom: "Cohérence de l'article", rub: 'faits', expl: "Un même nom doit s'écrire pareil d'un bout à l'autre de l'article, titre compris." },
+    age: { nom: 'Âge et année de naissance', rub: 'faits', expl: "L'âge doit correspondre à l'année de naissance." },
+    jour: { nom: 'Jour de la semaine', rub: 'faits', expl: "Le jour de la semaine doit correspondre à la date. La date du journal est affichée sur la rotative." },
+
+    // Mise en page
+    folio: { nom: 'Numéro de page', rub: 'page', expl: "Les pages se suivent : après la page 4 vient la page 5. La dernière page imprimée est indiquée sur la rotative." },
+    sommaire: { nom: 'Sommaire', rub: 'page', expl: "Le sommaire suit l'ordre des pages et ne peut pas renvoyer au-delà de la dernière page du numéro." },
   };
 
   // Familles de mots qui se confondent : la règle se devine toute seule.
